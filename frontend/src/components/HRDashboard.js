@@ -7,6 +7,9 @@ import {
   FaCalendarAlt,
   FaSignOutAlt,
   FaClipboardList,
+  FaChartBar,
+  FaUserPlus,
+  FaCalendarCheck,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -14,7 +17,7 @@ import AddEmployeeModal from "./AddEmployeeModal";
 import EmployeeList from "./EmployeeList";
 import AttendanceStats from "./AttendanceStats";
 import EmployeeMaster from "./EmployeeMaster";
-import HRLeaveManagement from "./HRLeaveManagement";
+import HRLeaveApproval from "./HRLeaveApproval";
 import OnboardedEmployees from "./OnboardedEmployees";
 import EmployeeFormManagement from "./EmployeeFormManagement";
 
@@ -74,7 +77,7 @@ const HRDashboard = () => {
     { id: "onboarded", label: "Onboarded Employees", icon: FaUsers },
     { id: "master", label: "Employee Master", icon: FaUsers },
     { id: "attendance", label: "Attendance", icon: FaCalendarAlt },
-    { id: "leave", label: "Leave Management", icon: FaClipboardList },
+    { id: "leave", label: "Leave Management", icon: FaCalendarCheck },
     { id: "stats", label: "Statistics", icon: FaChartPie },
   ];
 
@@ -231,7 +234,7 @@ const HRDashboard = () => {
         {/* Leave Management Tab */}
         {activeTab === "leave" && (
           <div>
-            <HRLeaveManagement />
+            <HRLeaveApproval />
           </div>
         )}
 

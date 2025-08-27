@@ -8,6 +8,7 @@ const authRoutes = require("./routes/auth");
 const hrRoutes = require("./routes/hr");
 const employeeRoutes = require("./routes/employee");
 const attendanceRoutes = require("./routes/attendance");
+const leaveRoutes = require('./routes/leave.js');
 const { connectDB } = require("./config/database");
 
 const app = express();
@@ -46,6 +47,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/hr", hrRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use('/api/leave', leaveRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

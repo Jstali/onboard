@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { FaSignOutAlt, FaUserEdit, FaCalendarAlt, FaCheckCircle } from 'react-icons/fa';
+import { FaSignOutAlt, FaUserEdit, FaCalendarAlt, FaCheckCircle, FaClock, FaClipboardList, FaCalendarPlus } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import OnboardingForm from './OnboardingForm';
 import OnboardingStatus from './OnboardingStatus';
+import { Link } from 'react-router-dom';
 
 const EmployeeDashboard = () => {
   const { logout } = useAuth();
@@ -157,35 +158,43 @@ const EmployeeDashboard = () => {
         )}
 
         {/* Quick Actions */}
-        {isOnboarded && (
-          <div className="mt-8">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <a
-                href="/attendance"
-                className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-              >
-                <div className="flex items-center">
-                  <FaCalendarAlt className="w-8 h-8 text-primary-600 mr-4" />
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900">Mark Attendance</h4>
-                    <p className="text-gray-600">Record your daily attendance</p>
-                  </div>
-                </div>
-              </a>
-              
-              <div className="card">
-                <div className="flex items-center">
-                  <FaUserEdit className="w-8 h-8 text-primary-600 mr-4" />
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900">Profile</h4>
-                    <p className="text-gray-600">View and update your profile</p>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <Link
+            to="/attendance"
+            className="bg-blue-600 text-white p-6 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+          >
+            <div className="flex items-center">
+              <FaCalendarAlt className="text-3xl mr-4" />
+              <div>
+                <h3 className="text-xl font-semibold">Mark Attendance</h3>
+                <p className="text-blue-100">Record your daily attendance</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            to="/leave-request"
+            className="bg-green-600 text-white p-6 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
+          >
+            <div className="flex items-center">
+              <FaCalendarPlus className="text-3xl mr-4" />
+              <div>
+                <h3 className="text-xl font-semibold">Leave Request</h3>
+                <p className="text-green-100">Submit leave applications</p>
+              </div>
+            </div>
+          </Link>
+
+          <div className="bg-purple-600 text-white p-6 rounded-lg shadow-lg">
+            <div className="flex items-center">
+              <FaClock className="text-3xl mr-4" />
+              <div>
+                <h3 className="text-xl font-semibold">My Schedule</h3>
+                <p className="text-purple-100">View your work schedule</p>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </main>
     </div>
   );

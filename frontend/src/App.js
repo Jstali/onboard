@@ -1,13 +1,22 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Login from './components/Login';
-import PasswordReset from './components/PasswordReset';
-import HRDashboard from './components/HRDashboard';
-import EmployeeDashboard from './components/EmployeeDashboard';
-import AttendancePortal from './components/AttendancePortal';
-import ProtectedRoute from './components/ProtectedRoute';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Login from "./components/Login";
+import PasswordReset from "./components/PasswordReset";
+import HRDashboard from "./components/HRDashboard";
+import EmployeeDashboard from "./components/EmployeeDashboard";
+import AttendancePortal from "./components/AttendancePortal";
+import ProtectedRoute from "./components/ProtectedRoute";
+import EmployeeLeaveRequest from "./components/EmployeeLeaveRequest";
+import ManagerLeaveApproval from "./components/ManagerLeaveApproval";
+import HRLeaveApproval from "./components/HRLeaveApproval";
+import ManagerDashboard from "./components/ManagerDashboard";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -24,19 +33,87 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
       <Route path="/reset-password" element={<PasswordReset />} />
-      
-      <Route path="/" element={
-        <ProtectedRoute>
-          {user?.role === 'hr' ? <HRDashboard /> : <EmployeeDashboard />}
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/attendance" element={
-        <ProtectedRoute>
-          <AttendancePortal />
-        </ProtectedRoute>
-      } />
-      
+
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            {user?.role === "hr" ? <HRDashboard /> : <EmployeeDashboard />}
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/attendance"
+        element={
+          <ProtectedRoute>
+            <AttendancePortal />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Employee Routes */}
+      <Route
+        path="/employee"
+        element={
+          <ProtectedRoute role="employee">
+            <EmployeeDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/attendance"
+        element={
+          <ProtectedRoute role="employee">
+            <AttendancePortal />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leave-request"
+        element={
+          <ProtectedRoute role="employee">
+            <EmployeeLeaveRequest />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Manager Routes */}
+      <Route
+        path="/manager"
+        element={
+          <ProtectedRoute role="manager">
+            <ManagerDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manager/leave-requests"
+        element={
+          <ProtectedRoute role="manager">
+            <ManagerLeaveApproval />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* HR Routes */}
+      <Route
+        path="/hr"
+        element={
+          <ProtectedRoute role="hr">
+            <HRDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hr/leave-requests"
+        element={
+          <ProtectedRoute role="hr">
+            <HRLeaveApproval />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
@@ -48,26 +125,26 @@ function App() {
       <Router>
         <div className="App">
           <AppRoutes />
-          <Toaster 
+          <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#363636',
-                color: '#fff',
+                background: "#363636",
+                color: "#fff",
               },
               success: {
                 duration: 3000,
                 iconTheme: {
-                  primary: '#22c55e',
-                  secondary: '#fff',
+                  primary: "#22c55e",
+                  secondary: "#fff",
                 },
               },
               error: {
                 duration: 5000,
                 iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
+                  primary: "#ef4444",
+                  secondary: "#fff",
                 },
               },
             }}

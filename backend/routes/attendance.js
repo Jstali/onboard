@@ -9,39 +9,61 @@ const {
 
 const router = express.Router();
 
+// Helper function to check employee onboarding status
+const checkEmployeeOnboardingStatus = async (userId) => {
+  const result = await pool.query(
+    `
+    SELECT 
+      CASE 
+        WHEN em.id IS NOT NULL THEN 'onboarded'
+        WHEN oe.id IS NOT NULL AND oe.status = 'pending_assignment' THEN 'approved_pending'
+        ELSE 'not_onboarded'
+      END as status,
+      em.id as master_id,
+      oe.id as onboarded_id
+    FROM users u
+    LEFT JOIN employee_master em ON em.company_email = u.email
+    LEFT JOIN onboarded_employees oe ON oe.user_id = u.id
+    WHERE u.id = $1
+  `,
+    [userId]
+  );
+
+  return result.rows[0] || { status: "not_onboarded" };
+};
+
 // Mark attendance (employees only)
 router.post(
   "/mark",
   [
     authenticateToken,
     requireEmployee,
-    body("date").isISO8601().toDate(),
+    body("date").isDate().withMessage("Date must be in YYYY-MM-DD format"),
     body("status").isIn(["Present", "Work From Home", "Leave"]),
-    body("reason").optional().notEmpty(),
+    body("reason").optional(),
   ],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("❌ Mark attendance validation errors:", errors.array());
+        console.log("📝 Mark attendance request body:", req.body);
         return res.status(400).json({ errors: errors.array() });
       }
 
       const { date, status, reason } = req.body;
 
-      // Check if employee is onboarded
-      const onboardedResult = await pool.query(
-        `
-      SELECT em.id FROM employee_master em
-      JOIN users u ON em.company_email = u.email
-      WHERE u.id = $1
-    `,
-        [req.user.id]
-      );
+      // Check if employee is onboarded or approved and waiting for assignment
+      const employeeStatus = await checkEmployeeOnboardingStatus(req.user.id);
 
-      if (onboardedResult.rows.length === 0) {
-        return res
-          .status(403)
-          .json({ error: "Only onboarded employees can mark attendance" });
+      if (
+        employeeStatus.status !== "onboarded" &&
+        employeeStatus.status !== "approved_pending"
+      ) {
+        return res.status(403).json({
+          error: "Only approved or onboarded employees can mark attendance",
+          details: "Please complete your onboarding process or contact HR",
+        });
       }
 
       // Check if attendance already exists for this date
@@ -81,7 +103,11 @@ router.post(
 // Clock out (for present employees)
 router.put(
   "/clock-out",
-  [authenticateToken, requireEmployee, body("date").isISO8601().toDate()],
+  [
+    authenticateToken,
+    requireEmployee,
+    body("date").isDate().withMessage("Date must be in YYYY-MM-DD format"),
+  ],
   async (req, res) => {
     try {
       const errors = validationResult(req);
