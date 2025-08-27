@@ -1,0 +1,313 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { FaUserCheck, FaEdit, FaEye, FaTrash } from "react-icons/fa";
+
+const OnboardedEmployees = ({ onRefresh }) => {
+  const [onboardedEmployees, setOnboardedEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [assignmentData, setAssignmentData] = useState({
+    name: "",
+    companyEmail: "",
+    manager: "",
+  });
+
+  useEffect(() => {
+    fetchOnboardedEmployees();
+  }, []);
+
+  const fetchOnboardedEmployees = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        "http://localhost:5001/api/hr/onboarded"
+      );
+      setOnboardedEmployees(response.data.onboardedEmployees);
+    } catch (error) {
+      console.error("Error fetching onboarded employees:", error);
+      toast.error("Failed to fetch onboarded employees");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAssignDetails = (employee) => {
+    setSelectedEmployee(employee);
+    setAssignmentData({
+      name: "",
+      companyEmail: "",
+      manager: "",
+    });
+    setShowAssignmentModal(true);
+  };
+
+  const handleAssignmentSubmit = async () => {
+    try {
+      if (!assignmentData.name || !assignmentData.companyEmail) {
+        toast.error("Name and Company Email are required");
+        return;
+      }
+
+      await axios.put(
+        `http://localhost:5001/api/hr/onboarded/${selectedEmployee.id}/assign`,
+        assignmentData
+      );
+
+      toast.success("Employee details assigned successfully!");
+      setShowAssignmentModal(false);
+      setSelectedEmployee(null);
+      fetchOnboardedEmployees();
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Assignment error:", error);
+      toast.error(
+        error.response?.data?.error || "Failed to assign employee details"
+      );
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "pending_assignment":
+        return (
+          <span className="px-2 py-1 text-xs font-medium bg-warning-100 text-warning-800 rounded-full">
+            Pending Assignment
+          </span>
+        );
+      case "assigned":
+        return (
+          <span className="px-2 py-1 text-xs font-medium bg-success-100 text-success-800 rounded-full">
+            Assigned
+          </span>
+        );
+      default:
+        return (
+          <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+            {status || "Unknown"}
+          </span>
+        );
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Onboarded Employees
+        </h2>
+        <p className="text-gray-600">
+          Employees approved and waiting for HR to assign name, company email,
+          and manager.
+        </p>
+      </div>
+
+      {onboardedEmployees.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-gray-400 text-6xl mb-4">📋</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Onboarded Employees
+          </h3>
+          <p className="text-gray-500">
+            Approved employees will appear here for HR to assign details.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Employee
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Submitted
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {onboardedEmployees.map((employee) => (
+                <tr key={employee.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {employee.user_email}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {employee.form_data?.name || "Name not available"}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                      {employee.employee_type}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(employee.status)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(employee.submitted_at)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => handleAssignDetails(employee)}
+                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      title="Assign Details"
+                    >
+                      <FaEdit className="inline-block" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        // View employee details
+                        console.log("View employee:", employee);
+                      }}
+                      className="text-blue-600 hover:text-blue-900"
+                      title="View Details"
+                    >
+                      <FaEye className="inline-block" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Assignment Modal */}
+      {showAssignmentModal && selectedEmployee && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Assign Employee Details
+              </h3>
+              <button
+                onClick={() => setShowAssignmentModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Employee:</strong> {selectedEmployee.user_email}
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>Type:</strong> {selectedEmployee.employee_type}
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAssignmentSubmit();
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Employee Name *
+                </label>
+                <input
+                  type="text"
+                  value={assignmentData.name}
+                  onChange={(e) =>
+                    setAssignmentData((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  className="input-field"
+                  placeholder="Enter employee name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Company Email *
+                </label>
+                <input
+                  type="email"
+                  value={assignmentData.companyEmail}
+                  onChange={(e) =>
+                    setAssignmentData((prev) => ({
+                      ...prev,
+                      companyEmail: e.target.value,
+                    }))
+                  }
+                  className="input-field"
+                  placeholder="employee@company.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Manager *
+                </label>
+                <select
+                  value={assignmentData.manager}
+                  onChange={(e) =>
+                    setAssignmentData((prev) => ({
+                      ...prev,
+                      manager: e.target.value,
+                    }))
+                  }
+                  className="input-field"
+                  required
+                >
+                  <option value="">Select a manager</option>
+                  <option value="pradeep">Pradeep</option>
+                  <option value="vamshi">Vamshi</option>
+                  <option value="vinod">Vinod</option>
+                  <option value="rakesh">Rakesh</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAssignmentModal(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-success">
+                  Assign Details
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default OnboardedEmployees;
