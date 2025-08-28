@@ -28,6 +28,7 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
     managerName: "",
     department: "",
     location: "",
+    role: "Product Developer",
     doj: "",
   });
 
@@ -36,6 +37,7 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
     if (token) {
       fetchManagers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   // Ensure formData is always properly initialized
@@ -49,6 +51,7 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
       managerName: "",
       department: "",
       location: "",
+      role: "Product Developer",
       doj: "",
     });
   }, []);
@@ -181,6 +184,7 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
       managerName: "",
       department: "",
       location: "",
+      role: "Product Developer",
       doj: "",
     });
     setError("");
@@ -317,6 +321,25 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Engineering"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Role *
+              </label>
+              <select
+                name="role"
+                value={formData.role || ""}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Role</option>
+                <option value="Product Developer">Product Developer</option>
+                <option value="SAP">SAP</option>
+                <option value="Income Management">Income Management</option>
+                <option value="Integration">Integration</option>
+              </select>
             </div>
           </div>
         </div>

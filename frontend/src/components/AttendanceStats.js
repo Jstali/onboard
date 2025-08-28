@@ -11,6 +11,7 @@ const AttendanceStats = () => {
 
   useEffect(() => {
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth, selectedYear]);
 
   const fetchStats = async () => {
@@ -26,11 +27,7 @@ const AttendanceStats = () => {
 
   const COLORS = ['#22c55e', '#3b82f6', '#ef4444'];
 
-  const chartData = stats ? [
-    { name: 'Present', value: stats.stats.Present, color: COLORS[0] },
-    { name: 'Work From Home', value: stats.stats['Work From Home'], color: COLORS[1] },
-    { name: 'Leave', value: stats.stats.Leave, color: COLORS[2] }
-  ] : [];
+  // Pie chart removed; keep placeholder for future use
 
   if (loading) {
     return (

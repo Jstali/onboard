@@ -24,6 +24,7 @@ const HRLeaveApproval = () => {
       fetchPendingRequests();
       fetchAllRequests();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const fetchPendingRequests = async () => {
@@ -88,7 +89,7 @@ const HRLeaveApproval = () => {
     setMessage("");
 
     try {
-      const response = await axios.put(
+      await axios.put(
         `http://localhost:5001/api/leave/hr/${request.id}/approve`,
         { action, notes: "" },
         {
@@ -162,9 +163,9 @@ const HRLeaveApproval = () => {
         return "text-green-600 bg-green-100";
       case "Rejected":
         return "text-red-600 bg-red-100";
-      case "Manager Approved":
+      case "manager_approved":
         return "text-blue-600 bg-blue-100";
-      case "Pending":
+      case "pending_manager_approval":
         return "text-yellow-600 bg-yellow-100";
       default:
         return "text-gray-600 bg-gray-100";

@@ -7,12 +7,7 @@ import {
   FaSearch,
   FaSave,
   FaTimes,
-  FaCheck,
   FaUser,
-  FaEnvelope,
-  FaUserTag,
-  FaToggleOn,
-  FaToggleOff,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -30,7 +25,7 @@ const EmployeeCRUD = () => {
     first_name: "",
     last_name: "",
     email: "",
-    role: "employee",
+    role: "Product Developer",
     status: "active",
   });
 
@@ -66,8 +61,7 @@ const EmployeeCRUD = () => {
       first_name: "",
       last_name: "",
       email: "",
-      role: "employee",
-      status: "active",
+      job_role: "Product Developer",
     });
   };
 
@@ -78,15 +72,13 @@ const EmployeeCRUD = () => {
         return;
       }
 
-      const response = await axios.post(
-        "http://localhost:5001/api/hr/employees",
-        {
-          name: `${formData.first_name} ${formData.last_name}`,
-          email: formData.email,
-          type: "Full-Time",
-          doj: new Date().toISOString(),
-        }
-      );
+      await axios.post("http://localhost:5001/api/hr/employees", {
+        name: `${formData.first_name} ${formData.last_name}`,
+        email: formData.email,
+        role: formData.role,
+        type: "Full-Time",
+        doj: new Date().toISOString(),
+      });
 
       toast.success("Employee created successfully");
       setShowAddModal(false);
@@ -104,8 +96,7 @@ const EmployeeCRUD = () => {
       first_name: employee.first_name || "",
       last_name: employee.last_name || "",
       email: employee.email || "",
-      role: employee.role || "employee",
-      status: employee.status || "active",
+      job_role: employee.assigned_job_role || "Product Developer",
     });
     setShowEditModal(true);
   };
@@ -114,7 +105,7 @@ const EmployeeCRUD = () => {
     try {
       if (!selectedEmployee) return;
 
-      const response = await axios.put(
+      await axios.put(
         `http://localhost:5001/api/hr/employees/${selectedEmployee.id}`,
         formData
       );
@@ -259,7 +250,13 @@ const EmployeeCRUD = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Employee
+                    Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Employee ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Role
@@ -287,10 +284,17 @@ const EmployeeCRUD = () => {
                           <div className="text-sm font-medium text-gray-900">
                             {employee.first_name} {employee.last_name}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {employee.email}
-                          </div>
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {employee.assigned_employee_id || employee.id}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {employee.email}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -392,6 +396,24 @@ const EmployeeCRUD = () => {
                     required
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Role *
+                  </label>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="Product Developer">Product Developer</option>
+                    <option value="SAP">SAP</option>
+                    <option value="Income Management">Income Management</option>
+                    <option value="Integration">Integration</option>
+                  </select>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
@@ -469,32 +491,18 @@ const EmployeeCRUD = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Role
+                    Job Role
                   </label>
                   <select
-                    name="role"
-                    value={formData.role}
+                    name="job_role"
+                    value={formData.job_role}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500"
                   >
-                    <option value="employee">Employee</option>
-                    <option value="manager">Manager</option>
-                    <option value="hr">HR</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="Product Developer">Product Developer</option>
+                    <option value="SAP">SAP</option>
+                    <option value="Income Management">Income Management</option>
+                    <option value="Integration">Integration</option>
                   </select>
                 </div>
               </div>

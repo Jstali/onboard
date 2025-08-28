@@ -29,9 +29,14 @@ const calculateLeaveDays = (fromDate, toDate, halfDay) => {
 // Helper function to get employee's manager
 const getEmployeeManager = async (employeeId) => {
   try {
-    // First get the manager name from onboarded_employees
+    // First get the manager information from employee_master table
     const employeeResult = await pool.query(
-      `SELECT manager_name FROM onboarded_employees WHERE user_id = $1`,
+      `SELECT em.manager_name, em.manager_id, m.email
+       FROM employee_master em
+       LEFT JOIN managers m ON em.manager_id = m.manager_id
+       WHERE em.company_email = (
+         SELECT email FROM users WHERE id = $1
+       )`,
       [employeeId]
     );
 
@@ -43,23 +48,38 @@ const getEmployeeManager = async (employeeId) => {
       return null;
     }
 
-    const managerName = employeeResult.rows[0].manager_name;
+    const employee = employeeResult.rows[0];
 
-    // Then get the manager details from managers table
+    // Then get the manager details from managers table and users table
     const managerResult = await pool.query(
-      `SELECT manager_name, email FROM managers WHERE manager_name = $1 AND status = 'active'`,
-      [managerName]
+      `SELECT m.manager_name, m.email, u.id as user_id
+       FROM managers m
+       LEFT JOIN users u ON u.email = m.email
+       WHERE m.manager_id = $1 AND m.status = 'active'`,
+      [employee.manager_id]
     );
 
     console.log(
       "🔍 Manager lookup for employee",
       employeeId,
+      "Manager ID:",
+      employee.manager_id,
       "Manager name:",
-      managerName,
+      employee.manager_name,
       "Result:",
       managerResult.rows
     );
-    return managerResult.rows[0] || null;
+
+    if (managerResult.rows.length > 0) {
+      const manager = managerResult.rows[0];
+      return {
+        id: manager.user_id,
+        manager_name: manager.manager_name,
+        email: manager.email,
+      };
+    }
+
+    return null;
   } catch (error) {
     console.error("Error getting employee manager:", error);
     return null;
@@ -272,13 +292,14 @@ router.post(
       // Get employee's manager
       const manager = await getEmployeeManager(employeeId);
 
-      // Insert leave request with approval token
+      // Insert leave request with approval token and manager info
       const insertResult = await pool.query(
         `
       INSERT INTO leave_requests (
         series, employee_id, employee_name, leave_type, leave_balance_before,
-        from_date, to_date, half_day, total_leave_days, reason, approval_token
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        from_date, to_date, half_day, total_leave_days, reason, 
+        status, manager_id, manager_name, approval_token
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *
     `,
         [
@@ -292,6 +313,9 @@ router.post(
           halfDay,
           totalLeaveDays,
           reason,
+          "pending_manager_approval", // Start with manager approval
+          manager ? manager.id : null,
+          manager ? manager.manager_name : null,
           approvalToken,
         ]
       );
@@ -299,6 +323,7 @@ router.post(
       const leaveRequest = insertResult.rows[0];
 
       // Send email notification to manager with approval buttons
+      console.log("🔍 Manager found:", manager);
       if (manager) {
         const emailData = {
           id: leaveRequest.id,
@@ -311,7 +336,20 @@ router.post(
           approvalToken,
         };
 
-        await sendLeaveRequestToManager(manager.email, emailData);
+        console.log("📧 Sending email to manager:", manager.email);
+        console.log("📧 Email data:", emailData);
+
+        try {
+          const emailResult = await sendLeaveRequestToManager(
+            manager.email,
+            emailData
+          );
+          console.log("📧 Email send result:", emailResult);
+        } catch (emailError) {
+          console.error("❌ Email sending failed:", emailError);
+        }
+      } else {
+        console.log("❌ No manager found for employee:", employeeId);
       }
 
       res.status(201).json({
@@ -367,7 +405,7 @@ router.get("/manager/pending", authenticateToken, async (req, res) => {
       SELECT lr.*, u.email as employee_email
       FROM leave_requests lr
       JOIN users u ON lr.employee_id = u.id
-      WHERE lr.status = 'Pending'
+      WHERE lr.status = 'pending_manager_approval'
       ORDER BY lr.created_at ASC
     `);
 
@@ -415,7 +453,7 @@ router.get("/approve/:id", async (req, res) => {
     const leaveRequest = tokenResult.rows[0];
 
     // Check if already processed
-    if (leaveRequest.status !== "Pending") {
+    if (leaveRequest.status !== "pending_manager_approval") {
       return res.status(400).json({
         error: "Request already processed",
         message: `This request has already been ${leaveRequest.status.toLowerCase()}`,
@@ -423,7 +461,7 @@ router.get("/approve/:id", async (req, res) => {
     }
 
     // Update the request status
-    const newStatus = action === "approve" ? "Manager Approved" : "Rejected";
+    const newStatus = action === "approve" ? "manager_approved" : "rejected";
     const updateResult = await pool.query(
       `UPDATE leave_requests 
        SET status = $1, 
@@ -568,7 +606,7 @@ router.put(
       const managerName = `${managerResult.rows[0].first_name} ${managerResult.rows[0].last_name}`;
 
       // Update leave request
-      const status = action === "approve" ? "Manager Approved" : "Rejected";
+      const status = action === "approve" ? "manager_approved" : "rejected";
       const updateResult = await pool.query(
         `
       UPDATE leave_requests 
@@ -646,7 +684,7 @@ router.get("/hr/pending", authenticateToken, async (req, res) => {
       SELECT lr.*, u.email as employee_email
       FROM leave_requests lr
       JOIN users u ON lr.employee_id = u.id
-      WHERE lr.status = 'Manager Approved'
+      WHERE lr.status = 'manager_approved'
       ORDER BY lr.manager_approved_at ASC
     `);
 
@@ -696,7 +734,7 @@ router.put(
       const hrName = `${hrResult.rows[0].first_name} ${hrResult.rows[0].last_name}`;
 
       // Update leave request
-      const status = action === "approve" ? "Approved" : "Rejected";
+      const status = action === "approve" ? "approved" : "rejected";
       const updateResult = await pool.query(
         `
       UPDATE leave_requests 

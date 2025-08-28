@@ -6,6 +6,7 @@ const {
   requireEmployee,
   requireHR,
 } = require("../middleware/auth");
+const crypto = require("crypto");
 
 const router = express.Router();
 
@@ -388,41 +389,155 @@ router.post(
   ],
   async (req, res) => {
     try {
+      console.log("🔍 Leave request received:", req.body);
+      console.log("🔍 User ID:", req.user.userId);
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("❌ Validation errors:", errors.array());
         return res.status(400).json({ errors: errors.array() });
       }
 
       const { startDate, endDate, leaveType, reason } = req.body;
 
-      // Check if employee is onboarded
+      // Check if employee is onboarded and get employee details
+      console.log("🔍 Checking if employee is onboarded...");
       const onboardedResult = await pool.query(
         `
-      SELECT em.id FROM employee_master em
+      SELECT em.id, em.employee_name, em.manager_name, em.manager_id, u.email
+      FROM employee_master em
       JOIN users u ON em.company_email = u.email
       WHERE u.id = $1
     `,
         [req.user.userId]
       );
 
+      console.log("🔍 Onboarded result:", onboardedResult.rows);
+
       if (onboardedResult.rows.length === 0) {
+        console.log("❌ Employee not onboarded");
         return res.status(403).json({
           error: "Only onboarded employees can submit leave requests",
         });
       }
 
+      const employee = onboardedResult.rows[0];
+      console.log("🔍 Employee details:", employee);
+
+      // Calculate total days first
+      const start = new Date(startDate);
+      const end = new Date(endDate || startDate); // Handle single day leave
+      const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
       // Insert leave request
-      await pool.query(
+      const leaveResult = await pool.query(
         `
-      INSERT INTO leave_requests (employee_id, start_date, end_date, leave_type, reason)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO leave_requests (
+        series, 
+        employee_id, 
+        employee_name, 
+        leave_type, 
+        leave_balance_before, 
+        from_date, 
+        to_date, 
+        total_leave_days, 
+        reason, 
+        status,
+        manager_name
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING id
       `,
-        [req.user.userId, startDate, endDate, leaveType, reason]
+        [
+          `LR-${require("crypto")
+            .randomBytes(8)
+            .toString("hex")
+            .toUpperCase()}-${require("crypto")
+            .randomBytes(6)
+            .toString("hex")
+            .toUpperCase()}`,
+          req.user.userId,
+          employee.employee_name,
+          leaveType,
+          27, // Default leave balance
+          startDate,
+          endDate || startDate, // Use startDate if endDate is null
+          totalDays,
+          reason,
+          "pending_manager_approval",
+          employee.manager_name || null,
+        ]
       );
+
+      const leaveRequestId = leaveResult.rows[0].id;
+
+      // Send email notification to manager if manager exists
+      if (employee.manager_id && employee.manager_name) {
+        try {
+          // Get manager email from managers table
+          const managerResult = await pool.query(
+            "SELECT email FROM managers WHERE manager_id = $1",
+            [employee.manager_id]
+          );
+
+          if (managerResult.rows.length > 0) {
+            const managerEmail = managerResult.rows[0].email;
+
+            // Import mailer function
+            const { sendLeaveRequestToManager } = require("../utils/mailer");
+
+            // Prepare leave request data for email
+            const leaveRequestData = {
+              id: leaveRequestId,
+              employeeName: employee.employee_name,
+              leaveType: leaveType,
+              fromDate: startDate,
+              toDate: endDate,
+              totalDays: totalDays,
+              reason: reason,
+              approvalToken: crypto.randomBytes(32).toString("hex"),
+            };
+
+            // Send email to manager
+            const emailSent = await sendLeaveRequestToManager(
+              managerEmail,
+              leaveRequestData
+            );
+
+            if (emailSent) {
+              console.log(
+                `✅ Leave request email sent to manager: ${managerEmail}`
+              );
+            } else {
+              console.log(
+                `❌ Failed to send leave request email to manager: ${managerEmail}`
+              );
+            }
+          } else {
+            console.log(
+              `⚠️ Manager not found for employee: ${employee.employee_name}`
+            );
+          }
+        } catch (emailError) {
+          console.error("❌ Email notification error:", emailError);
+          // Don't fail the request if email fails
+        }
+      } else {
+        console.log(
+          `⚠️ No manager assigned for employee: ${employee.employee_name}`
+        );
+      }
 
       res.status(201).json({
         message: "Leave request submitted successfully",
-        leaveRequest: { startDate, endDate, leaveType, reason },
+        leaveRequest: {
+          id: leaveRequestId,
+          startDate,
+          endDate,
+          leaveType,
+          reason,
+          status: "pending_manager_approval",
+        },
       });
     } catch (error) {
       console.error("Submit leave request error:", error);

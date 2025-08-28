@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { FaSignOutAlt, FaUserEdit, FaCalendarAlt, FaCheckCircle, FaClock, FaClipboardList, FaCalendarPlus } from 'react-icons/fa';
+import { FaSignOutAlt, FaUserEdit, FaCalendarAlt, FaCheckCircle, FaClock, FaCalendarPlus } from 'react-icons/fa';
 import axios from 'axios';
-import toast from 'react-hot-toast';
 import OnboardingForm from './OnboardingForm';
 import OnboardingStatus from './OnboardingStatus';
 import { Link } from 'react-router-dom';

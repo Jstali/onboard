@@ -114,7 +114,8 @@ router.get("/employees", async (req, res) => {
         em.department,
         em.designation,
         em.salary_band,
-        em.location
+        em.location,
+        COALESCE(em.role, 'Not Assigned') as assigned_job_role
       FROM users u
       LEFT JOIN employee_forms ef ON u.id = ef.employee_id
       LEFT JOIN employee_master em ON u.email = em.company_email
@@ -882,17 +883,86 @@ router.put(
 router.delete("/employees/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    console.log("🔍 Deleting employee with ID:", id);
 
-    // Delete from all related tables
-    await pool.query("DELETE FROM attendance WHERE employee_id = $1", [id]);
-    await pool.query("DELETE FROM leave_requests WHERE employee_id = $1", [id]);
-    await pool.query("DELETE FROM employee_forms WHERE employee_id = $1", [id]);
-    await pool.query("DELETE FROM users WHERE id = $1", [id]);
+    // Check if employee exists first
+    const employeeCheck = await pool.query(
+      "SELECT id, email FROM users WHERE id = $1",
+      [id]
+    );
+    if (employeeCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    console.log("🔍 Employee found:", employeeCheck.rows[0]);
+
+    // Delete from all related tables in the correct order
+    try {
+      // Delete from attendance table
+      const attendanceResult = await pool.query(
+        "DELETE FROM attendance WHERE employee_id = $1",
+        [id]
+      );
+      console.log("✅ Attendance records deleted:", attendanceResult.rowCount);
+
+      // Delete from leave_requests table
+      const leaveResult = await pool.query(
+        "DELETE FROM leave_requests WHERE employee_id = $1",
+        [id]
+      );
+      console.log("✅ Leave requests deleted:", leaveResult.rowCount);
+
+      // Delete from leave_balances table (using user ID directly)
+      const balanceResult = await pool.query(
+        "DELETE FROM leave_balances WHERE employee_id = $1",
+        [id]
+      );
+      console.log("✅ Leave balances deleted:", balanceResult.rowCount);
+
+      // Delete from employee_forms table
+      const formsResult = await pool.query(
+        "DELETE FROM employee_forms WHERE employee_id = $1",
+        [id]
+      );
+      console.log("✅ Employee forms deleted:", formsResult.rowCount);
+
+      // Delete from onboarded_employees table
+      const onboardedResult = await pool.query(
+        "DELETE FROM onboarded_employees WHERE user_id = $1",
+        [id]
+      );
+      console.log("✅ Onboarded records deleted:", onboardedResult.rowCount);
+
+      // Delete from employee_master table (if exists)
+      const masterResult = await pool.query(
+        "DELETE FROM employee_master WHERE company_email = (SELECT email FROM users WHERE id = $1)",
+        [id]
+      );
+      console.log("✅ Master records deleted:", masterResult.rowCount);
+
+      // Finally delete from users table
+      const userResult = await pool.query("DELETE FROM users WHERE id = $1", [
+        id,
+      ]);
+      console.log("✅ User deleted:", userResult.rowCount);
+    } catch (deleteError) {
+      console.error("❌ Error during deletion process:", deleteError);
+      throw deleteError;
+    }
 
     res.json({ message: "Employee deleted successfully" });
   } catch (error) {
-    console.error("Delete employee error:", error);
-    res.status(500).json({ error: "Failed to delete employee" });
+    console.error("❌ Delete employee error:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      error: "Failed to delete employee",
+      details: error.message,
+    });
   }
 });
 
@@ -930,10 +1000,11 @@ router.post(
     body("employeeName").notEmpty().trim(),
     body("employeeId").notEmpty().trim(),
     body("companyEmail").isEmail().normalizeEmail(),
-    body("managerId").notEmpty().trim(),
-    body("managerName").notEmpty().trim(),
-    body("department").notEmpty().trim(),
+    body("managerId").optional().trim(),
+    body("managerName").optional().trim(),
+    body("department").optional().trim(),
     body("location").optional().trim(),
+    body("role").notEmpty().trim(),
     body("doj").isISO8601().toDate(),
   ],
   async (req, res) => {
@@ -961,6 +1032,7 @@ router.post(
         managerName,
         department,
         location,
+        role,
         doj,
       } = req.body;
 
@@ -1035,13 +1107,14 @@ router.post(
         manager_id,
         manager_name,
         type,
+        role,
         doj,
         status,
         department,
         location,
         created_at,
         updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
         [
           employeeId,
           employeeName,
@@ -1049,6 +1122,7 @@ router.post(
           managerId,
           managerName,
           "Full-Time", // Default type
+          role,
           doj,
           "active", // Default status
           department,
@@ -1058,6 +1132,8 @@ router.post(
 
       // Initialize leave balance for the new employee
       const currentYear = new Date().getFullYear();
+
+      // Insert leave balance using the user ID (since leave_balances.employee_id references users.id)
       await pool.query(
         `INSERT INTO leave_balances (
         employee_id, 
@@ -1113,8 +1189,7 @@ router.put(
     body("first_name").optional().trim(),
     body("last_name").optional().trim(),
     body("email").optional().isEmail().normalizeEmail(),
-    body("role").optional().isIn(["employee", "hr", "manager"]),
-    body("status").optional().isIn(["active", "inactive"]),
+    body("job_role").optional().trim(), // Job role (Product Developer, SAP, etc.)
   ],
   async (req, res) => {
     try {
@@ -1124,47 +1199,96 @@ router.put(
       }
 
       const { id } = req.params;
-      const updates = req.body;
+      const { first_name, last_name, email, job_role } = req.body;
 
-      // Build dynamic update query
-      const fields = [];
-      const values = [];
-      let paramCounter = 1;
+      // Start a transaction
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
 
-      Object.keys(updates).forEach((key) => {
-        if (updates[key] !== undefined && updates[key] !== null) {
-          fields.push(`${key} = $${paramCounter}`);
-          values.push(updates[key]);
-          paramCounter++;
+        // Update users table
+        const userUpdates = [];
+        const userValues = [];
+        let userParamCounter = 1;
+
+        if (first_name !== undefined) {
+          userUpdates.push(`first_name = $${userParamCounter}`);
+          userValues.push(first_name);
+          userParamCounter++;
         }
-      });
+        if (last_name !== undefined) {
+          userUpdates.push(`last_name = $${userParamCounter}`);
+          userValues.push(last_name);
+          userParamCounter++;
+        }
+        if (email !== undefined) {
+          userUpdates.push(`email = $${userParamCounter}`);
+          userValues.push(email);
+          userParamCounter++;
+        }
 
-      if (fields.length === 0) {
-        return res.status(400).json({ error: "No valid fields to update" });
+        if (userUpdates.length > 0) {
+          userUpdates.push(`updated_at = CURRENT_TIMESTAMP`);
+          const userQuery = `
+            UPDATE users 
+            SET ${userUpdates.join(", ")}
+            WHERE id = $${userParamCounter}
+            RETURNING id, first_name, last_name, email, role, created_at, updated_at
+          `;
+          userValues.push(id);
+
+          const userResult = await client.query(userQuery, userValues);
+          if (userResult.rows.length === 0) {
+            throw new Error("Employee not found");
+          }
+        }
+
+        // Update employee_master table if job_role is provided
+        if (job_role !== undefined) {
+          const masterQuery = `
+            UPDATE employee_master 
+            SET role = $1, updated_at = CURRENT_TIMESTAMP
+            WHERE company_email = (SELECT email FROM users WHERE id = $2)
+            RETURNING id
+          `;
+
+          const masterResult = await client.query(masterQuery, [job_role, id]);
+          console.log(
+            `Updated employee_master role for user ${id}: ${masterResult.rowCount} rows affected`
+          );
+        }
+
+        await client.query("COMMIT");
+
+        // Get updated employee data
+        const finalResult = await client.query(
+          `
+          SELECT 
+            u.id, 
+            u.first_name, 
+            u.last_name, 
+            u.email, 
+            u.role, 
+            u.created_at, 
+            u.updated_at,
+            em.role as job_role
+          FROM users u
+          LEFT JOIN employee_master em ON u.email = em.company_email
+          WHERE u.id = $1
+        `,
+          [id]
+        );
+
+        res.json({
+          message: "Employee updated successfully",
+          employee: finalResult.rows[0],
+        });
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
       }
-
-      // Add updated_at timestamp
-      fields.push(`updated_at = CURRENT_TIMESTAMP`);
-
-      const query = `
-      UPDATE users 
-      SET ${fields.join(", ")}
-      WHERE id = $${paramCounter}
-      RETURNING id, first_name, last_name, email, role, status, created_at, updated_at
-    `;
-
-      values.push(id);
-
-      const result = await pool.query(query, values);
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Employee not found" });
-      }
-
-      res.json({
-        message: "Employee updated successfully",
-        employee: result.rows[0],
-      });
     } catch (error) {
       console.error("Update employee error:", error);
       res.status(500).json({ error: "Failed to update employee" });
@@ -1185,7 +1309,6 @@ router.get("/employees/:id", async (req, res) => {
         u.first_name,
         u.last_name,
         u.role,
-        u.status,
         u.created_at,
         u.updated_at,
         ef.full_name as form_name,

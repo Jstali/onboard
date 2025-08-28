@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  FaPlus,
   FaUsers,
-  FaChartPie,
   FaCalendarAlt,
   FaSignOutAlt,
   FaClipboardList,
-  FaChartBar,
-  FaUserPlus,
   FaCalendarCheck,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
 import AddEmployeeModal from "./AddEmployeeModal";
-import EmployeeList from "./EmployeeList";
+// EmployeeList removed
 import AttendanceStats from "./AttendanceStats";
 import EmployeeMaster from "./EmployeeMaster";
 import HRLeaveApproval from "./HRLeaveApproval";
@@ -27,9 +23,9 @@ const HRDashboard = () => {
   const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState("employees");
   const [showAddEmployee, setShowAddEmployee] = useState(false);
-  const [employees, setEmployees] = useState([]);
+  // const [employees, setEmployees] = useState([]);
   const [masterEmployees, setMasterEmployees] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Debug logging
@@ -54,12 +50,10 @@ const HRDashboard = () => {
         "http://localhost:5001/api/hr/employees"
       );
       console.log("✅ Employees fetched:", response.data);
-      setEmployees(response.data.employees);
+      // setEmployees(response.data.employees); // Unused - handled by EmployeeCRUD component
     } catch (error) {
       console.error("❌ Error fetching employees:", error);
       toast.error("Failed to fetch employees");
-    } finally {
-      setLoading(false);
     }
   };
 

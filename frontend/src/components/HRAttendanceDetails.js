@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { FaSearch, FaCalendarAlt, FaUsers, FaDownload } from 'react-icons/fa';
-import { format } from 'date-fns';
-import axios from 'axios';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { FaCalendarAlt, FaUsers, FaDownload } from "react-icons/fa";
+import { format } from "date-fns";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const HRAttendanceDetails = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     fetchAttendanceDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth, selectedYear]);
 
   const fetchAttendanceDetails = async () => {
@@ -25,8 +26,8 @@ const HRAttendanceDetails = () => {
       );
       setAttendanceRecords(response.data.records || []);
     } catch (error) {
-      console.error('Error fetching attendance details:', error);
-      toast.error('Failed to fetch attendance details');
+      console.error("Error fetching attendance details:", error);
+      toast.error("Failed to fetch attendance details");
     } finally {
       setLoading(false);
     }
@@ -35,11 +36,11 @@ const HRAttendanceDetails = () => {
   const getStatusBadge = (status) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     switch (status) {
-      case 'Present':
+      case "Present":
         return `${baseClasses} bg-green-100 text-green-800`;
-      case 'Work From Home':
+      case "Work From Home":
         return `${baseClasses} bg-blue-100 text-blue-800`;
-      case 'Leave':
+      case "Leave":
         return `${baseClasses} bg-red-100 text-red-800`;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
@@ -47,22 +48,24 @@ const HRAttendanceDetails = () => {
   };
 
   const formatDate = (dateString) => {
-    return format(new Date(dateString), 'MMM dd, yyyy');
+    return format(new Date(dateString), "MMM dd, yyyy");
   };
 
   const formatTime = (timeString) => {
-    if (!timeString) return '-';
-    return format(new Date(timeString), 'hh:mm a');
+    if (!timeString) return "-";
+    return format(new Date(timeString), "hh:mm a");
   };
 
-  const filteredRecords = attendanceRecords.filter(record => {
-    const matchesSearch = !searchTerm || 
+  const filteredRecords = attendanceRecords.filter((record) => {
+    const matchesSearch =
+      !searchTerm ||
       record.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.employee_email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDate = !selectedDate || 
-      format(new Date(record.date), 'yyyy-MM-dd') === selectedDate;
-    
+
+    const matchesDate =
+      !selectedDate ||
+      format(new Date(record.date), "yyyy-MM-dd") === selectedDate;
+
     const matchesStatus = !selectedStatus || record.status === selectedStatus;
 
     return matchesSearch && matchesDate && matchesStatus;
@@ -104,7 +107,7 @@ const HRAttendanceDetails = () => {
             >
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i + 1} value={i + 1}>
-                  {format(new Date(2025, i, 1), 'MMMM')}
+                  {format(new Date(2025, i, 1), "MMMM")}
                 </option>
               ))}
             </select>
@@ -174,7 +177,8 @@ const HRAttendanceDetails = () => {
           <div className="flex items-center space-x-4">
             <FaUsers className="text-gray-400" />
             <span className="text-sm text-gray-600">
-              Showing {filteredRecords.length} of {attendanceRecords.length} records
+              Showing {filteredRecords.length} of {attendanceRecords.length}{" "}
+              records
             </span>
           </div>
         </div>
@@ -219,11 +223,14 @@ const HRAttendanceDetails = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredRecords.map((record) => (
-                  <tr key={`${record.employee_id}-${record.date}`} className="hover:bg-gray-50">
+                  <tr
+                    key={`${record.employee_id}-${record.date}`}
+                    className="hover:bg-gray-50"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {record.employee_name || 'Unknown'}
+                          {record.employee_name || "Unknown"}
                         </div>
                         <div className="text-sm text-gray-500">
                           {record.employee_email}
@@ -245,7 +252,7 @@ const HRAttendanceDetails = () => {
                       {formatTime(record.clock_out_time)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {record.reason || '-'}
+                      {record.reason || "-"}
                     </td>
                   </tr>
                 ))}

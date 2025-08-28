@@ -1,0 +1,41 @@
+✅ Connected to PostgreSQL database
+✅ Database tables initialized successfully
+🚀 Server running on port 5001
+📧 Email configured for: alphanxzen@gmail.com
+🔍 Leave request received: {
+  leaveType: 'Casual Leave',
+  fromDate: '2025-09-05',
+  toDate: null,
+  halfDay: false,
+  reason: 'fuyyugug',
+  totalDays: 1
+}
+🔍 Request body types: {
+  leaveType: 'string',
+  fromDate: 'string',
+  toDate: 'object',
+  reason: 'string',
+  halfDay: 'boolean'
+}
+🔍 User: { userId: 26, email: 'stalinstalin11112@gmail.com', role: 'employee' }
+🔍 Manager lookup for employee 26 Manager ID: MGR001 Manager name: Pradeep Result: [
+  {
+    manager_name: 'Pradeep',
+    email: 'pradeep@company.com',
+    user_id: 22
+  }
+]
+🔍 Manager found: { id: 22, manager_name: 'Pradeep', email: 'pradeep@company.com' }
+📧 Sending email to manager: pradeep@company.com
+📧 Email data: {
+  id: 24,
+  employeeName: 'stalin j',
+  leaveType: 'Casual Leave',
+  fromDate: '2025-09-05',
+  toDate: null,
+  totalDays: 1,
+  reason: 'fuyyugug',
+  approvalToken: '227df27e98c0d6c731abd3272dd561bdad4efe53487f1a7730ebb04474fe04d4'
+}
+✅ Leave request email sent to manager: pradeep@company.com
+📧 Email send result: true

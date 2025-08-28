@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaInfoCircle, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaInfoCircle, FaClock, FaCheckCircle } from 'react-icons/fa';
 
 const OnboardingStatus = ({ status }) => {
   if (!status) return null;

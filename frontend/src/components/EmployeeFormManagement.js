@@ -3,7 +3,6 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import {
   FaEye,
-  FaEdit,
   FaTrash,
   FaDownload,
   FaSearch,
@@ -133,7 +132,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
       )
     ) {
       try {
-        const response = await axios.put(
+        await axios.put(
           `http://localhost:5001/api/hr/employee-forms/${form.id}/approve`,
           {
             action: "approve",
@@ -159,7 +158,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
       )
     ) {
       try {
-        const response = await axios.put(
+        await axios.put(
           `http://localhost:5001/api/hr/employee-forms/${form.id}/approve`,
           {
             action: "reject",

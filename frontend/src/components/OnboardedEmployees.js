@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { FaUserCheck, FaEdit, FaEye, FaTrash } from "react-icons/fa";
+import { FaEdit, FaEye, FaTrash } from "react-icons/fa";
 
 const OnboardedEmployees = ({ onRefresh }) => {
   const [onboardedEmployees, setOnboardedEmployees] = useState([]);
@@ -19,6 +19,18 @@ const OnboardedEmployees = ({ onRefresh }) => {
   useEffect(() => {
     fetchOnboardedEmployees();
   }, []);
+
+  // Ensure form data is properly initialized when modal opens
+  useEffect(() => {
+    if (showAssignmentModal) {
+      setAssignmentData({
+        name: "",
+        companyEmail: "",
+        manager: "",
+        employeeId: "",
+      });
+    }
+  }, [showAssignmentModal]);
 
   const fetchOnboardedEmployees = async () => {
     try {
@@ -41,6 +53,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
       name: "",
       companyEmail: "",
       manager: "",
+      employeeId: "",
     });
     setShowAssignmentModal(true);
   };
@@ -58,6 +71,9 @@ const OnboardedEmployees = ({ onRefresh }) => {
         return;
       }
 
+      console.log("🔍 Submitting assignment data:", assignmentData);
+      console.log("🔍 Selected employee ID:", selectedEmployee.id);
+
       await axios.put(
         `http://localhost:5001/api/hr/onboarded/${selectedEmployee.id}/assign`,
         assignmentData
@@ -70,6 +86,10 @@ const OnboardedEmployees = ({ onRefresh }) => {
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error("Assignment error:", error);
+      console.error("Error response:", error.response?.data);
+      if (error.response?.data?.errors) {
+        console.error("Validation errors:", error.response.data.errors);
+      }
       toast.error(
         error.response?.data?.error || "Failed to assign employee details"
       );

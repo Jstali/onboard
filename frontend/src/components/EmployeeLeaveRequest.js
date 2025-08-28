@@ -4,7 +4,7 @@ import axios from "axios";
 import { format } from "date-fns";
 
 const EmployeeLeaveRequest = () => {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [leaveBalance, setLeaveBalance] = useState(null);
   const [myRequests, setMyRequests] = useState([]);
@@ -25,6 +25,7 @@ const EmployeeLeaveRequest = () => {
       fetchLeaveBalance();
       fetchMyRequests();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const fetchLeaveTypes = async () => {
@@ -133,15 +134,11 @@ const EmployeeLeaveRequest = () => {
       console.log("🔍 Frontend - Data being sent:", requestData);
       console.log("🔍 Frontend - Token available:", !!token);
 
-      const response = await axios.post(
-        "http://localhost:5001/api/leave/submit",
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.post("http://localhost:5001/api/leave/submit", requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setMessage("Leave request submitted successfully!");
       setFormData({
@@ -171,9 +168,9 @@ const EmployeeLeaveRequest = () => {
         return "text-green-600 bg-green-100";
       case "Rejected":
         return "text-red-600 bg-red-100";
-      case "Manager Approved":
+      case "manager_approved":
         return "text-blue-600 bg-blue-100";
-      case "Pending":
+      case "pending_manager_approval":
         return "text-yellow-600 bg-yellow-100";
       default:
         return "text-gray-600 bg-gray-100";

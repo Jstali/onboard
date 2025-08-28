@@ -7,14 +7,7 @@ import {
   FaHome,
   FaBed,
 } from "react-icons/fa";
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  isSameDay,
-  isWeekend,
-} from "date-fns";
+import { format } from "date-fns";
 import axios from "axios";
 import toast from "react-hot-toast";
 import AttendanceCalendar from "./AttendanceCalendar";

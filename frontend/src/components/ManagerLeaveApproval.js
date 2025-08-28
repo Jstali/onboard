@@ -21,6 +21,7 @@ const ManagerLeaveApproval = () => {
     if (token) {
       fetchPendingRequests();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const fetchLeaveTypes = async () => {

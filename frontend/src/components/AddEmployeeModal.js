@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
-import { FaTimes, FaUser, FaEnvelope, FaCalendarAlt } from 'react-icons/fa';
+import React, { useState } from "react";
+import { FaTimes, FaUser, FaEnvelope, FaCalendarAlt } from "react-icons/fa";
 
 const AddEmployeeModal = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    type: 'Full-Time',
-    doj: ''
+    name: "",
+    email: "",
+    type: "Full-Time",
+    role: "Product Developer",
+    doj: "",
   });
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -25,7 +26,7 @@ const AddEmployeeModal = ({ onClose, onSubmit }) => {
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error('Failed to add employee:', error);
+      console.error("Failed to add employee:", error);
     } finally {
       setLoading(false);
     }
@@ -35,7 +36,9 @@ const AddEmployeeModal = ({ onClose, onSubmit }) => {
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Add New Employee</h3>
+          <h3 className="text-lg font-medium text-gray-900">
+            Add New Employee
+          </h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -43,7 +46,7 @@ const AddEmployeeModal = ({ onClose, onSubmit }) => {
             <FaTimes className="w-5 h-5" />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -61,7 +64,7 @@ const AddEmployeeModal = ({ onClose, onSubmit }) => {
               />
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email *
@@ -78,7 +81,7 @@ const AddEmployeeModal = ({ onClose, onSubmit }) => {
               />
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Employment Type *
@@ -95,7 +98,25 @@ const AddEmployeeModal = ({ onClose, onSubmit }) => {
               <option value="Intern">Intern</option>
             </select>
           </div>
-          
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Role *
+            </label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleInputChange}
+              className="input-field"
+              required
+            >
+              <option value="Product Developer">Product Developer</option>
+              <option value="SAP">SAP</option>
+              <option value="Income Management">Income Management</option>
+              <option value="Integration">Integration</option>
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Date of Joining *
@@ -114,22 +135,14 @@ const AddEmployeeModal = ({ onClose, onSubmit }) => {
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-secondary"
-            >
+            <button type="button" onClick={onClose} className="btn-secondary">
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary"
-            >
+            <button type="submit" disabled={loading} className="btn-primary">
               {loading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               ) : (
-                'Add Employee'
+                "Add Employee"
               )}
             </button>
           </div>

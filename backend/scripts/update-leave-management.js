@@ -1,13 +1,13 @@
-require('dotenv').config({ path: './config.env' });
-const { pool } = require('../config/database.js');
+require("dotenv").config({ path: "./config.env" });
+const { pool } = require("../config/database.js");
 
 async function updateLeaveManagementStructure() {
   try {
-    console.log('🔄 Updating Leave Management Database Structure...');
+    console.log("🔄 Updating Leave Management Database Structure...");
 
     // Drop existing leave_requests table if it exists (to recreate with new schema)
-    await pool.query('DROP TABLE IF EXISTS leave_requests CASCADE');
-    console.log('✅ Dropped existing leave_requests table');
+    await pool.query("DROP TABLE IF EXISTS leave_requests CASCADE");
+    console.log("✅ Dropped existing leave_requests table");
 
     // Create leave_types table
     await pool.query(`
@@ -20,7 +20,7 @@ async function updateLeaveManagementStructure() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    console.log('✅ Created leave_types table');
+    console.log("✅ Created leave_types table");
 
     // Create leave_balances table
     await pool.query(`
@@ -37,7 +37,7 @@ async function updateLeaveManagementStructure() {
         FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
-    console.log('✅ Created leave_balances table');
+    console.log("✅ Created leave_balances table");
 
     // Create enhanced leave_requests table
     await pool.query(`
@@ -69,7 +69,7 @@ async function updateLeaveManagementStructure() {
         FOREIGN KEY (hr_id) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
-    console.log('✅ Created enhanced leave_requests table');
+    console.log("✅ Created enhanced leave_requests table");
 
     // Insert default leave types
     await pool.query(`
@@ -81,7 +81,7 @@ async function updateLeaveManagementStructure() {
       ('Paternity Leave', 'Leave for new fathers', '#F59E0B')
       ON CONFLICT (type_name) DO NOTHING
     `);
-    console.log('✅ Inserted default leave types');
+    console.log("✅ Inserted default leave types");
 
     // Create indexes for performance
     await pool.query(`
@@ -92,11 +92,12 @@ async function updateLeaveManagementStructure() {
       CREATE INDEX IF NOT EXISTS idx_leave_requests_dates ON leave_requests(from_date, to_date);
       CREATE INDEX IF NOT EXISTS idx_leave_balances_employee_year ON leave_balances(employee_id, year);
     `);
-    console.log('✅ Created performance indexes');
+    console.log("✅ Created performance indexes");
 
     // Initialize leave balances for existing employees (current year)
     const currentYear = new Date().getFullYear();
-    await pool.query(`
+    await pool.query(
+      `
       INSERT INTO leave_balances (employee_id, year, total_allocated, leaves_taken, leaves_remaining)
       SELECT 
         u.id, 
@@ -107,13 +108,14 @@ async function updateLeaveManagementStructure() {
       FROM users u
       WHERE u.role = 'employee'
       ON CONFLICT (employee_id, year) DO NOTHING
-    `, [currentYear]);
-    console.log('✅ Initialized leave balances for existing employees');
+    `,
+      [currentYear]
+    );
+    console.log("✅ Initialized leave balances for existing employees");
 
-    console.log('🎉 Leave Management Database Structure Updated Successfully!');
-    
+    console.log("🎉 Leave Management Database Structure Updated Successfully!");
   } catch (error) {
-    console.error('❌ Error updating leave management structure:', error);
+    console.error("❌ Error updating leave management structure:", error);
   } finally {
     await pool.end();
   }
