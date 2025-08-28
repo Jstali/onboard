@@ -11,6 +11,8 @@ router.use(authenticateToken, requireEmployee);
 // Get employee onboarding status
 router.get("/onboarding-status", async (req, res) => {
   try {
+    console.log("🔍 Checking onboarding status for user ID:", req.user.userId);
+
     const result = await pool.query(
       `
       SELECT ef.*, em.status as master_status
@@ -19,8 +21,10 @@ router.get("/onboarding-status", async (req, res) => {
       LEFT JOIN employee_master em ON u.email = em.company_email
       WHERE ef.employee_id = $1
     `,
-      [req.user.id]
+      [req.user.userId]
     );
+
+    console.log("🔍 Query result:", result.rows);
 
     if (result.rows.length === 0) {
       return res.json({
@@ -30,6 +34,7 @@ router.get("/onboarding-status", async (req, res) => {
     }
 
     const form = result.rows[0];
+    console.log("🔍 Form found:", form);
 
     if (form.status === "submitted" && !form.master_status) {
       return res.json({
@@ -39,7 +44,7 @@ router.get("/onboarding-status", async (req, res) => {
       });
     }
 
-    if (form.master_status === "active") {
+    if (form.master_status === "active" || form.status === "approved") {
       return res.json({
         hasForm: true,
         status: "approved",
@@ -79,7 +84,7 @@ router.post(
       // Check if form already exists
       const existingForm = await pool.query(
         "SELECT id FROM employee_forms WHERE employee_id = $1",
-        [req.user.id]
+        [req.user.userId]
       );
 
       if (existingForm.rows.length > 0) {
@@ -94,7 +99,7 @@ router.post(
       INSERT INTO employee_forms (employee_id, type, form_data, files, status)
       VALUES ($1, $2, $3, $4, 'submitted')
     `,
-        [req.user.id, type, formData, files]
+        [req.user.userId, type, formData, files]
       );
 
       res.status(201).json({
@@ -115,7 +120,7 @@ router.get("/onboarding-form", async (req, res) => {
       `
       SELECT * FROM employee_forms WHERE employee_id = $1
     `,
-      [req.user.id]
+      [req.user.userId]
     );
 
     if (result.rows.length === 0) {
@@ -151,7 +156,7 @@ router.put(
         `
       SELECT id, status FROM employee_forms WHERE employee_id = $1
     `,
-        [req.user.id]
+        [req.user.userId]
       );
 
       if (existingForm.rows.length === 0) {
@@ -169,7 +174,7 @@ router.put(
       SET type = $1, form_data = $2, files = $3, updated_at = CURRENT_TIMESTAMP
       WHERE employee_id = $4
     `,
-        [type, formData, files, req.user.id]
+        [type, formData, files, req.user.userId]
       );
 
       res.json({ message: "Form updated successfully" });
@@ -189,7 +194,7 @@ router.get("/is-onboarded", async (req, res) => {
       JOIN users u ON em.company_email = u.email
       WHERE u.id = $1
     `,
-      [req.user.id]
+      [req.user.userId]
     );
 
     if (result.rows.length === 0) {
@@ -216,7 +221,7 @@ router.get("/profile", async (req, res) => {
       LEFT JOIN employee_forms ef ON u.id = ef.employee_id
       WHERE u.id = $1
     `,
-      [req.user.id]
+      [req.user.userId]
     );
 
     if (result.rows.length === 0) {

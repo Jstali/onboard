@@ -21,6 +21,9 @@ import ManagerDashboard from "./components/ManagerDashboard";
 function AppRoutes() {
   const { user, loading } = useAuth();
 
+  // Debug logging
+  console.log("🔍 AppRoutes - User:", user, "Loading:", loading);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -38,16 +41,11 @@ function AppRoutes() {
         path="/"
         element={
           <ProtectedRoute>
-            {user?.role === "hr" ? <HRDashboard /> : <EmployeeDashboard />}
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/attendance"
-        element={
-          <ProtectedRoute>
-            <AttendancePortal />
+            {user?.role === "hr" ? (
+              <Navigate to="/hr" />
+            ) : (
+              <Navigate to="/employee" />
+            )}
           </ProtectedRoute>
         }
       />
@@ -110,6 +108,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute role="hr">
             <HRLeaveApproval />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hr/employees"
+        element={
+          <ProtectedRoute role="hr">
+            <HRDashboard />
           </ProtectedRoute>
         }
       />

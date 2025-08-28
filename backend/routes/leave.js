@@ -1,7 +1,11 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const { pool } = require("../config/database.js");
-const { sendEmail } = require("../utils/mailer.js");
+const {
+  sendLeaveRequestToManager,
+  sendManagerApprovalToHR,
+  sendLeaveApprovalToEmployee,
+} = require("../utils/mailer.js");
 const { authenticateToken } = require("../middleware/auth.js");
 
 const router = express.Router();
@@ -25,17 +29,37 @@ const calculateLeaveDays = (fromDate, toDate, halfDay) => {
 // Helper function to get employee's manager
 const getEmployeeManager = async (employeeId) => {
   try {
-    const result = await pool.query(
-      `
-      SELECT m.manager_name, m.email
-      FROM managers m
-      JOIN onboarded_employees oe ON oe.manager_name = m.manager_name
-      JOIN users u ON u.email = oe.company_email
-      WHERE u.id = $1 AND m.status = 'active'
-    `,
+    // First get the manager name from onboarded_employees
+    const employeeResult = await pool.query(
+      `SELECT manager_name FROM onboarded_employees WHERE user_id = $1`,
       [employeeId]
     );
-    return result.rows[0] || null;
+
+    if (
+      employeeResult.rows.length === 0 ||
+      !employeeResult.rows[0].manager_name
+    ) {
+      console.log("🔍 No manager found for employee", employeeId);
+      return null;
+    }
+
+    const managerName = employeeResult.rows[0].manager_name;
+
+    // Then get the manager details from managers table
+    const managerResult = await pool.query(
+      `SELECT manager_name, email FROM managers WHERE manager_name = $1 AND status = 'active'`,
+      [managerName]
+    );
+
+    console.log(
+      "🔍 Manager lookup for employee",
+      employeeId,
+      "Manager name:",
+      managerName,
+      "Result:",
+      managerResult.rows
+    );
+    return managerResult.rows[0] || null;
   } catch (error) {
     console.error("Error getting employee manager:", error);
     return null;
@@ -73,6 +97,10 @@ router.get("/types", async (req, res) => {
 // Get employee leave balance
 router.get("/balance", authenticateToken, async (req, res) => {
   try {
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
     const currentYear = new Date().getFullYear();
     const result = await pool.query(
       `
@@ -113,23 +141,80 @@ router.post(
   authenticateToken,
   [
     body("leaveType").notEmpty().withMessage("Leave type is required"),
-    body("fromDate").isDate().withMessage("From date is required"),
+    body("fromDate").notEmpty().withMessage("From date is required"),
     body("toDate")
       .optional()
-      .isDate()
-      .withMessage("To date must be a valid date if provided"),
+      .notEmpty()
+      .withMessage("To date must not be empty if provided"),
     body("reason").notEmpty().withMessage("Reason is required"),
-    body("halfDay").isBoolean().optional(),
+    body("halfDay").optional().isBoolean(),
   ],
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+      console.log("🔍 Leave request received:", req.body);
+      console.log("🔍 Request body types:", {
+        leaveType: typeof req.body.leaveType,
+        fromDate: typeof req.body.fromDate,
+        toDate: typeof req.body.toDate,
+        reason: typeof req.body.reason,
+        halfDay: typeof req.body.halfDay,
+      });
+      console.log("🔍 User:", req.user);
+
+      // Manual validation instead of express-validator
+      const errors = [];
+
+      if (!req.body.leaveType || req.body.leaveType.trim() === "") {
+        errors.push({ field: "leaveType", message: "Leave type is required" });
+      }
+
+      if (!req.body.fromDate || req.body.fromDate.trim() === "") {
+        errors.push({ field: "fromDate", message: "From date is required" });
+      }
+
+      if (req.body.toDate && req.body.toDate.trim() === "") {
+        errors.push({
+          field: "toDate",
+          message: "To date must not be empty if provided",
+        });
+      }
+
+      if (!req.body.reason || req.body.reason.trim() === "") {
+        errors.push({ field: "reason", message: "Reason is required" });
+      }
+
+      if (errors.length > 0) {
+        console.log("❌ Manual validation errors:", errors);
+        return res.status(400).json({ errors: errors });
       }
 
       const { leaveType, fromDate, toDate, reason, halfDay = false } = req.body;
       const employeeId = req.user.userId;
+
+      // Validate and convert dates
+      let validatedFromDate, validatedToDate;
+
+      try {
+        validatedFromDate = new Date(fromDate);
+        if (isNaN(validatedFromDate.getTime())) {
+          return res.status(400).json({
+            error: "Invalid from date format. Please use YYYY-MM-DD format.",
+          });
+        }
+
+        if (toDate) {
+          validatedToDate = new Date(toDate);
+          if (isNaN(validatedToDate.getTime())) {
+            return res.status(400).json({
+              error: "Invalid to date format. Please use YYYY-MM-DD format.",
+            });
+          }
+        }
+      } catch (error) {
+        return res.status(400).json({
+          error: "Invalid date format. Please use YYYY-MM-DD format.",
+        });
+      }
 
       // Get employee details
       const employeeResult = await pool.query(
@@ -162,7 +247,11 @@ router.post(
 
       // Calculate total leave days
       const totalLeaveDays = toDate
-        ? calculateLeaveDays(fromDate, toDate, halfDay)
+        ? calculateLeaveDays(
+            validatedFromDate.toISOString().split("T")[0],
+            validatedToDate.toISOString().split("T")[0],
+            halfDay
+          )
         : halfDay
         ? 0.5
         : 1;
@@ -177,16 +266,19 @@ router.post(
       // Generate unique series ID
       const series = generateSeriesId();
 
+      // Generate approval token for email links
+      const approvalToken = require("crypto").randomBytes(32).toString("hex");
+
       // Get employee's manager
       const manager = await getEmployeeManager(employeeId);
 
-      // Insert leave request
+      // Insert leave request with approval token
       const insertResult = await pool.query(
         `
       INSERT INTO leave_requests (
         series, employee_id, employee_name, leave_type, leave_balance_before,
-        from_date, to_date, half_day, total_leave_days, reason
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        from_date, to_date, half_day, total_leave_days, reason, approval_token
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `,
         [
@@ -195,41 +287,31 @@ router.post(
           employeeName,
           leaveType,
           leaveBalanceBefore,
-          fromDate,
-          toDate,
+          validatedFromDate.toISOString().split("T")[0],
+          validatedToDate ? validatedToDate.toISOString().split("T")[0] : null,
           halfDay,
           totalLeaveDays,
           reason,
+          approvalToken,
         ]
       );
 
       const leaveRequest = insertResult.rows[0];
 
-      // Send email notification to manager
+      // Send email notification to manager with approval buttons
       if (manager) {
-        const managerEmailContent = `
-        <h2>Leave Request Notification</h2>
-        <p><strong>Employee:</strong> ${employeeName}</p>
-        <p><strong>Leave Type:</strong> ${leaveType}</p>
-        <p><strong>From:</strong> ${fromDate}</p>
-        ${
-          toDate
-            ? `<p><strong>To:</strong> ${toDate}</p>`
-            : "<p><strong>Type:</strong> Single Day Leave</p>"
-        }
-        <p><strong>Total Days:</strong> ${totalLeaveDays}</p>
-        <p><strong>Reason:</strong> ${reason}</p>
-        <p><strong>Leave Balance:</strong> ${leaveBalanceBefore} days remaining</p>
-        <br>
-        <p>Please review and take action:</p>
-        <a href="http://localhost:3001/manager/leave-requests" style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review Request</a>
-      `;
+        const emailData = {
+          id: leaveRequest.id,
+          employeeName,
+          leaveType,
+          fromDate,
+          toDate,
+          totalDays: totalLeaveDays,
+          reason,
+          approvalToken,
+        };
 
-        await sendEmail(
-          manager.email,
-          `Leave Request from ${employeeName} - ${series}`,
-          managerEmailContent
-        );
+        await sendLeaveRequestToManager(manager.email, emailData);
       }
 
       res.status(201).json({
@@ -238,8 +320,17 @@ router.post(
         series,
       });
     } catch (error) {
-      console.error("Error submitting leave request:", error);
-      res.status(500).json({ error: "Failed to submit leave request" });
+      console.error("❌ Error submitting leave request:", error);
+      console.error("❌ Error details:", {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+        detail: error.detail,
+      });
+      res.status(500).json({
+        error: "Failed to submit leave request",
+        details: error.message,
+      });
     }
   }
 );
@@ -287,7 +378,160 @@ router.get("/manager/pending", authenticateToken, async (req, res) => {
   }
 });
 
-// Manager approval/rejection
+// Email-based approval endpoint (for managers clicking from email)
+router.get("/approve/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, token } = req.query;
+
+    if (!action || !token) {
+      return res.status(400).json({
+        error: "Missing action or token",
+        message:
+          "Please provide both action (approve/reject) and token parameters",
+      });
+    }
+
+    if (!["approve", "reject"].includes(action)) {
+      return res.status(400).json({
+        error: "Invalid action",
+        message: "Action must be either 'approve' or 'reject'",
+      });
+    }
+
+    // Verify the approval token
+    const tokenResult = await pool.query(
+      `SELECT * FROM leave_requests WHERE id = $1 AND approval_token = $2`,
+      [id, token]
+    );
+
+    if (tokenResult.rows.length === 0) {
+      return res.status(400).json({
+        error: "Invalid or expired token",
+        message: "The approval link is invalid or has expired",
+      });
+    }
+
+    const leaveRequest = tokenResult.rows[0];
+
+    // Check if already processed
+    if (leaveRequest.status !== "Pending") {
+      return res.status(400).json({
+        error: "Request already processed",
+        message: `This request has already been ${leaveRequest.status.toLowerCase()}`,
+      });
+    }
+
+    // Update the request status
+    const newStatus = action === "approve" ? "Manager Approved" : "Rejected";
+    const updateResult = await pool.query(
+      `UPDATE leave_requests 
+       SET status = $1, 
+           manager_approved_at = CURRENT_TIMESTAMP,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING *`,
+      [newStatus, id]
+    );
+
+    const updatedRequest = updateResult.rows[0];
+
+    if (action === "approve") {
+      // Send notification to HR
+      const hrUsers = await getHRUsers();
+      for (const hrUser of hrUsers) {
+        await sendManagerApprovalToHR(
+          hrUser.email,
+          updatedRequest,
+          leaveRequest.manager_name || "Manager"
+        );
+      }
+
+      // Return success page for manager approval
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Leave Request Approved</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .success { color: #28a745; font-size: 24px; margin-bottom: 20px; }
+            .info { color: #666; margin-bottom: 30px; }
+            .button { background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
+          </style>
+        </head>
+        <body>
+          <div class="success">✅ Leave Request Approved!</div>
+          <div class="info">
+            <p>You have successfully approved the leave request from <strong>${leaveRequest.employee_name}</strong>.</p>
+            <p>The request has been forwarded to HR for final approval.</p>
+          </div>
+          <a href="http://localhost:3001/manager/leave-requests" class="button">View All Requests</a>
+        </body>
+        </html>
+      `);
+    } else {
+      // Send rejection notification to employee
+      const employeeResult = await pool.query(
+        `SELECT email FROM users WHERE id = $1`,
+        [leaveRequest.employee_id]
+      );
+
+      if (employeeResult.rows.length > 0) {
+        await sendLeaveApprovalToEmployee(
+          employeeResult.rows[0].email,
+          updatedRequest,
+          "rejected",
+          leaveRequest.manager_name || "Manager"
+        );
+      }
+
+      // Return success page for manager rejection
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Leave Request Rejected</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .rejected { color: #dc3545; font-size: 24px; margin-bottom: 20px; }
+            .info { color: #666; margin-bottom: 30px; }
+            .button { background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
+          </style>
+        </head>
+        <body>
+          <div class="rejected">❌ Leave Request Rejected</div>
+          <div class="info">
+            <p>You have successfully rejected the leave request from <strong>${leaveRequest.employee_name}</strong>.</p>
+            <p>The employee has been notified of the rejection.</p>
+          </div>
+          <a href="http://localhost:3001/manager/leave-requests" class="button">View All Requests</a>
+        </body>
+        </html>
+      `);
+    }
+  } catch (error) {
+    console.error("Email approval error:", error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Error</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+          .error { color: #dc3545; font-size: 24px; margin-bottom: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="error">❌ Error Processing Request</div>
+        <p>An error occurred while processing your request. Please try again or contact support.</p>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// Manager approval/rejection (UI-based)
 router.put(
   "/manager/:id/approve",
   authenticateToken,
@@ -528,7 +772,7 @@ router.put(
           }
         }
 
-        // Notify employee
+        // Notify employee using new email system
         const employeeResult = await pool.query(
           `
         SELECT email FROM users WHERE id = $1
@@ -537,31 +781,28 @@ router.put(
         );
 
         if (employeeResult.rows.length > 0) {
-          const employeeEmailContent = `
-          <h2>Leave Request Approved! 🎉</h2>
-          <p>Your leave request has been approved by HR.</p>
-          <p><strong>Details:</strong></p>
-          <ul>
-            <li><strong>Series:</strong> ${leaveRequest.series}</li>
-            <li><strong>Leave Type:</strong> ${leaveRequest.leave_type}</li>
-            <li><strong>From:</strong> ${leaveRequest.from_date}</li>
-            ${
-              leaveRequest.to_date
-                ? `<li><strong>To:</strong> ${leaveRequest.to_date}</li>`
-                : "<li><strong>Type:</strong> Single Day Leave</li>"
-            }
-            <li><strong>Total Days:</strong> ${
-              leaveRequest.total_leave_days
-            }</li>
-            <li><strong>Status:</strong> Approved</li>
-          </ul>
-          <p>Your leave balance has been updated accordingly.</p>
-        `;
-
-          await sendEmail(
+          await sendLeaveApprovalToEmployee(
             employeeResult.rows[0].email,
-            `Leave Request Approved - ${leaveRequest.series}`,
-            employeeEmailContent
+            leaveRequest,
+            "approved",
+            hrName
+          );
+        }
+      } else {
+        // If rejected, notify employee
+        const employeeResult = await pool.query(
+          `
+        SELECT email FROM users WHERE id = $1
+      `,
+          [leaveRequest.employee_id]
+        );
+
+        if (employeeResult.rows.length > 0) {
+          await sendLeaveApprovalToEmployee(
+            employeeResult.rows[0].email,
+            leaveRequest,
+            "rejected",
+            hrName
           );
         }
       }
@@ -571,8 +812,16 @@ router.put(
         leaveRequest,
       });
     } catch (error) {
-      console.error("Error processing HR approval:", error);
-      res.status(500).json({ error: "Failed to process approval" });
+      console.error("❌ Error processing HR approval:", error);
+      console.error("❌ Error stack:", error.stack);
+      console.error("❌ Error message:", error.message);
+      if (error.code) {
+        console.error("❌ Error code:", error.code);
+      }
+      res.status(500).json({
+        error: "Failed to process approval",
+        details: error.message,
+      });
     }
   }
 );
@@ -597,6 +846,32 @@ router.get("/all", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Error fetching all leave requests:", error);
     res.status(500).json({ error: "Failed to fetch leave requests" });
+  }
+});
+
+// Delete a leave request (HR only)
+router.delete("/:id", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "hr") {
+      return res
+        .status(403)
+        .json({ error: "Access denied. HR role required." });
+    }
+
+    const { id } = req.params;
+    const exists = await pool.query(
+      "SELECT id FROM leave_requests WHERE id = $1",
+      [id]
+    );
+    if (exists.rows.length === 0) {
+      return res.status(404).json({ error: "Leave request not found" });
+    }
+
+    await pool.query("DELETE FROM leave_requests WHERE id = $1", [id]);
+    res.json({ message: "Leave request deleted" });
+  } catch (error) {
+    console.error("Delete leave request error:", error);
+    res.status(500).json({ error: "Failed to delete leave request" });
   }
 });
 

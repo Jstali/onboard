@@ -7,11 +7,13 @@ const OnboardedEmployees = ({ onRefresh }) => {
   const [onboardedEmployees, setOnboardedEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [assignmentData, setAssignmentData] = useState({
     name: "",
     companyEmail: "",
     manager: "",
+    employeeId: "",
   });
 
   useEffect(() => {
@@ -47,6 +49,12 @@ const OnboardedEmployees = ({ onRefresh }) => {
     try {
       if (!assignmentData.name || !assignmentData.companyEmail) {
         toast.error("Name and Company Email are required");
+        return;
+      }
+
+      // Validate 6-digit numeric employee ID
+      if (!/^\d{6}$/.test(assignmentData.employeeId)) {
+        toast.error("Employee ID must be exactly 6 digits");
         return;
       }
 
@@ -181,13 +189,37 @@ const OnboardedEmployees = ({ onRefresh }) => {
                     </button>
                     <button
                       onClick={() => {
-                        // View employee details
-                        console.log("View employee:", employee);
+                        setSelectedEmployee(employee);
+                        setShowViewModal(true);
                       }}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="text-blue-600 hover:text-blue-900 mr-3"
                       title="View Details"
                     >
                       <FaEye className="inline-block" />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!window.confirm("Delete this onboarded record?"))
+                          return;
+                        try {
+                          await axios.delete(
+                            `http://localhost:5001/api/hr/onboarded/${employee.id}`
+                          );
+                          toast.success("Onboarded record deleted");
+                          fetchOnboardedEmployees();
+                          if (onRefresh) onRefresh();
+                        } catch (err) {
+                          console.error("Delete onboarded error:", err);
+                          toast.error(
+                            err.response?.data?.error ||
+                              "Failed to delete record"
+                          );
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-900"
+                      title="Delete"
+                    >
+                      <FaTrash className="inline-block" />
                     </button>
                   </td>
                 </tr>
@@ -269,6 +301,29 @@ const OnboardedEmployees = ({ onRefresh }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
+                  Employee ID (6 digits) *
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={assignmentData.employeeId}
+                  onChange={(e) =>
+                    setAssignmentData((prev) => ({
+                      ...prev,
+                      employeeId: e.target.value
+                        .replace(/[^0-9]/g, "")
+                        .slice(0, 6),
+                    }))
+                  }
+                  className="input-field"
+                  placeholder="e.g. 123456"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
                   Manager *
                 </label>
                 <select
@@ -303,6 +358,102 @@ const OnboardedEmployees = ({ onRefresh }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showViewModal && selectedEmployee && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-3xl shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Employee Details
+              </h3>
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">
+                  <strong>Email:</strong> {selectedEmployee.user_email}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Company Email:</strong>{" "}
+                  {selectedEmployee.company_email || "—"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Type:</strong> {selectedEmployee.employee_type || "—"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Status:</strong> {selectedEmployee.status}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">
+                  <strong>Submitted:</strong>{" "}
+                  {formatDate(selectedEmployee.submitted_at)}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Manager:</strong>{" "}
+                  {selectedEmployee.manager_name || "Not assigned"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Notes:</strong> {selectedEmployee.notes || "—"}
+                </p>
+              </div>
+            </div>
+
+            {selectedEmployee.form_data && (
+              <div className="mt-4">
+                <h4 className="text-md font-medium text-gray-900 mb-2">
+                  Form Summary
+                </h4>
+                <div className="bg-gray-50 rounded p-3 text-sm text-gray-700 space-y-1">
+                  {selectedEmployee.form_data.name && (
+                    <p>
+                      <strong>Name:</strong> {selectedEmployee.form_data.name}
+                    </p>
+                  )}
+                  {selectedEmployee.form_data.phone && (
+                    <p>
+                      <strong>Phone:</strong> {selectedEmployee.form_data.phone}
+                    </p>
+                  )}
+                  {selectedEmployee.form_data.address && (
+                    <p>
+                      <strong>Address:</strong>{" "}
+                      {selectedEmployee.form_data.address}
+                    </p>
+                  )}
+                  {selectedEmployee.form_data.education && (
+                    <p>
+                      <strong>Education:</strong>{" "}
+                      {selectedEmployee.form_data.education}
+                    </p>
+                  )}
+                  {selectedEmployee.form_data.experience && (
+                    <p>
+                      <strong>Experience:</strong>{" "}
+                      {selectedEmployee.form_data.experience}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="btn-secondary"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

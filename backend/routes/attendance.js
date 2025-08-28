@@ -17,10 +17,12 @@ const checkEmployeeOnboardingStatus = async (userId) => {
       CASE 
         WHEN em.id IS NOT NULL THEN 'onboarded'
         WHEN oe.id IS NOT NULL AND oe.status = 'pending_assignment' THEN 'approved_pending'
+        WHEN oe.id IS NOT NULL AND oe.status = 'assigned' THEN 'assigned'
         ELSE 'not_onboarded'
       END as status,
       em.id as master_id,
-      oe.id as onboarded_id
+      oe.id as onboarded_id,
+      oe.status as onboarded_status
     FROM users u
     LEFT JOIN employee_master em ON em.company_email = u.email
     LEFT JOIN onboarded_employees oe ON oe.user_id = u.id
@@ -29,6 +31,12 @@ const checkEmployeeOnboardingStatus = async (userId) => {
     [userId]
   );
 
+  console.log(
+    "🔍 Employee onboarding status check for user",
+    userId,
+    "Result:",
+    result.rows[0]
+  );
   return result.rows[0] || { status: "not_onboarded" };
 };
 
@@ -54,11 +62,14 @@ router.post(
       const { date, status, reason } = req.body;
 
       // Check if employee is onboarded or approved and waiting for assignment
-      const employeeStatus = await checkEmployeeOnboardingStatus(req.user.id);
+      const employeeStatus = await checkEmployeeOnboardingStatus(
+        req.user.userId
+      );
 
       if (
         employeeStatus.status !== "onboarded" &&
-        employeeStatus.status !== "approved_pending"
+        employeeStatus.status !== "approved_pending" &&
+        employeeStatus.status !== "assigned"
       ) {
         return res.status(403).json({
           error: "Only approved or onboarded employees can mark attendance",
@@ -69,7 +80,7 @@ router.post(
       // Check if attendance already exists for this date
       const existingAttendance = await pool.query(
         "SELECT id FROM attendance WHERE employee_id = $1 AND date = $2",
-        [req.user.id, date]
+        [req.user.userId, date]
       );
 
       if (existingAttendance.rows.length > 0) {
@@ -86,7 +97,7 @@ router.post(
       INSERT INTO attendance (employee_id, date, status, reason, clock_in_time)
       VALUES ($1, $2, $3, $4, $5)
     `,
-        [req.user.id, date, status, reason, clockInTime]
+        [req.user.userId, date, status, reason, clockInTime]
       );
 
       res.status(201).json({
@@ -120,7 +131,7 @@ router.put(
       // Check if attendance exists and is present
       const attendanceResult = await pool.query(
         "SELECT id, status FROM attendance WHERE employee_id = $1 AND date = $2",
-        [req.user.id, date]
+        [req.user.userId, date]
       );
 
       if (attendanceResult.rows.length === 0) {
@@ -162,7 +173,7 @@ router.get(
       FROM attendance 
       WHERE employee_id = $1
     `;
-      let params = [req.user.id];
+      let params = [req.user.userId];
 
       if (month && year) {
         query += ` AND EXTRACT(MONTH FROM date) = $2 AND EXTRACT(YEAR FROM date) = $3`;
@@ -201,7 +212,7 @@ router.get(
       AND EXTRACT(YEAR FROM date) = $3
       ORDER BY date
     `,
-        [req.user.id, parseInt(month), parseInt(year)]
+        [req.user.userId, parseInt(month), parseInt(year)]
       );
 
       res.json({ calendar: result.rows });
@@ -391,7 +402,7 @@ router.post(
       JOIN users u ON em.company_email = u.email
       WHERE u.id = $1
     `,
-        [req.user.id]
+        [req.user.userId]
       );
 
       if (onboardedResult.rows.length === 0) {
@@ -405,8 +416,8 @@ router.post(
         `
       INSERT INTO leave_requests (employee_id, start_date, end_date, leave_type, reason)
       VALUES ($1, $2, $3, $4, $5)
-    `,
-        [req.user.id, startDate, endDate, leaveType, reason]
+      `,
+        [req.user.userId, startDate, endDate, leaveType, reason]
       );
 
       res.status(201).json({
@@ -432,7 +443,7 @@ router.get(
       WHERE employee_id = $1 
       ORDER BY created_at DESC
     `,
-        [req.user.id]
+        [req.user.userId]
       );
 
       res.json({ leaveRequests: result.rows });
@@ -442,5 +453,52 @@ router.get(
     }
   }
 );
+
+// Get detailed attendance records for HR
+router.get("/hr/details", [authenticateToken, requireHR], async (req, res) => {
+  try {
+    const { month, year } = req.query;
+
+    let query = `
+      SELECT 
+        a.id,
+        a.employee_id,
+        a.date,
+        a.status,
+        a.reason,
+        a.clock_in_time,
+        a.clock_out_time,
+        a.created_at,
+        u.first_name,
+        u.last_name,
+        u.email as employee_email,
+        CONCAT(u.first_name, ' ', u.last_name) as employee_name
+      FROM attendance a
+      JOIN users u ON a.employee_id = u.id
+      WHERE 1=1
+    `;
+
+    const params = [];
+
+    if (month && year) {
+      query += ` AND EXTRACT(MONTH FROM a.date) = $${params.length + 1}`;
+      params.push(month);
+      query += ` AND EXTRACT(YEAR FROM a.date) = $${params.length + 1}`;
+      params.push(year);
+    }
+
+    query += ` ORDER BY a.date DESC, a.created_at DESC`;
+
+    const result = await pool.query(query, params);
+
+    res.json({
+      records: result.rows,
+      total: result.rows.length,
+    });
+  } catch (error) {
+    console.error("Error fetching HR attendance details:", error);
+    res.status(500).json({ error: "Failed to fetch attendance details" });
+  }
+});
 
 module.exports = router;

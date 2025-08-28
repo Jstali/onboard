@@ -118,7 +118,8 @@ router.get("/employees", async (req, res) => {
       FROM users u
       LEFT JOIN employee_forms ef ON u.id = ef.employee_id
       LEFT JOIN employee_master em ON u.email = em.company_email
-      WHERE u.role = 'employee'
+      WHERE u.role = 'employee' 
+        AND ef.id IS NOT NULL
       ORDER BY u.created_at DESC
     `);
 
@@ -195,6 +196,79 @@ router.delete("/employee-forms/:id", async (req, res) => {
   } catch (error) {
     console.error("Delete employee form error:", error);
     res.status(500).json({ error: "Failed to delete employee form" });
+  }
+});
+
+// Approve or reject employee form
+router.put("/employee-forms/:id/approve", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action } = req.body; // 'approve' or 'reject'
+
+    if (!action || !["approve", "reject"].includes(action)) {
+      return res
+        .status(400)
+        .json({ error: "Action must be 'approve' or 'reject'" });
+    }
+
+    // Get the employee form details (employee_forms uses employee_id -> users.id)
+    const formResult = await pool.query(
+      `SELECT ef.id,
+              ef.employee_id,           -- FK to users.id
+              ef.type as employee_type,
+              ef.status as form_status,
+              u.email as user_email
+       FROM employee_forms ef
+       JOIN users u ON ef.employee_id = u.id
+       WHERE ef.id = $1`,
+      [id]
+    );
+
+    if (formResult.rows.length === 0) {
+      return res.status(404).json({ error: "Employee form not found" });
+    }
+
+    const form = formResult.rows[0];
+
+    if (action === "approve") {
+      // Update form status to approved
+      await pool.query(
+        "UPDATE employee_forms SET status = 'approved', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+        [id]
+      );
+
+      // Insert minimal required data into onboarded_employees for assignment step
+      await pool.query(
+        `INSERT INTO onboarded_employees (
+           user_id, company_email, status, created_at
+         ) VALUES ($1, $2, 'pending_assignment', CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id) DO UPDATE SET
+           company_email = EXCLUDED.company_email,
+           status = 'pending_assignment',
+           updated_at = CURRENT_TIMESTAMP`,
+        [form.employee_id, form.user_email]
+      );
+
+      res.json({
+        message:
+          "Employee form approved successfully. Employee moved to onboarded list.",
+        status: "approved",
+      });
+    } else if (action === "reject") {
+      // Update form status to rejected
+      await pool.query(
+        "UPDATE employee_forms SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+        [id]
+      );
+
+      res.json({
+        message: "Employee form rejected successfully.",
+        status: "rejected",
+      });
+    }
+  } catch (error) {
+    console.error("Form approval error:", error);
+    res.status(500).json({ error: "Failed to process form approval" });
   }
 });
 
@@ -385,6 +459,71 @@ router.get("/master", async (req, res) => {
   }
 });
 
+// Delete employee from master table
+router.delete("/master/:id", async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+
+    // Find master row and user by company email
+    const masterRow = await client.query(
+      "SELECT id, company_email FROM employee_master WHERE id = $1",
+      [id]
+    );
+    if (masterRow.rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found in master" });
+    }
+
+    const companyEmail = masterRow.rows[0].company_email;
+
+    const userRow = await client.query(
+      "SELECT id FROM users WHERE email = $1",
+      [companyEmail]
+    );
+    const userId = userRow.rows[0]?.id;
+
+    await client.query("BEGIN");
+
+    // Delete dependent data first
+    if (userId) {
+      await client.query("DELETE FROM attendance WHERE employee_id = $1", [
+        userId,
+      ]);
+      await client.query("DELETE FROM leave_requests WHERE employee_id = $1", [
+        userId,
+      ]);
+      await client.query("DELETE FROM leave_balances WHERE employee_id = $1", [
+        userId,
+      ]);
+      await client.query("DELETE FROM employee_forms WHERE employee_id = $1", [
+        userId,
+      ]);
+      await client.query("DELETE FROM onboarded_employees WHERE user_id = $1", [
+        userId,
+      ]);
+    }
+
+    // Delete from master
+    await client.query("DELETE FROM employee_master WHERE id = $1", [id]);
+
+    // Finally delete user to free up email for re-adding
+    if (userId) {
+      await client.query("DELETE FROM users WHERE id = $1", [userId]);
+    }
+
+    await client.query("COMMIT");
+    res.json({ message: "Employee and related data deleted successfully" });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Delete master employee error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to delete employee and related data" });
+  } finally {
+    client.release();
+  }
+});
+
 // Get onboarded employees (pending assignment) with comprehensive details
 router.get("/onboarded", async (req, res) => {
   try {
@@ -429,6 +568,50 @@ router.get("/onboarded", async (req, res) => {
   }
 });
 
+// Delete onboarded employee (cleanup staged record)
+router.delete("/onboarded/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Ensure the record exists
+    const exists = await pool.query(
+      "SELECT id FROM onboarded_employees WHERE id = $1",
+      [id]
+    );
+    if (exists.rows.length === 0) {
+      return res.status(404).json({ error: "Onboarded employee not found" });
+    }
+
+    // Safe delete: only allow delete if not yet in master table
+    // Find the user id to check master linkage (if any)
+    const details = await pool.query(
+      "SELECT user_id, company_email FROM onboarded_employees WHERE id = $1",
+      [id]
+    );
+    const userId = details.rows[0].user_id;
+    const companyEmail = details.rows[0].company_email;
+
+    if (companyEmail) {
+      const inMaster = await pool.query(
+        "SELECT id FROM employee_master WHERE company_email = $1",
+        [companyEmail]
+      );
+      if (inMaster.rows.length > 0) {
+        return res
+          .status(400)
+          .json({ error: "Cannot delete: employee already moved to master" });
+      }
+    }
+
+    await pool.query("DELETE FROM onboarded_employees WHERE id = $1", [id]);
+
+    res.json({ message: "Onboarded employee deleted" });
+  } catch (error) {
+    console.error("Delete onboarded employee error:", error);
+    res.status(500).json({ error: "Failed to delete onboarded employee" });
+  }
+});
+
 // Assign details to onboarded employee and move to master table
 router.put(
   "/onboarded/:id/assign",
@@ -438,6 +621,9 @@ router.put(
       .isEmail()
       .withMessage("Valid company email is required"),
     body("manager").notEmpty().withMessage("Manager is required"),
+    body("employeeId")
+      .matches(/^\d{6}$/)
+      .withMessage("Employee ID must be exactly 6 digits"),
   ],
   async (req, res) => {
     try {
@@ -447,7 +633,7 @@ router.put(
       }
 
       const { id } = req.params;
-      const { name, companyEmail, manager } = req.body;
+      const { name, companyEmail, manager, employeeId } = req.body;
 
       console.log("🔍 Assigning details to onboarded employee:", {
         id,
@@ -506,10 +692,6 @@ router.put(
         [companyEmail, `Assigned to manager: ${manager}`, id]
       );
 
-      // Generate unique employee ID
-      const timestamp = Date.now();
-      const uniqueEmployeeId = `EMP${timestamp}`;
-
       // Add to employee master table
       await pool.query(
         `
@@ -517,7 +699,7 @@ router.put(
         VALUES ($1, $2, $3, $4, $5, $6)
       `,
         [
-          uniqueEmployeeId,
+          employeeId,
           name,
           companyEmail,
           manager, // Use the selected manager
@@ -532,7 +714,7 @@ router.put(
         message:
           "Employee details assigned and moved to master table successfully",
         employee: {
-          employeeId: uniqueEmployeeId,
+          employeeId: employeeId,
           companyEmail,
           name: name,
           manager: manager,
@@ -737,6 +919,310 @@ router.get("/managers", async (req, res) => {
   } catch (error) {
     console.error("Get managers error:", error);
     res.status(500).json({ error: "Failed to get managers" });
+  }
+});
+
+// Manually add employee to master table
+router.post(
+  "/master-employees",
+  [
+    body("email").isEmail().normalizeEmail(),
+    body("employeeName").notEmpty().trim(),
+    body("employeeId").notEmpty().trim(),
+    body("companyEmail").isEmail().normalizeEmail(),
+    body("managerId").notEmpty().trim(),
+    body("managerName").notEmpty().trim(),
+    body("department").notEmpty().trim(),
+    body("location").optional().trim(),
+    body("doj").isISO8601().toDate(),
+  ],
+  async (req, res) => {
+    try {
+      console.log("🔍 Received request body:", req.body);
+      console.log(
+        "🔍 Date of joining:",
+        req.body.doj,
+        "Type:",
+        typeof req.body.doj
+      );
+
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        console.log("❌ Validation errors:", errors.array());
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const {
+        email,
+        employeeName,
+        employeeId,
+        companyEmail,
+        managerId,
+        managerName,
+        department,
+        location,
+        doj,
+      } = req.body;
+
+      // Check if email already exists in users table
+      const existingUser = await pool.query(
+        "SELECT id FROM users WHERE email = $1",
+        [email]
+      );
+
+      if (existingUser.rows.length > 0) {
+        return res
+          .status(400)
+          .json({ error: "Email already exists in users table" });
+      }
+
+      // Check if company email already exists in employee_master
+      const existingCompanyEmail = await pool.query(
+        "SELECT id FROM employee_master WHERE company_email = $1",
+        [companyEmail]
+      );
+
+      if (existingCompanyEmail.rows.length > 0) {
+        return res
+          .status(400)
+          .json({ error: "Company email already exists in employee master" });
+      }
+
+      // Check if employee ID already exists
+      const existingEmployeeId = await pool.query(
+        "SELECT id FROM employee_master WHERE employee_id = $1",
+        [employeeId]
+      );
+
+      if (existingEmployeeId.rows.length > 0) {
+        return res.status(400).json({ error: "Employee ID already exists" });
+      }
+
+      // Generate temporary password
+      const tempPassword = generateTempPassword();
+
+      // Create user account
+      const userResult = await pool.query(
+        `INSERT INTO users (
+        email, 
+        password, 
+        role, 
+        temp_password,
+        first_name,
+        last_name,
+        created_at,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
+      RETURNING id`,
+        [
+          email,
+          "",
+          "employee",
+          tempPassword,
+          employeeName.split(" ")[0],
+          employeeName.split(" ").slice(1).join(" ") || "",
+        ]
+      );
+
+      const userId = userResult.rows[0].id;
+
+      // Add to employee_master table
+      await pool.query(
+        `INSERT INTO employee_master (
+        employee_id,
+        employee_name,
+        company_email,
+        manager_id,
+        manager_name,
+        type,
+        doj,
+        status,
+        department,
+        location,
+        created_at,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        [
+          employeeId,
+          employeeName,
+          companyEmail,
+          managerId,
+          managerName,
+          "Full-Time", // Default type
+          doj,
+          "active", // Default status
+          department,
+          location || null,
+        ]
+      );
+
+      // Initialize leave balance for the new employee
+      const currentYear = new Date().getFullYear();
+      await pool.query(
+        `INSERT INTO leave_balances (
+        employee_id, 
+        year, 
+        total_allocated, 
+        leaves_taken, 
+        leaves_remaining
+      ) VALUES ($1, $2, 27, 0, 27)`,
+        [userId, currentYear]
+      );
+
+      // Send onboarding email with temporary password
+      const emailSent = await sendOnboardingEmail(email, tempPassword);
+
+      if (!emailSent) {
+        console.warn(
+          "Failed to send onboarding email, but employee was created"
+        );
+      }
+
+      res.status(201).json({
+        message: "Employee added to master table successfully",
+        employee: {
+          id: userId,
+          email,
+          employeeName,
+          employeeId,
+          companyEmail,
+          managerName,
+          department,
+          tempPassword,
+        },
+      });
+    } catch (error) {
+      console.error("Add master employee error:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      });
+      res.status(500).json({
+        error: "Failed to add employee to master table",
+        details: error.message,
+      });
+    }
+  }
+);
+
+// Update employee information
+router.put(
+  "/employees/:id",
+  [
+    body("first_name").optional().trim(),
+    body("last_name").optional().trim(),
+    body("email").optional().isEmail().normalizeEmail(),
+    body("role").optional().isIn(["employee", "hr", "manager"]),
+    body("status").optional().isIn(["active", "inactive"]),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { id } = req.params;
+      const updates = req.body;
+
+      // Build dynamic update query
+      const fields = [];
+      const values = [];
+      let paramCounter = 1;
+
+      Object.keys(updates).forEach((key) => {
+        if (updates[key] !== undefined && updates[key] !== null) {
+          fields.push(`${key} = $${paramCounter}`);
+          values.push(updates[key]);
+          paramCounter++;
+        }
+      });
+
+      if (fields.length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+
+      // Add updated_at timestamp
+      fields.push(`updated_at = CURRENT_TIMESTAMP`);
+
+      const query = `
+      UPDATE users 
+      SET ${fields.join(", ")}
+      WHERE id = $${paramCounter}
+      RETURNING id, first_name, last_name, email, role, status, created_at, updated_at
+    `;
+
+      values.push(id);
+
+      const result = await pool.query(query, values);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Employee not found" });
+      }
+
+      res.json({
+        message: "Employee updated successfully",
+        employee: result.rows[0],
+      });
+    } catch (error) {
+      console.error("Update employee error:", error);
+      res.status(500).json({ error: "Failed to update employee" });
+    }
+  }
+);
+
+// Get single employee details
+router.get("/employees/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT 
+        u.id, 
+        u.email, 
+        u.first_name,
+        u.last_name,
+        u.role,
+        u.status,
+        u.created_at,
+        u.updated_at,
+        ef.full_name as form_name,
+        ef.phone,
+        ef.date_of_birth,
+        ef.address,
+        ef.emergency_contact_name,
+        ef.emergency_contact_phone,
+        ef.status as form_status,
+        ef.submitted_at,
+        em.employee_id as master_employee_id,
+        em.company_email,
+        em.department,
+        em.designation,
+        em.manager_name,
+        em.salary_band,
+        em.type as employment_type,
+        em.doj,
+        em.status as master_status
+      FROM users u
+      LEFT JOIN employee_forms ef ON u.id = ef.user_id
+      LEFT JOIN employee_master em ON u.email = em.company_email
+      WHERE u.id = $1
+    `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    res.json({
+      employee: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Get employee error:", error);
+    res.status(500).json({ error: "Failed to fetch employee" });
   }
 });
 

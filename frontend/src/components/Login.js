@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+// ... existing code ...
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -30,11 +30,7 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="mx-auto h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center">
-            <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
+
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Welcome to ONDOARD
           </h2>
@@ -45,10 +41,8 @@ const Login = () => {
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaEnvelope className="h-5 w-5 text-gray-400" />
-              </div>
+            <div className="relative mb-4">
+
               <input
                 type="email"
                 required
@@ -59,9 +53,7 @@ const Login = () => {
               />
             </div>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaLock className="h-5 w-5 text-gray-400" />
-              </div>
+
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
@@ -75,11 +67,7 @@ const Login = () => {
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? (
-                  <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                ) : (
-                  <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                )}
+
               </button>
             </div>
           </div>

@@ -76,6 +76,8 @@ const AttendancePortal = () => {
       toast.success("Attendance marked successfully!");
       setShowAttendanceForm(false);
       setSelectedDate(null);
+
+      // Refresh attendance data to show the update immediately
       fetchAttendance();
     } catch (error) {
       console.error("❌ Attendance error:", error);
@@ -90,12 +92,20 @@ const AttendancePortal = () => {
 
   const getAttendanceForDate = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    return attendance.find((a) => a.date === dateStr);
+    return attendance.find((a) => {
+      const apiDate = new Date(a.date);
+      const apiDateStr = format(apiDate, "yyyy-MM-dd");
+      return apiDateStr === dateStr;
+    });
   };
 
   const isDateDisabled = (date) => {
     const today = new Date();
-    return date > today;
+    const todayStr = format(today, "yyyy-MM-dd");
+    const dateStr = format(date, "yyyy-MM-dd");
+
+    // Only allow marking attendance for today
+    return dateStr !== todayStr;
   };
 
   const getStatusColor = (status) => {
@@ -172,13 +182,30 @@ const AttendancePortal = () => {
             </h2>
             <button
               onClick={() => {
-                setSelectedDate(new Date());
+                const today = new Date();
+                const todayAttendance = getAttendanceForDate(today);
+
+                if (todayAttendance) {
+                  toast(
+                    `Attendance already marked as ${todayAttendance.status} for today`,
+                    {
+                      icon: "ℹ️",
+                      style: {
+                        background: "#3b82f6",
+                        color: "white",
+                      },
+                    }
+                  );
+                  return;
+                }
+
+                setSelectedDate(today);
                 setShowAttendanceForm(true);
               }}
               className="btn-primary flex items-center"
             >
               <FaCalendarAlt className="mr-2" />
-              Mark Today's Attendance
+              Mark Today's Attendance ({format(new Date(), "MMM dd")})
             </button>
           </div>
 

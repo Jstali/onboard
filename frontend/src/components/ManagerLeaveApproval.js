@@ -4,7 +4,7 @@ import axios from "axios";
 import { format } from "date-fns";
 
 const ManagerLeaveApproval = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -18,8 +18,10 @@ const ManagerLeaveApproval = () => {
 
   useEffect(() => {
     fetchLeaveTypes();
-    fetchPendingRequests();
-  }, []);
+    if (token) {
+      fetchPendingRequests();
+    }
+  }, [token]);
 
   const fetchLeaveTypes = async () => {
     try {
@@ -32,8 +34,18 @@ const ManagerLeaveApproval = () => {
 
   const fetchPendingRequests = async () => {
     try {
+      if (!token) {
+        console.error("No token available");
+        return;
+      }
+
       const response = await axios.get(
-        "http://localhost:5001/api/leave/manager/pending"
+        "http://localhost:5001/api/leave/manager/pending",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setPendingRequests(response.data);
     } catch (error) {
@@ -62,7 +74,12 @@ const ManagerLeaveApproval = () => {
     try {
       const response = await axios.put(
         `http://localhost:5001/api/leave/manager/${selectedRequest.id}/approve`,
-        approvalData
+        approvalData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setMessage(response.data.message);

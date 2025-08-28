@@ -4,7 +4,7 @@ import axios from "axios";
 import { format } from "date-fns";
 
 const EmployeeLeaveRequest = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [leaveBalance, setLeaveBalance] = useState(null);
   const [myRequests, setMyRequests] = useState([]);
@@ -21,9 +21,11 @@ const EmployeeLeaveRequest = () => {
 
   useEffect(() => {
     fetchLeaveTypes();
-    fetchLeaveBalance();
-    fetchMyRequests();
-  }, []);
+    if (token) {
+      fetchLeaveBalance();
+      fetchMyRequests();
+    }
+  }, [token]);
 
   const fetchLeaveTypes = async () => {
     try {
@@ -36,7 +38,19 @@ const EmployeeLeaveRequest = () => {
 
   const fetchLeaveBalance = async () => {
     try {
-      const response = await axios.get("http://localhost:5001/api/leave/balance");
+      if (!token) {
+        console.error("No token available");
+        return;
+      }
+
+      const response = await axios.get(
+        "http://localhost:5001/api/leave/balance",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setLeaveBalance(response.data);
     } catch (error) {
       console.error("Error fetching leave balance:", error);
@@ -45,7 +59,19 @@ const EmployeeLeaveRequest = () => {
 
   const fetchMyRequests = async () => {
     try {
-      const response = await axios.get("http://localhost:5001/api/leave/my-requests");
+      if (!token) {
+        console.error("No token available");
+        return;
+      }
+
+      const response = await axios.get(
+        "http://localhost:5001/api/leave/my-requests",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setMyRequests(response.data);
     } catch (error) {
       console.error("Error fetching my requests:", error);
@@ -84,6 +110,12 @@ const EmployeeLeaveRequest = () => {
     try {
       const totalDays = calculateTotalDays();
 
+      if (!leaveBalance) {
+        setMessage("Please wait while we load your leave balance...");
+        setLoading(false);
+        return;
+      }
+
       if (totalDays > leaveBalance.leaves_remaining) {
         setMessage(
           `Insufficient leave balance. You have ${leaveBalance.leaves_remaining} days remaining, but requesting ${totalDays} days.`
@@ -92,11 +124,24 @@ const EmployeeLeaveRequest = () => {
         return;
       }
 
-      const response = await axios.post("http://localhost:5001/api/leave/submit", {
+      const requestData = {
         ...formData,
         toDate: formData.toDate || null,
         totalDays,
-      });
+      };
+
+      console.log("🔍 Frontend - Data being sent:", requestData);
+      console.log("🔍 Frontend - Token available:", !!token);
+
+      const response = await axios.post(
+        "http://localhost:5001/api/leave/submit",
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setMessage("Leave request submitted successfully!");
       setFormData({
@@ -147,7 +192,7 @@ const EmployeeLeaveRequest = () => {
         </h2>
 
         {/* Leave Balance Display */}
-        {leaveBalance && (
+        {leaveBalance ? (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <h3 className="text-lg font-semibold text-blue-800 mb-2">
               Your Leave Balance
@@ -173,6 +218,13 @@ const EmployeeLeaveRequest = () => {
               </div>
             </div>
           </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+              <span className="text-gray-600">Loading leave balance...</span>
+            </div>
+          </div>
         )}
 
         {/* Leave Request Form */}
@@ -187,9 +239,14 @@ const EmployeeLeaveRequest = () => {
                 value={formData.leaveType}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={leaveTypes.length === 0}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
-                <option value="">Select Leave Type</option>
+                <option value="">
+                  {leaveTypes.length === 0
+                    ? "Loading leave types..."
+                    : "Select Leave Type"}
+                </option>
                 {leaveTypes.map((type) => (
                   <option key={type.id} value={type.type_name}>
                     {type.type_name}

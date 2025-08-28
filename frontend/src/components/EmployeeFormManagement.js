@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { FaEye, FaEdit, FaTrash, FaDownload, FaSearch } from "react-icons/fa";
+import {
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaDownload,
+  FaSearch,
+  FaCheck,
+  FaTimes,
+} from "react-icons/fa";
 
 const EmployeeFormManagement = ({ onRefresh }) => {
   const [employeeForms, setEmployeeForms] = useState([]);
@@ -10,6 +18,69 @@ const EmployeeFormManagement = ({ onRefresh }) => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedForm, setSelectedForm] = useState(null);
   const [showFormDetails, setShowFormDetails] = useState(false);
+
+  // Helpers for rendering attached files nicely (avoid dumping base64 strings)
+  const parseDataUrl = (dataUrl) => {
+    if (!dataUrl || typeof dataUrl !== "string")
+      return { mime: "application/octet-stream", base64: "" };
+    const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+    if (!match) return { mime: "application/octet-stream", base64: "" };
+    return {
+      mime: match[1] || "application/octet-stream",
+      base64: match[2] || "",
+    };
+  };
+
+  const getExtensionFromMime = (mime) => {
+    if (!mime) return "bin";
+    if (mime.includes("png")) return "png";
+    if (mime.includes("jpeg")) return "jpg";
+    if (mime.includes("jpg")) return "jpg";
+    if (mime.includes("pdf")) return "pdf";
+    if (mime.includes("gif")) return "gif";
+    return mime.split("/")[1] || "bin";
+  };
+
+  const estimateFileSize = (base64) => {
+    if (!base64) return 0;
+    // Rough estimate of decoded size in bytes for base64
+    return Math.ceil((base64.length * 3) / 4);
+  };
+
+  const formatBytes = (bytes) => {
+    if (!bytes) return "0 B";
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.min(
+      Math.floor(Math.log(bytes) / Math.log(1024)),
+      sizes.length - 1
+    );
+    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+  };
+
+  const handleDownloadFile = (dataUrl, suggestedName) => {
+    try {
+      const { mime, base64 } = parseDataUrl(dataUrl);
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download =
+        suggestedName || `attachment.${getExtensionFromMime(mime)}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Download error:", e);
+      toast.error("Failed to download file");
+    }
+  };
 
   useEffect(() => {
     fetchEmployeeForms();
@@ -51,6 +122,56 @@ const EmployeeFormManagement = ({ onRefresh }) => {
       } catch (error) {
         console.error("Delete form error:", error);
         toast.error("Failed to delete form");
+      }
+    }
+  };
+
+  const handleApproveForm = async (form) => {
+    if (
+      window.confirm(
+        `Are you sure you want to approve ${form.full_name}'s application?`
+      )
+    ) {
+      try {
+        const response = await axios.put(
+          `http://localhost:5001/api/hr/employee-forms/${form.id}/approve`,
+          {
+            action: "approve",
+          }
+        );
+
+        toast.success(
+          "Employee form approved! Employee moved to onboarded list."
+        );
+        fetchEmployeeForms();
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error("Approve form error:", error);
+        toast.error(error.response?.data?.error || "Failed to approve form");
+      }
+    }
+  };
+
+  const handleRejectForm = async (form) => {
+    if (
+      window.confirm(
+        `Are you sure you want to reject ${form.full_name}'s application?`
+      )
+    ) {
+      try {
+        const response = await axios.put(
+          `http://localhost:5001/api/hr/employee-forms/${form.id}/approve`,
+          {
+            action: "reject",
+          }
+        );
+
+        toast.success("Employee form rejected.");
+        fetchEmployeeForms();
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error("Reject form error:", error);
+        toast.error(error.response?.data?.error || "Failed to reject form");
       }
     }
   };
@@ -262,20 +383,43 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     {formatDate(form.submitted_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleViewForm(form)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                      title="View Form Details"
-                    >
-                      <FaEye className="inline-block" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteForm(form.id)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Delete Form"
-                    >
-                      <FaTrash className="inline-block" />
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleViewForm(form)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="View Form Details"
+                      >
+                        <FaEye className="inline-block" />
+                      </button>
+
+                      {/* Show approve/reject buttons only for submitted forms */}
+                      {form.status === "submitted" && (
+                        <>
+                          <button
+                            onClick={() => handleApproveForm(form)}
+                            className="text-green-600 hover:text-green-900"
+                            title="Approve Application"
+                          >
+                            <FaCheck className="inline-block" />
+                          </button>
+                          <button
+                            onClick={() => handleRejectForm(form)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Reject Application"
+                          >
+                            <FaTimes className="inline-block" />
+                          </button>
+                        </>
+                      )}
+
+                      <button
+                        onClick={() => handleDeleteForm(form.id)}
+                        className="text-gray-600 hover:text-gray-900"
+                        title="Delete Form"
+                      >
+                        <FaTrash className="inline-block" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -443,19 +587,49 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     Attached Files
                   </h4>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="space-y-2">
-                      {selectedForm.files.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between"
-                        >
-                          <span className="text-sm text-gray-700">{file}</span>
-                          <button className="text-blue-600 hover:text-blue-800">
-                            <FaDownload className="inline-block mr-1" />
-                            Download
-                          </button>
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedForm.files.map((file, index) => {
+                        const { mime, base64 } = parseDataUrl(file);
+                        const ext = getExtensionFromMime(mime);
+                        const size = formatBytes(estimateFileSize(base64));
+                        const isImage = mime.startsWith("image/");
+                        const fileName = `attachment_${index + 1}.${ext}`;
+                        return (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between bg-white rounded border p-3"
+                          >
+                            <div className="flex items-center space-x-3 overflow-hidden">
+                              {isImage ? (
+                                <img
+                                  src={file}
+                                  alt={fileName}
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-500 text-xs uppercase">
+                                  {ext}
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium text-gray-900 truncate">
+                                  {fileName}
+                                </div>
+                                <div className="text-xs text-gray-500 truncate">
+                                  {mime} • {size}
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleDownloadFile(file, fileName)}
+                              className="text-blue-600 hover:text-blue-800 whitespace-nowrap"
+                            >
+                              <FaDownload className="inline-block mr-1" />
+                              Download
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

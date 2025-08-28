@@ -8,7 +8,7 @@ const authRoutes = require("./routes/auth");
 const hrRoutes = require("./routes/hr");
 const employeeRoutes = require("./routes/employee");
 const attendanceRoutes = require("./routes/attendance");
-const leaveRoutes = require('./routes/leave.js');
+const leaveRoutes = require("./routes/leave.js");
 const { connectDB } = require("./config/database");
 
 const app = express();
@@ -17,23 +17,45 @@ const PORT = process.env.PORT || 5000;
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
+// Rate limiting - More lenient for development
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === "production" ? 100 : 1000, // Higher limit for development
+  message: "Too many requests from this IP, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
 
-// CORS
+// CORS - Enhanced configuration
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? false
-        : ["http://localhost:3000", "http://localhost:3001"],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      const allowedOrigins = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+      ];
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    optionsSuccessStatus: 200,
   })
 );
+
+// Handle preflight requests
+app.options("*", cors());
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
@@ -47,7 +69,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/hr", hrRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
-app.use('/api/leave', leaveRoutes);
+app.use("/api/leave", leaveRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

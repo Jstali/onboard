@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, role }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -15,6 +15,18 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/login" />;
+  }
+
+  // If role is specified, check if user has the required role
+  if (role && user.role !== role) {
+    // Redirect based on user's actual role
+    if (user.role === "hr") {
+      return <Navigate to="/hr" />;
+    } else if (user.role === "manager") {
+      return <Navigate to="/manager" />;
+    } else {
+      return <Navigate to="/employee" />;
+    }
   }
 
   return children;

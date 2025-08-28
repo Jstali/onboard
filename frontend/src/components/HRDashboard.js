@@ -20,6 +20,8 @@ import EmployeeMaster from "./EmployeeMaster";
 import HRLeaveApproval from "./HRLeaveApproval";
 import OnboardedEmployees from "./OnboardedEmployees";
 import EmployeeFormManagement from "./EmployeeFormManagement";
+import HRAttendanceDetails from "./HRAttendanceDetails";
+import EmployeeCRUD from "./EmployeeCRUD";
 
 const HRDashboard = () => {
   const { logout } = useAuth();
@@ -28,19 +30,33 @@ const HRDashboard = () => {
   const [employees, setEmployees] = useState([]);
   const [masterEmployees, setMasterEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Debug logging
+  console.log("🔍 HRDashboard mounted - Active tab:", activeTab);
+  console.log("🔍 HRDashboard - User auth state:", useAuth());
 
   useEffect(() => {
-    fetchEmployees();
-    fetchMasterEmployees();
+    console.log("🔍 HRDashboard useEffect triggered");
+    try {
+      fetchEmployees();
+      fetchMasterEmployees();
+    } catch (err) {
+      console.error("❌ Error in HRDashboard useEffect:", err);
+      setError(err.message);
+    }
   }, []);
 
   const fetchEmployees = async () => {
     try {
+      console.log("🔍 Fetching employees...");
       const response = await axios.get(
         "http://localhost:5001/api/hr/employees"
       );
+      console.log("✅ Employees fetched:", response.data);
       setEmployees(response.data.employees);
     } catch (error) {
+      console.error("❌ Error fetching employees:", error);
       toast.error("Failed to fetch employees");
     } finally {
       setLoading(false);
@@ -49,9 +65,12 @@ const HRDashboard = () => {
 
   const fetchMasterEmployees = async () => {
     try {
+      console.log("🔍 Fetching master employees...");
       const response = await axios.get("http://localhost:5001/api/hr/master");
+      console.log("✅ Master employees fetched:", response.data);
       setMasterEmployees(response.data.employees);
     } catch (error) {
+      console.error("❌ Error fetching master employees:", error);
       toast.error("Failed to fetch master employees");
     }
   };
@@ -78,7 +97,6 @@ const HRDashboard = () => {
     { id: "master", label: "Employee Master", icon: FaUsers },
     { id: "attendance", label: "Attendance", icon: FaCalendarAlt },
     { id: "leave", label: "Leave Management", icon: FaCalendarCheck },
-    { id: "stats", label: "Statistics", icon: FaChartPie },
   ];
 
   return (
@@ -130,26 +148,22 @@ const HRDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Error Boundary */}
+        <div className="mb-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <span className="text-red-800 font-medium">
+                  Dashboard Error: {error}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
         {/* Employees Tab */}
         {activeTab === "employees" && (
           <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Employee Management
-              </h2>
-              <button
-                onClick={() => setShowAddEmployee(true)}
-                className="btn-primary flex items-center"
-              >
-                <FaPlus className="mr-2" />
-                Add Employee
-              </button>
-            </div>
-            <EmployeeList
-              employees={employees}
-              onRefresh={fetchEmployees}
-              onApprove={fetchEmployees}
-            />
+            <EmployeeCRUD />
           </div>
         )}
 
@@ -190,11 +204,6 @@ const HRDashboard = () => {
         {/* Master Tab */}
         {activeTab === "master" && (
           <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Employee Master Table
-              </h2>
-            </div>
             <EmployeeMaster
               employees={masterEmployees}
               onRefresh={fetchMasterEmployees}
@@ -202,32 +211,14 @@ const HRDashboard = () => {
           </div>
         )}
 
-        {/* Attendance Tab */}
+        {/* Attendance Tab (statistics removed per request) */}
         {activeTab === "attendance" && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Attendance Overview
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="card">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Today's Attendance
-                </h3>
-                {/* Today's attendance component will go here */}
-                <p className="text-gray-500">
-                  Attendance data will be displayed here
-                </p>
-              </div>
-              <div className="card">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Recent Activity
-                </h3>
-                {/* Recent activity component will go here */}
-                <p className="text-gray-500">
-                  Recent activity will be displayed here
-                </p>
-              </div>
+          <div className="space-y-6">
+            {/* Summary cards only */}
+            <div>
+              <AttendanceStats />
             </div>
+            <HRAttendanceDetails />
           </div>
         )}
 

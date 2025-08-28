@@ -4,7 +4,7 @@ import axios from "axios";
 import { format } from "date-fns";
 
 const HRLeaveApproval = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [pendingRequests, setPendingRequests] = useState([]);
   const [allRequests, setAllRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,14 +20,26 @@ const HRLeaveApproval = () => {
 
   useEffect(() => {
     fetchLeaveTypes();
-    fetchPendingRequests();
-    fetchAllRequests();
-  }, []);
+    if (token) {
+      fetchPendingRequests();
+      fetchAllRequests();
+    }
+  }, [token]);
 
   const fetchPendingRequests = async () => {
     try {
+      if (!token) {
+        console.error("No token available");
+        return;
+      }
+
       const response = await axios.get(
-        "http://localhost:5001/api/leave/hr/pending"
+        "http://localhost:5001/api/leave/hr/pending",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setPendingRequests(response.data);
     } catch (error) {
@@ -40,7 +52,16 @@ const HRLeaveApproval = () => {
 
   const fetchAllRequests = async () => {
     try {
-      const response = await axios.get("http://localhost:5001/api/leave/all");
+      if (!token) {
+        console.error("No token available");
+        return;
+      }
+
+      const response = await axios.get("http://localhost:5001/api/leave/all", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setAllRequests(response.data);
     } catch (error) {
       console.error("Error fetching all requests:", error);
@@ -62,6 +83,34 @@ const HRLeaveApproval = () => {
     setShowModal(true);
   };
 
+  const handleDirectApproval = async (request, action) => {
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await axios.put(
+        `http://localhost:5001/api/leave/hr/${request.id}/approve`,
+        { action, notes: "" },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setMessage(`Leave request ${action}d successfully`);
+
+      // Refresh the lists
+      fetchPendingRequests();
+      fetchAllRequests();
+    } catch (error) {
+      console.error("Error processing approval:", error);
+      setMessage(error.response?.data?.error || "Failed to process approval");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleApprovalSubmit = async () => {
     if (!approvalData.action) {
       setMessage("Please select an action (approve or reject)");
@@ -74,7 +123,12 @@ const HRLeaveApproval = () => {
     try {
       const response = await axios.put(
         `http://localhost:5001/api/leave/hr/${selectedRequest.id}/approve`,
-        approvalData
+        approvalData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setMessage(response.data.message);
@@ -146,6 +200,13 @@ const HRLeaveApproval = () => {
             }`}
           >
             {message}
+          </div>
+        )}
+
+        {loading && (
+          <div className="flex items-center justify-center p-4 mb-6 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+            <span className="text-blue-800">Processing request...</span>
           </div>
         )}
 
@@ -276,12 +337,32 @@ const HRLeaveApproval = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => handleApproval(request)}
-                            className="text-blue-600 hover:text-blue-900 font-medium"
-                          >
-                            Review
-                          </button>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() =>
+                                handleDirectApproval(request, "approve")
+                              }
+                              disabled={loading}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                            >
+                              ✅ Approve
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleDirectApproval(request, "reject")
+                              }
+                              disabled={loading}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                            >
+                              ❌ Reject
+                            </button>
+                            <button
+                              onClick={() => handleApproval(request)}
+                              className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              📝 Review
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -333,6 +414,9 @@ const HRLeaveApproval = () => {
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Submitted
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
                       </th>
                     </tr>
                   </thead>
@@ -392,6 +476,51 @@ const HRLeaveApproval = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatDate(request.created_at)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => {
+                                setSelectedRequest(request);
+                                setShowModal(true);
+                              }}
+                              className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (
+                                  !window.confirm("Delete this leave request?")
+                                )
+                                  return;
+                                try {
+                                  await axios.delete(
+                                    `http://localhost:5001/api/leave/${request.id}`,
+                                    {
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                    }
+                                  );
+                                  fetchAllRequests();
+                                  fetchPendingRequests();
+                                } catch (err) {
+                                  console.error(
+                                    "Delete leave request error:",
+                                    err
+                                  );
+                                  setMessage(
+                                    err.response?.data?.error ||
+                                      "Failed to delete request"
+                                  );
+                                }
+                              }}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

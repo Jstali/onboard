@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaChartPie, FaUsers, FaCalendarAlt } from 'react-icons/fa';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { FaUsers, FaCalendarAlt } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -145,36 +144,7 @@ const AttendanceStats = () => {
         </div>
       </div>
 
-      {/* Pie Chart */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-6 flex items-center">
-          <FaChartPie className="mr-2" />
-          Attendance Distribution
-        </h3>
-        
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      {/* Pie Chart removed per request */}
 
       {/* Detailed Statistics */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
