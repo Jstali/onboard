@@ -1311,14 +1311,10 @@ router.get("/employees/:id", async (req, res) => {
         u.role,
         u.created_at,
         u.updated_at,
-        ef.full_name as form_name,
-        ef.phone,
-        ef.date_of_birth,
-        ef.address,
-        ef.emergency_contact_name,
-        ef.emergency_contact_phone,
-        ef.status as form_status,
-        ef.submitted_at,
+        oe.employee_id as form_employee_id,
+        oe.manager_name as form_manager_name,
+        oe.status as form_status,
+        oe.assigned_at as form_submitted_at,
         em.employee_id as master_employee_id,
         em.company_email,
         em.department,
@@ -1329,7 +1325,7 @@ router.get("/employees/:id", async (req, res) => {
         em.doj,
         em.status as master_status
       FROM users u
-      LEFT JOIN employee_forms ef ON u.id = ef.user_id
+      LEFT JOIN onboarded_employees oe ON u.id = oe.user_id
       LEFT JOIN employee_master em ON u.email = em.company_email
       WHERE u.id = $1
     `,
