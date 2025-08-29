@@ -25,7 +25,7 @@ const EmployeeCRUD = () => {
     first_name: "",
     last_name: "",
     email: "",
-    role: "Product Developer",
+    type: "Full-Time",
     status: "active",
   });
 
@@ -39,6 +39,7 @@ const EmployeeCRUD = () => {
       const response = await axios.get(
         "http://localhost:5001/api/hr/employees"
       );
+      console.log("🔍 Employee data received:", response.data.employees);
       setEmployees(response.data.employees || []);
     } catch (error) {
       console.error("Error fetching employees:", error);
@@ -61,7 +62,7 @@ const EmployeeCRUD = () => {
       first_name: "",
       last_name: "",
       email: "",
-      job_role: "Product Developer",
+      type: "Full-Time",
     });
   };
 
@@ -72,13 +73,16 @@ const EmployeeCRUD = () => {
         return;
       }
 
-      await axios.post("http://localhost:5001/api/hr/employees", {
+      const employeeData = {
         name: `${formData.first_name} ${formData.last_name}`,
-        email: formData.email,
-        role: formData.role,
-        type: "Full-Time",
+        email: formData.email, // Personal email
+        type: formData.type,
         doj: new Date().toISOString(),
-      });
+      };
+
+      console.log("Sending employee data:", employeeData);
+
+      await axios.post("http://localhost:5001/api/hr/employees", employeeData);
 
       toast.success("Employee created successfully");
       setShowAddModal(false);
@@ -86,6 +90,7 @@ const EmployeeCRUD = () => {
       fetchEmployees();
     } catch (error) {
       console.error("Error creating employee:", error);
+      console.error("Error response:", error.response?.data);
       toast.error(error.response?.data?.error || "Failed to create employee");
     }
   };
@@ -96,7 +101,7 @@ const EmployeeCRUD = () => {
       first_name: employee.first_name || "",
       last_name: employee.last_name || "",
       email: employee.email || "",
-      job_role: employee.assigned_job_role || "Product Developer",
+      type: employee.assigned_job_role || "Full-Time",
     });
     setShowEditModal(true);
   };
@@ -135,11 +140,15 @@ const EmployeeCRUD = () => {
   };
 
   const handleDelete = async (employee) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${employee.first_name} ${employee.last_name}?`
-      )
-    ) {
+    const employeeName =
+      employee.first_name && employee.last_name
+        ? `${employee.first_name} ${employee.last_name}`
+        : employee.first_name ||
+          employee.last_name ||
+          employee.email ||
+          "this employee";
+
+    if (!window.confirm(`Are you sure you want to delete ${employeeName}?`)) {
       return;
     }
 
@@ -157,11 +166,13 @@ const EmployeeCRUD = () => {
 
   const filteredEmployees = employees.filter((employee) => {
     const searchLower = searchTerm.toLowerCase();
+    const fullName = `${employee.first_name || ""} ${
+      employee.last_name || ""
+    }`.trim();
     return (
-      (employee.first_name?.toLowerCase() || "").includes(searchLower) ||
-      (employee.last_name?.toLowerCase() || "").includes(searchLower) ||
+      fullName.toLowerCase().includes(searchLower) ||
       (employee.email?.toLowerCase() || "").includes(searchLower) ||
-      (employee.role?.toLowerCase() || "").includes(searchLower)
+      (employee.assigned_job_role?.toLowerCase() || "").includes(searchLower)
     );
   });
 
@@ -175,10 +186,20 @@ const EmployeeCRUD = () => {
   const getRoleBadge = (role) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     switch (role) {
+      case "Full-Time":
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case "Contract":
+        return `${baseClasses} bg-blue-100 text-blue-800`;
+      case "Intern":
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      case "Product Developer":
+        return `${baseClasses} bg-indigo-100 text-indigo-800`;
       case "hr":
         return `${baseClasses} bg-purple-100 text-purple-800`;
       case "manager":
         return `${baseClasses} bg-blue-100 text-blue-800`;
+      case "Not Assigned":
+        return `${baseClasses} bg-gray-100 text-gray-600`;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
     }
@@ -282,7 +303,12 @@ const EmployeeCRUD = () => {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {employee.first_name} {employee.last_name}
+                            {employee.first_name && employee.last_name
+                              ? `${employee.first_name} ${employee.last_name}`
+                              : employee.first_name ||
+                                employee.last_name ||
+                                employee.email ||
+                                "Unknown Employee"}
                           </div>
                         </div>
                       </div>
@@ -298,8 +324,10 @@ const EmployeeCRUD = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={getRoleBadge(employee.role)}>
-                        {employee.role}
+                      <span
+                        className={getRoleBadge(employee.assigned_job_role)}
+                      >
+                        {employee.assigned_job_role || "Not Assigned"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -399,19 +427,18 @@ const EmployeeCRUD = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Role *
+                    Employment Type *
                   </label>
                   <select
-                    name="role"
-                    value={formData.role}
+                    name="type"
+                    value={formData.type}
                     onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
-                    <option value="Product Developer">Product Developer</option>
-                    <option value="SAP">SAP</option>
-                    <option value="Income Management">Income Management</option>
-                    <option value="Integration">Integration</option>
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Intern">Intern</option>
                   </select>
                 </div>
               </div>
@@ -491,18 +518,17 @@ const EmployeeCRUD = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Job Role
+                    Employment Type
                   </label>
                   <select
-                    name="job_role"
-                    value={formData.job_role}
+                    name="type"
+                    value={formData.type}
                     onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500"
                   >
-                    <option value="Product Developer">Product Developer</option>
-                    <option value="SAP">SAP</option>
-                    <option value="Income Management">Income Management</option>
-                    <option value="Integration">Integration</option>
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Intern">Intern</option>
                   </select>
                 </div>
               </div>
@@ -545,7 +571,12 @@ const EmployeeCRUD = () => {
                 <div className="flex justify-between">
                   <span className="font-medium text-gray-700">Name:</span>
                   <span className="text-gray-900">
-                    {selectedEmployee.first_name} {selectedEmployee.last_name}
+                    {selectedEmployee.first_name && selectedEmployee.last_name
+                      ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}`
+                      : selectedEmployee.first_name ||
+                        selectedEmployee.last_name ||
+                        selectedEmployee.email ||
+                        "Unknown Employee"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -556,8 +587,10 @@ const EmployeeCRUD = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium text-gray-700">Role:</span>
-                  <span className={getRoleBadge(selectedEmployee.role)}>
-                    {selectedEmployee.role}
+                  <span
+                    className={getRoleBadge(selectedEmployee.assigned_job_role)}
+                  >
+                    {selectedEmployee.assigned_job_role || "Not Assigned"}
                   </span>
                 </div>
                 <div className="flex justify-between">

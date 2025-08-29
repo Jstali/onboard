@@ -17,6 +17,7 @@ import EmployeeLeaveRequest from "./components/EmployeeLeaveRequest";
 import ManagerLeaveApproval from "./components/ManagerLeaveApproval";
 import HRLeaveApproval from "./components/HRLeaveApproval";
 import ManagerDashboard from "./components/ManagerDashboard";
+import Profile from "./components/Profile";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -116,6 +117,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute role="hr">
             <HRDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Profile Route - Available to all authenticated users */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

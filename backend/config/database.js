@@ -153,8 +153,6 @@ const initializeTables = async () => {
         total_leave_days DECIMAL(5,1) NOT NULL,
         reason TEXT NOT NULL,
         status VARCHAR(50) DEFAULT 'pending_manager_approval',
-        manager_id INTEGER,
-        manager_name VARCHAR(255),
         manager_approved_at TIMESTAMP,
         manager_approval_notes TEXT,
         hr_id INTEGER,
@@ -165,7 +163,6 @@ const initializeTables = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL,
         FOREIGN KEY (hr_id) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
@@ -224,7 +221,7 @@ const initializeTables = async () => {
       CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(date);
       CREATE INDEX IF NOT EXISTS idx_leave_requests_employee_id ON leave_requests(employee_id);
       CREATE INDEX IF NOT EXISTS idx_leave_requests_status ON leave_requests(status);
-      CREATE INDEX IF NOT EXISTS idx_leave_requests_manager_id ON leave_requests(manager_id);
+
       CREATE INDEX IF NOT EXISTS idx_leave_requests_hr_id ON leave_requests(hr_id);
       CREATE INDEX IF NOT EXISTS idx_leave_requests_dates ON leave_requests(from_date, to_date);
       CREATE INDEX IF NOT EXISTS idx_leave_balances_employee_year ON leave_balances(employee_id, year);
@@ -249,7 +246,7 @@ const initializeTables = async () => {
       {
         id: "MGR001",
         name: "Pradeep",
-        email: "pradeep@company.com",
+        email: "strawhatluff124@gmail.com",
         department: "Engineering",
       },
       {

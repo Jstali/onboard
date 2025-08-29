@@ -12,14 +12,23 @@ const authenticateToken = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Get user from database
+    // Get user from database with temp_password check
     const result = await pool.query(
-      "SELECT id, email, role FROM users WHERE id = $1",
+      "SELECT id, email, role, temp_password FROM users WHERE id = $1",
       [decoded.userId]
     );
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: "Invalid token" });
+    }
+
+    // Check if user still has temporary password
+    if (result.rows[0].temp_password) {
+      return res.status(403).json({ 
+        error: "Password change required",
+        requiresPasswordReset: true,
+        message: "Please change your temporary password before accessing the application"
+      });
     }
 
     req.user = {
@@ -37,7 +46,7 @@ const authenticateToken = async (req, res, next) => {
     }
     return res.status(500).json({ error: "Authentication failed" });
   }
-};
+ };
 
 const requireRole = (roles) => {
   return (req, res, next) => {

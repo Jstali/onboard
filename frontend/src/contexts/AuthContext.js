@@ -33,6 +33,13 @@ export const AuthProvider = ({ children }) => {
           setUser(response.data.user);
         } catch (error) {
           console.error("Auth check failed:", error);
+          
+          // Check if user needs to change password
+          if (error.response?.data?.requiresPasswordReset) {
+            console.log("🔐 User needs to change temporary password");
+            toast.error("Please change your temporary password to continue");
+          }
+          
           localStorage.removeItem("token");
           setToken(null);
           setUser(null);

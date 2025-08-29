@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaCalendarAlt, FaUsers, FaDownload } from "react-icons/fa";
+import { FaCalendarAlt, FaUsers, FaDownload, FaTrash } from "react-icons/fa";
 import { format } from "date-fns";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 const HRAttendanceDetails = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -54,6 +55,32 @@ const HRAttendanceDetails = () => {
   const formatTime = (timeString) => {
     if (!timeString) return "-";
     return format(new Date(timeString), "hh:mm a");
+  };
+
+  const handleDeleteAttendance = async (id, employeeName, date) => {
+    const confirmMessage = `Are you sure you want to delete the attendance record for ${employeeName} on ${formatDate(
+      date
+    )}?\n\nThis action cannot be undone.`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      setDeletingId(id);
+      await axios.delete(`http://localhost:5001/api/attendance/${id}`);
+      toast.success("Attendance record deleted successfully");
+
+      // Refresh the attendance data
+      fetchAttendanceDetails();
+    } catch (error) {
+      console.error("Error deleting attendance record:", error);
+      toast.error(
+        error.response?.data?.error || "Failed to delete attendance record"
+      );
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const filteredRecords = attendanceRecords.filter((record) => {
@@ -219,6 +246,9 @@ const HRAttendanceDetails = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Reason
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -253,6 +283,33 @@ const HRAttendanceDetails = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {record.reason || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <button
+                        onClick={() =>
+                          handleDeleteAttendance(
+                            record.id,
+                            record.employee_name,
+                            record.date
+                          )
+                        }
+                        disabled={deletingId === record.id}
+                        className={`font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded px-3 py-2 transition-colors duration-200 ${
+                          deletingId === record.id
+                            ? "text-gray-400 cursor-not-allowed bg-gray-100"
+                            : "text-red-600 hover:text-red-800 hover:bg-red-50 border border-red-200 hover:border-red-300"
+                        }`}
+                        title="Delete attendance record"
+                      >
+                        {deletingId === record.id ? (
+                          "Deleting..."
+                        ) : (
+                          <>
+                            <FaTrash className="inline mr-1" />
+                            Delete
+                          </>
+                        )}
+                      </button>
                     </td>
                   </tr>
                 ))}

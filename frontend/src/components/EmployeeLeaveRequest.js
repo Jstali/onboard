@@ -178,7 +178,13 @@ const EmployeeLeaveRequest = () => {
   };
 
   const formatDate = (dateString) => {
-    return format(new Date(dateString), "MMM dd, yyyy");
+    if (!dateString) return "-";
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
+      return "-";
+    }
   };
 
   return (
@@ -394,9 +400,6 @@ const EmployeeLeaveRequest = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Series
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Type
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -409,6 +412,9 @@ const EmployeeLeaveRequest = () => {
                     Days
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Manager
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -419,9 +425,6 @@ const EmployeeLeaveRequest = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {myRequests.map((request) => (
                   <tr key={request.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {request.series}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {leaveTypes.find(
@@ -445,11 +448,23 @@ const EmployeeLeaveRequest = () => {
                       {formatDate(request.from_date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(request.to_date)}
+                      {request.to_date ? formatDate(request.to_date) : "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {request.total_leave_days}
                       {request.half_day && " (½ day)"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          request.manager_name &&
+                          request.manager_name !== "Not Assigned"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {request.manager_name || "Not Assigned"}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

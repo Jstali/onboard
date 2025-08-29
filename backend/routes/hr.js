@@ -25,57 +25,80 @@ function generateTempPassword() {
 router.post(
   "/employees",
   [
-    body("email").isEmail().normalizeEmail(),
-    body("name").notEmpty().trim(),
-    body("type").isIn(["Intern", "Contract", "Full-Time"]),
-    body("doj").isISO8601().toDate(),
+    body("email").isEmail().withMessage("Valid email is required"),
+    body("name").notEmpty().trim().withMessage("Employee name is required"),
+    body("type")
+      .isIn(["Intern", "Contract", "Full-Time"])
+      .withMessage("Valid employment type is required"),
+    body("doj")
+      .isISO8601()
+      .toDate()
+      .withMessage("Valid date of joining is required"),
   ],
   async (req, res) => {
     try {
+      console.log("🔍 Employee creation request received:", req.body);
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("❌ Validation errors:", errors.array());
         return res.status(400).json({ errors: errors.array() });
       }
 
       const { email, name, type, doj } = req.body;
+      console.log("✅ Validated data:", { email, name, type, doj });
 
       // Check if email already exists
+      console.log("🔍 Checking if email exists:", email);
       const existingUser = await pool.query(
         "SELECT id FROM users WHERE email = $1",
         [email]
       );
 
       if (existingUser.rows.length > 0) {
+        console.log("❌ Email already exists:", email);
         return res.status(400).json({ error: "Email already exists" });
       }
+      console.log("✅ Email is unique");
 
       // Generate temporary password
       const tempPassword = generateTempPassword();
+      console.log("🔍 Generated temp password:", tempPassword);
 
-      // Create user
+      // Split name into first and last name
+      const nameParts = name.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
+      // Create user with the provided email
+      console.log("🔍 Creating user in database...");
       const userResult = await pool.query(
-        "INSERT INTO users (email, password, role, temp_password) VALUES ($1, $2, $3, $4) RETURNING id",
-        [email, "", "employee", tempPassword]
+        "INSERT INTO users (email, password, role, temp_password, first_name, last_name) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+        [email, "", "employee", tempPassword, firstName, lastName]
       );
 
       const userId = userResult.rows[0].id;
+      console.log("✅ User created with ID:", userId);
 
       // Send onboarding email
+      console.log("🔍 Sending onboarding email to:", email);
       const emailSent = await sendOnboardingEmail(email, tempPassword);
 
       if (!emailSent) {
+        console.log("❌ Email sending failed, deleting user");
         // If email fails, delete the user and return error
         await pool.query("DELETE FROM users WHERE id = $1", [userId]);
         return res
           .status(500)
           .json({ error: "Failed to send onboarding email" });
       }
+      console.log("✅ Email sent successfully");
 
       res.status(201).json({
         message: "Employee added successfully",
         employee: {
           id: userId,
-          email,
+          email: email,
           name,
           type,
           doj,
@@ -115,7 +138,7 @@ router.get("/employees", async (req, res) => {
         em.designation,
         em.salary_band,
         em.location,
-        COALESCE(em.role, 'Not Assigned') as assigned_job_role
+        COALESCE(ef.type, em.role, 'Not Assigned') as assigned_job_role
       FROM users u
       LEFT JOIN employee_forms ef ON u.id = ef.employee_id
       LEFT JOIN employee_master em ON u.email = em.company_email
@@ -449,8 +472,16 @@ router.put(
 router.get("/master", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT * FROM employee_master
-      ORDER BY created_at DESC
+      SELECT 
+        em.*,
+        CASE 
+          WHEN m.manager_name IS NOT NULL THEN m.manager_name
+          WHEN em.manager_name IS NOT NULL AND em.manager_name != '' THEN em.manager_name
+          ELSE 'Not Assigned'
+        END as display_manager_name
+      FROM employee_master em
+      LEFT JOIN managers m ON em.manager_id = m.manager_id
+      ORDER BY em.created_at DESC
     `);
 
     res.json({ employees: result.rows });
@@ -679,31 +710,60 @@ router.put(
         });
       }
 
+      // Get manager details from managers table
+      const managerResult = await pool.query(
+        "SELECT manager_id, manager_name FROM managers WHERE manager_name ILIKE $1 AND status = 'active'",
+        [manager]
+      );
+
+      if (managerResult.rows.length === 0) {
+        return res.status(400).json({
+          error: "Manager not found or inactive",
+        });
+      }
+
+      const managerInfo = managerResult.rows[0];
+
+      // Update the user's email to the company email (keep same password)
+      await pool.query(
+        "UPDATE users SET email = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+        [companyEmail, onboarded.user_id]
+      );
+
       // Update onboarded employee with assigned details
       await pool.query(
         `
         UPDATE onboarded_employees 
         SET 
           company_email = $1,
+          manager_id = $2,
+          manager_name = $3,
           status = 'assigned',
-          notes = $2,
+          notes = $4,
           updated_at = CURRENT_TIMESTAMP
-        WHERE id = $3
+        WHERE id = $5
       `,
-        [companyEmail, `Assigned to manager: ${manager}`, id]
+        [
+          companyEmail,
+          managerInfo.manager_id,
+          managerInfo.manager_name,
+          `Assigned to manager: ${managerInfo.manager_name}`,
+          id,
+        ]
       );
 
       // Add to employee master table
       await pool.query(
         `
-        INSERT INTO employee_master (employee_id, employee_name, company_email, manager_id, type, doj)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO employee_master (employee_id, employee_name, company_email, manager_id, manager_name, type, doj)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
       `,
         [
           employeeId,
           name,
           companyEmail,
-          manager, // Use the selected manager
+          managerInfo.manager_id, // Use proper manager ID
+          managerInfo.manager_name, // Use proper manager name
           onboarded.employee_type,
           formData.doj || new Date(),
         ]
@@ -722,8 +782,29 @@ router.put(
         },
       });
     } catch (error) {
-      console.error("Assign employee details error:", error);
-      res.status(500).json({ error: "Failed to assign employee details" });
+      console.error("❌ Assign employee details error:", error);
+
+      // Provide specific error messages for common issues
+      let errorMessage = "Failed to assign employee details";
+      if (error.code === "23505") {
+        if (error.detail && error.detail.includes("company_email")) {
+          errorMessage = "Company email already exists in master table";
+        } else if (error.detail && error.detail.includes("employee_id")) {
+          errorMessage = "Employee ID already exists in master table";
+        } else if (error.detail && error.detail.includes("name")) {
+          errorMessage = "Employee name and email combination already exists";
+        } else {
+          errorMessage = "Duplicate entry detected - please check all fields";
+        }
+      } else if (error.code === "23503") {
+        errorMessage = "Invalid manager reference";
+      }
+
+      res.status(500).json({
+        error: errorMessage,
+        details: error.message,
+        code: error.code || "UNKNOWN_ERROR",
+      });
     }
   }
 );
@@ -746,9 +827,14 @@ router.get("/debug/employees", async (req, res) => {
     console.log("🔍 Employee Forms:", formsResult.rows);
 
     // Check employee_master table
-    const masterResult = await pool.query(
-      "SELECT * FROM employee_master ORDER BY id"
-    );
+    const masterResult = await pool.query(`
+      SELECT 
+        em.*,
+        COALESCE(m.manager_name, em.manager_name, em.manager_id) as display_manager_name
+      FROM employee_master em
+      LEFT JOIN managers m ON em.manager_id = m.manager_id
+      ORDER BY em.id
+    `);
     console.log("🔍 Employee Master:", masterResult.rows);
 
     res.json({

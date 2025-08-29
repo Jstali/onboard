@@ -125,7 +125,7 @@ const updateDatabaseStructure = async () => {
       {
         id: "MGR001",
         name: "Pradeep",
-        email: "pradeep@company.com",
+        email: "strawhatluff124@gmail.com",
         department: "Engineering",
       },
       {

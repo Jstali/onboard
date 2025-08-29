@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
 import {
   FaUsers,
   FaCalendarAlt,
   FaSignOutAlt,
   FaClipboardList,
   FaCalendarCheck,
+  FaUserEdit,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -104,13 +106,22 @@ const HRDashboard = () => {
                 ONDOARD HR Dashboard
               </h1>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
-            >
-              <FaSignOutAlt className="mr-2" />
-              Logout
-            </button>
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/profile"
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+              >
+                <FaUserEdit className="mr-2" />
+                Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+              >
+                <FaSignOutAlt className="mr-2" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>

@@ -25,8 +25,6 @@ const AttendanceStats = () => {
     }
   };
 
-  const COLORS = ['#22c55e', '#3b82f6', '#ef4444'];
-
   // Pie chart removed; keep placeholder for future use
 
   if (loading) {

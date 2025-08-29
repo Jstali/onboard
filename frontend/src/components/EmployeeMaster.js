@@ -127,7 +127,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {employee.manager_id || "Not Assigned"}
+                  {employee.display_manager_name || "Not Assigned"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -151,7 +151,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                         }\nDOJ: ${new Date(
                           employee.doj
                         ).toLocaleDateString()}\nManager: ${
-                          employee.manager_id || "Not Assigned"
+                          employee.display_manager_name || "Not Assigned"
                         }\nStatus: ${employee.status}`
                       );
                     }}

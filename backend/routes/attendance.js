@@ -616,4 +616,43 @@ router.get("/hr/details", [authenticateToken, requireHR], async (req, res) => {
   }
 });
 
+// Delete attendance record (HR only)
+router.delete("/:id", [authenticateToken, requireHR], async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if attendance record exists
+    const attendanceResult = await pool.query(
+      "SELECT a.id, a.employee_id, a.date, a.status, u.email FROM attendance a JOIN users u ON a.employee_id = u.id WHERE a.id = $1",
+      [id]
+    );
+
+    if (attendanceResult.rows.length === 0) {
+      return res.status(404).json({ error: "Attendance record not found" });
+    }
+
+    const attendance = attendanceResult.rows[0];
+
+    // Delete the attendance record
+    await pool.query("DELETE FROM attendance WHERE id = $1", [id]);
+
+    console.log(
+      `🗑️ HR ${req.user.email} deleted attendance record ${id} for employee ${attendance.employee_id} on ${attendance.date}`
+    );
+
+    res.json({
+      message: "Attendance record deleted successfully",
+      deletedRecord: {
+        id: attendance.id,
+        employeeId: attendance.employee_id,
+        date: attendance.date,
+        status: attendance.status,
+      },
+    });
+  } catch (error) {
+    console.error("Delete attendance error:", error);
+    res.status(500).json({ error: "Failed to delete attendance record" });
+  }
+});
+
 module.exports = router;

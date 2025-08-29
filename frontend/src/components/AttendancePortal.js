@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   FaSignOutAlt,
@@ -20,11 +20,7 @@ const AttendancePortal = () => {
   const [showAttendanceForm, setShowAttendanceForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
 
-  useEffect(() => {
-    fetchAttendance();
-  }, [currentDate]);
-
-  const fetchAttendance = async () => {
+  const fetchAttendance = useCallback(async () => {
     try {
       const month = currentDate.getMonth() + 1;
       const year = currentDate.getFullYear();
@@ -44,7 +40,11 @@ const AttendancePortal = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentDate]);
+
+  useEffect(() => {
+    fetchAttendance();
+  }, [fetchAttendance]);
 
   const handleMarkAttendance = async (date, status, reason = "") => {
     try {

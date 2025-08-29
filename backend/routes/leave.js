@@ -29,7 +29,8 @@ const calculateLeaveDays = (fromDate, toDate, halfDay) => {
 // Helper function to get employee's manager
 const getEmployeeManager = async (employeeId) => {
   try {
-    // First get the manager information from employee_master table
+    // Get the manager information from employee_master table
+    // Use the same email for both user account and company email
     const employeeResult = await pool.query(
       `SELECT em.manager_name, em.manager_id, m.email
        FROM employee_master em
@@ -92,7 +93,7 @@ const getHRUsers = async () => {
     const result = await pool.query(`
       SELECT id, email, first_name, last_name
       FROM users
-      WHERE role = 'hr' AND status = 'active'
+      WHERE role = 'hr'
     `);
     return result.rows;
   } catch (error) {
@@ -147,7 +148,14 @@ router.get("/balance", authenticateToken, async (req, res) => {
         year: currentYear,
       });
     } else {
-      res.json(result.rows[0]);
+      // Ensure numeric values are returned as numbers
+      const balance = result.rows[0];
+      res.json({
+        total_allocated: parseInt(balance.total_allocated) || 0,
+        leaves_taken: parseInt(balance.leaves_taken) || 0,
+        leaves_remaining: parseInt(balance.leaves_remaining) || 0,
+        year: balance.year,
+      });
     }
   } catch (error) {
     console.error("Error fetching leave balance:", error);
@@ -292,14 +300,14 @@ router.post(
       // Get employee's manager
       const manager = await getEmployeeManager(employeeId);
 
-      // Insert leave request with approval token and manager info
+      // Insert leave request without storing manager info (will fetch from employee_master)
       const insertResult = await pool.query(
         `
       INSERT INTO leave_requests (
         series, employee_id, employee_name, leave_type, leave_balance_before,
         from_date, to_date, half_day, total_leave_days, reason, 
-        status, manager_id, manager_name, approval_token
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        status, approval_token
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `,
         [
@@ -314,8 +322,6 @@ router.post(
           totalLeaveDays,
           reason,
           "pending_manager_approval", // Start with manager approval
-          manager ? manager.id : null,
-          manager ? manager.manager_name : null,
           approvalToken,
         ]
       );
@@ -328,6 +334,7 @@ router.post(
         const emailData = {
           id: leaveRequest.id,
           employeeName,
+          employeeEmail: employee.email, // Add employee email for reply-to functionality
           leaveType,
           fromDate,
           toDate,
@@ -373,16 +380,31 @@ router.post(
   }
 );
 
-// Get employee's leave requests
+// Get employee's leave requests with current manager info from employee_master
 router.get("/my-requests", authenticateToken, async (req, res) => {
   try {
+    console.log("🔍 Fetching leave requests for user ID:", req.user.userId);
+
     const result = await pool.query(
       `
-      SELECT * FROM leave_requests 
+      SELECT 
+        *,
+        current_manager_name as manager_name
+      FROM leave_requests_with_manager
       WHERE employee_id = $1 
       ORDER BY created_at DESC
     `,
       [req.user.userId]
+    );
+
+    console.log(
+      "🔍 Leave requests with manager data:",
+      result.rows.map((r) => ({
+        id: r.id,
+        from_date: r.from_date,
+        manager_name: r.manager_name,
+        current_manager_name: r.current_manager_name,
+      }))
     );
 
     res.json(result.rows);
@@ -401,13 +423,32 @@ router.get("/manager/pending", authenticateToken, async (req, res) => {
         .json({ error: "Access denied. Manager role required." });
     }
 
-    const result = await pool.query(`
-      SELECT lr.*, u.email as employee_email
-      FROM leave_requests lr
-      JOIN users u ON lr.employee_id = u.id
-      WHERE lr.status = 'pending_manager_approval'
-      ORDER BY lr.created_at ASC
-    `);
+    // Get manager ID from current user
+    const managerResult = await pool.query(
+      "SELECT manager_id FROM managers WHERE email = $1 AND status = 'active'",
+      [req.user.email]
+    );
+
+    if (managerResult.rows.length === 0) {
+      return res.status(403).json({ error: "Manager not found or inactive" });
+    }
+
+    const managerId = managerResult.rows[0].manager_id;
+
+    const result = await pool.query(
+      `
+      SELECT 
+        lrm.*, 
+        u.email as employee_email,
+        lrm.current_manager_name as manager_name
+      FROM leave_requests_with_manager lrm
+      JOIN users u ON lrm.employee_id = u.id
+      WHERE lrm.status = 'pending_manager_approval' 
+        AND lrm.current_manager_id = $1
+      ORDER BY lrm.created_at ASC
+    `,
+      [managerId]
+    );
 
     res.json(result.rows);
   } catch (error) {
@@ -605,22 +646,20 @@ router.put(
       );
       const managerName = `${managerResult.rows[0].first_name} ${managerResult.rows[0].last_name}`;
 
-      // Update leave request
+      // Update leave request (manager info comes from employee_master)
       const status = action === "approve" ? "manager_approved" : "rejected";
       const updateResult = await pool.query(
         `
       UPDATE leave_requests 
       SET 
         status = $1,
-        manager_id = $2,
-        manager_name = $3,
         manager_approved_at = CURRENT_TIMESTAMP,
-        manager_approval_notes = $4,
+        manager_approval_notes = $2,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $5
+      WHERE id = $3
       RETURNING *
     `,
-        [status, managerId, managerName, notes, id]
+        [status, notes, id]
       );
 
       if (updateResult.rows.length === 0) {
@@ -634,29 +673,28 @@ router.put(
         const hrUsers = await getHRUsers();
 
         for (const hr of hrUsers) {
-          const hrEmailContent = `
-          <h2>Leave Request Approved by Manager</h2>
-          <p><strong>Employee:</strong> ${leaveRequest.employee_name}</p>
-          <p><strong>Leave Type:</strong> ${leaveRequest.leave_type}</p>
-          <p><strong>From:</strong> ${leaveRequest.from_date}</p>
-          ${
-            leaveRequest.to_date
-              ? `<p><strong>To:</strong> ${leaveRequest.to_date}</p>`
-              : "<p><strong>Type:</strong> Single Day Leave</p>"
+          try {
+            await sendManagerApprovalToHR(
+              hr.email,
+              {
+                id: leaveRequest.id,
+                employeeName: leaveRequest.employee_name,
+                employeeEmail: leaveRequest.employee_email || "Not available",
+                leaveType: leaveRequest.leave_type,
+                fromDate: leaveRequest.from_date,
+                toDate: leaveRequest.to_date,
+                totalDays: leaveRequest.total_leave_days,
+                reason: leaveRequest.reason,
+              },
+              managerName
+            );
+          } catch (emailError) {
+            console.error(
+              "❌ Failed to send HR notification email:",
+              emailError
+            );
+            // Continue with other HR users even if one email fails
           }
-          <p><strong>Total Days:</strong> ${leaveRequest.total_leave_days}</p>
-          <p><strong>Reason:</strong> ${leaveRequest.reason}</p>
-          <p><strong>Approved by:</strong> ${managerName}</p>
-          <br>
-          <p>Please review and take final action:</p>
-          <a href="http://localhost:3001/hr/leave-requests" style="background-color: #10B981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review Request</a>
-        `;
-
-          await sendEmail(
-            hr.email,
-            `Leave Request Approved by Manager - ${leaveRequest.series}`,
-            hrEmailContent
-          );
         }
       }
 
@@ -665,8 +703,29 @@ router.put(
         leaveRequest,
       });
     } catch (error) {
-      console.error("Error processing manager approval:", error);
-      res.status(500).json({ error: "Failed to process approval" });
+      console.error("❌ Error processing manager approval:", error);
+      console.error("❌ Error stack:", error.stack);
+      console.error("❌ Error message:", error.message);
+      if (error.code) {
+        console.error("❌ Error code:", error.code);
+      }
+      if (error.detail) {
+        console.error("❌ Error detail:", error.detail);
+      }
+
+      // Provide more specific error messages
+      let errorMessage = "Failed to process approval";
+      if (error.code === "23503") {
+        errorMessage = "Invalid leave request reference";
+      } else if (error.message.includes("email")) {
+        errorMessage = "Failed to send notification email";
+      }
+
+      res.status(500).json({
+        error: errorMessage,
+        details: error.message,
+        code: error.code || "UNKNOWN_ERROR",
+      });
     }
   }
 );
@@ -759,40 +818,85 @@ router.put(
 
       // If approved, update leave balance and attendance
       if (action === "approve") {
-        // Update leave balance
-        const currentYear = new Date().getFullYear();
-        await pool.query(
-          `
-        UPDATE leave_balances 
-        SET 
-          leaves_taken = leaves_taken + $1,
-          leaves_remaining = leaves_remaining - $1,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE employee_id = $2 AND year = $3
-      `,
-          [leaveRequest.total_leave_days, leaveRequest.employee_id, currentYear]
-        );
+        try {
+          // Update leave balance - convert total_leave_days to integer
+          const currentYear = new Date().getFullYear();
+          const totalDays = Math.round(
+            parseFloat(leaveRequest.total_leave_days) || 1
+          );
+
+          console.log("🔍 Updating leave balance:", {
+            employeeId: leaveRequest.employee_id,
+            year: currentYear,
+            totalDays: totalDays,
+            originalValue: leaveRequest.total_leave_days,
+          });
+
+          await pool.query(
+            `
+          UPDATE leave_balances 
+          SET 
+            leaves_taken = leaves_taken + $1,
+            leaves_remaining = leaves_remaining - $1,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE employee_id = $2 AND year = $3
+        `,
+            [totalDays, leaveRequest.employee_id, currentYear]
+          );
+
+          console.log("✅ Leave balance updated successfully");
+        } catch (balanceError) {
+          console.error("❌ Error updating leave balance:", balanceError);
+          // Continue with the approval process even if balance update fails
+          // The leave request is still approved
+        }
 
         // Add to attendance table
         const fromDate = new Date(leaveRequest.from_date);
         const toDate = leaveRequest.to_date
           ? new Date(leaveRequest.to_date)
-          : fromDate;
+          : fromDate; // Use from_date if to_date is NULL (single day leave)
 
-        for (
-          let d = new Date(fromDate);
-          d <= toDate;
-          d.setDate(d.getDate() + 1)
-        ) {
-          // Skip weekends
-          if (d.getDay() === 0 || d.getDay() === 6) continue;
+        // Handle single day vs multi-day leaves
+        if (leaveRequest.to_date) {
+          // Multi-day leave: loop through dates
+          for (
+            let d = new Date(fromDate);
+            d <= toDate;
+            d.setDate(d.getDate() + 1)
+          ) {
+            // Skip weekends
+            if (d.getDay() === 0 || d.getDay() === 6) continue;
 
-          // Check if attendance already exists
+            // Check if attendance already exists
+            const existingAttendance = await pool.query(
+              `
+            SELECT id FROM attendance WHERE employee_id = $1 AND date = $2
+          `,
+              [leaveRequest.employee_id, d.toISOString().split("T")[0]]
+            );
+
+            if (existingAttendance.rows.length === 0) {
+              await pool.query(
+                `
+              INSERT INTO attendance (employee_id, date, status, reason)
+              VALUES ($1, $2, 'Leave', $3)
+            `,
+                [
+                  leaveRequest.employee_id,
+                  d.toISOString().split("T")[0],
+                  `Approved leave: ${leaveRequest.reason}`,
+                ]
+              );
+            }
+          }
+        } else {
+          // Single day leave: just add one attendance record
           const existingAttendance = await pool.query(
             `
           SELECT id FROM attendance WHERE employee_id = $1 AND date = $2
         `,
-            [leaveRequest.employee_id, d.toISOString().split("T")[0]]
+            [leaveRequest.employee_id, fromDate.toISOString().split("T")[0]]
           );
 
           if (existingAttendance.rows.length === 0) {
@@ -803,7 +907,7 @@ router.put(
           `,
               [
                 leaveRequest.employee_id,
-                d.toISOString().split("T")[0],
+                fromDate.toISOString().split("T")[0],
                 `Approved leave: ${leaveRequest.reason}`,
               ]
             );
@@ -856,9 +960,25 @@ router.put(
       if (error.code) {
         console.error("❌ Error code:", error.code);
       }
+      if (error.detail) {
+        console.error("❌ Error detail:", error.detail);
+      }
+
+      // Provide more specific error messages
+      let errorMessage = "Failed to process approval";
+      if (error.code === "23505") {
+        errorMessage =
+          "Duplicate attendance record - leave may already be processed";
+      } else if (error.code === "23503") {
+        errorMessage = "Invalid employee or leave request reference";
+      } else if (error.message.includes("date")) {
+        errorMessage = "Invalid date format in leave request";
+      }
+
       res.status(500).json({
-        error: "Failed to process approval",
+        error: errorMessage,
         details: error.message,
+        code: error.code || "UNKNOWN_ERROR",
       });
     }
   }
@@ -874,10 +994,13 @@ router.get("/all", authenticateToken, async (req, res) => {
     }
 
     const result = await pool.query(`
-      SELECT lr.*, u.email as employee_email
-      FROM leave_requests lr
-      JOIN users u ON lr.employee_id = u.id
-      ORDER BY lr.created_at DESC
+      SELECT 
+        lrm.*, 
+        u.email as employee_email,
+        lrm.current_manager_name as manager_name
+      FROM leave_requests_with_manager lrm
+      JOIN users u ON lrm.employee_id = u.id
+      ORDER BY lrm.created_at DESC
     `);
 
     res.json(result.rows);

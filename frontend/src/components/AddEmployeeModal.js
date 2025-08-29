@@ -4,7 +4,7 @@ import { FaTimes, FaUser, FaEnvelope, FaCalendarAlt } from "react-icons/fa";
 const AddEmployeeModal = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: "", // Personal email only
     type: "Full-Time",
     role: "Product Developer",
     doj: "",
@@ -67,7 +67,7 @@ const AddEmployeeModal = ({ onClose, onSubmit }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email *
+              Personal Email *
             </label>
             <div className="relative">
               <FaEnvelope className="absolute left-3 top-3 text-gray-400" />

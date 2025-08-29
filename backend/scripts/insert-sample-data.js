@@ -144,8 +144,13 @@ const insertSampleData = async () => {
     console.log("📅 Creating sample attendance records...");
 
     const attendanceData = [
+      // Historical data
       { email: "john.doe@company.com", date: "2024-08-24", status: "Present" },
-      { email: "jane.smith@company.com", date: "2024-08-24", status: "WFH" },
+      {
+        email: "jane.smith@company.com",
+        date: "2024-08-24",
+        status: "Work From Home",
+      },
       {
         email: "mike.wilson@company.com",
         date: "2024-08-24",
@@ -161,6 +166,29 @@ const insertSampleData = async () => {
         date: "2024-08-24",
         status: "Present",
       },
+      // Current month data (August 2025)
+      {
+        email: "strawhatluff124@gmail.com",
+        date: "2025-08-15",
+        status: "Present",
+      },
+      {
+        email: "stalin@nxzen.com",
+        date: "2025-08-15",
+        status: "Work From Home",
+      },
+      {
+        email: "strawhatluff124@gmail.com",
+        date: "2025-08-16",
+        status: "Present",
+      },
+      { email: "stalin@nxzen.com", date: "2025-08-16", status: "Present" },
+      {
+        email: "strawhatluff124@gmail.com",
+        date: "2025-08-17",
+        status: "Present",
+      },
+      { email: "stalin@nxzen.com", date: "2025-08-17", status: "Leave" },
     ];
 
     for (const att of attendanceData) {
