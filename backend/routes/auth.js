@@ -43,6 +43,20 @@ router.post(
             email: user.email,
             role: user.role,
           });
+        } else {
+          // If temp password exists but doesn't match, and user has a regular password, check that too
+          if (user.password) {
+            const isValidPassword = await bcrypt.compare(
+              password,
+              user.password
+            );
+            if (!isValidPassword) {
+              return res.status(401).json({ error: "Invalid credentials" });
+            }
+            // If regular password is valid, continue to generate token
+          } else {
+            return res.status(401).json({ error: "Invalid credentials" });
+          }
         }
       } else {
         // Regular password check

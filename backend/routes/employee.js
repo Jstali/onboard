@@ -105,6 +105,7 @@ router.post(
       res.status(201).json({
         message: "Onboarding form submitted successfully",
         status: "submitted",
+        userId: req.user.userId,
       });
     } catch (error) {
       console.error("Submit form error:", error);

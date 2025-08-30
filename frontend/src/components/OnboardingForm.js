@@ -1,49 +1,55 @@
-import React, { useState } from 'react';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaGraduationCap, FaBriefcase, FaCalendarAlt, FaUpload } from 'react-icons/fa';
-import axios from 'axios';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaGraduationCap,
+  FaBriefcase,
+  FaCalendarAlt,
+} from "react-icons/fa";
+import axios from "axios";
+import toast from "react-hot-toast";
+import DocumentUploadSection from "./DocumentUploadSection";
 
 const OnboardingForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    education: '',
-    experience: '',
-    doj: '',
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    education: "",
+    experience: "",
+    doj: "",
     emergencyContact: {
-      name: '',
-      phone: '',
-      relationship: ''
-    }
+      name: "",
+      phone: "",
+      relationship: "",
+    },
   });
-  const [employmentType, setEmploymentType] = useState('Full-Time');
-  const [files, setFiles] = useState([]);
+  const [employmentType, setEmploymentType] = useState("Full-Time");
+
   const [loading, setLoading] = useState(false);
+  const [showDocuments, setShowDocuments] = useState(false);
+  const [submittedUserId, setSubmittedUserId] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
-        }
+          [child]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
-  };
-
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    setFiles(selectedFiles);
   };
 
   const handleSubmit = async (e) => {
@@ -51,40 +57,84 @@ const OnboardingForm = ({ onSuccess }) => {
     setLoading(true);
 
     try {
-      // Convert files to base64 for storage (in production, use proper file storage)
-      const filePromises = files.map(file => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        });
-      });
+      const response = await axios.post(
+        "http://localhost:5001/api/employee/onboarding-form",
+        {
+          type: employmentType,
+          formData: {
+            ...formData,
+            employmentType,
+            submittedAt: new Date().toISOString(),
+          },
+          files: [], // No files in basic form - handled separately in document upload
+        }
+      );
 
-      const fileData = await Promise.all(filePromises);
+      // Store the user ID for document uploads
+      setSubmittedUserId(response.data.userId);
 
-      await axios.post('http://localhost:5001/api/employee/onboarding-form', {
-        type: employmentType,
-        formData: {
-          ...formData,
-          employmentType,
-          submittedAt: new Date().toISOString()
-        },
-        files: fileData
-      });
-
-      toast.success('Onboarding form submitted successfully!');
-      onSuccess();
+      toast.success(
+        "Basic form submitted successfully! Please upload required documents."
+      );
+      setShowDocuments(true);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to submit form');
-    } finally {
+      toast.error(error.response?.data?.error || "Failed to submit form");
       setLoading(false);
     }
   };
 
+  const handleDocumentsComplete = () => {
+    toast.success("Onboarding completed successfully!");
+    onSuccess();
+  };
+
+  if (showDocuments) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-900">Document Upload</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Please upload the required documents for your {employmentType}{" "}
+            position.
+          </p>
+        </div>
+
+        <DocumentUploadSection
+          employmentType={employmentType}
+          employeeId={submittedUserId}
+          onDocumentsChange={() => {}}
+        />
+
+        <div className="mt-8 flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            <p>📋 Document uploads are optional.</p>
+            <p>You can upload missing documents later from your profile.</p>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={handleDocumentsComplete}
+              className="btn-secondary px-6 py-3"
+            >
+              Skip Documents & Complete
+            </button>
+            <button
+              onClick={handleDocumentsComplete}
+              className="btn-primary px-6 py-3"
+            >
+              Complete Onboarding
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-6">Complete Your Onboarding</h3>
-      
+      <h3 className="text-lg font-medium text-gray-900 mb-6">
+        Complete Your Onboarding
+      </h3>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Employment Type */}
         <div>
@@ -232,7 +282,9 @@ const OnboardingForm = ({ onSuccess }) => {
 
         {/* Emergency Contact */}
         <div>
-          <h4 className="text-md font-medium text-gray-900 mb-3">Emergency Contact</h4>
+          <h4 className="text-md font-medium text-gray-900 mb-3">
+            Emergency Contact
+          </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -279,34 +331,15 @@ const OnboardingForm = ({ onSuccess }) => {
           </div>
         </div>
 
-        {/* File Upload */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Documents (Optional)
-          </label>
-          <div className="relative">
-            <FaUpload className="absolute left-3 top-3 text-gray-400" />
-            <input
-              type="file"
-              multiple
-              onChange={handleFileChange}
-              className="input-field pl-10"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            />
-          </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 5 files)
+        {/* Note about documents */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-blue-900 mb-1">
+            📄 Document Upload
+          </h4>
+          <p className="text-sm text-blue-700">
+            After submitting this form, you'll be able to upload required
+            documents based on your employment type ({employmentType}).
           </p>
-          {files.length > 0 && (
-            <div className="mt-2">
-              <p className="text-sm font-medium text-gray-700">Selected files:</p>
-              <ul className="text-sm text-gray-600 mt-1">
-                {files.map((file, index) => (
-                  <li key={index}>{file.name}</li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         {/* Submit Button */}
@@ -319,7 +352,7 @@ const OnboardingForm = ({ onSuccess }) => {
             {loading ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
             ) : (
-              'Submit Onboarding Form'
+              "Submit Onboarding Form"
             )}
           </button>
         </div>

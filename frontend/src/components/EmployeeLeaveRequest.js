@@ -6,7 +6,9 @@ import { format } from "date-fns";
 const EmployeeLeaveRequest = () => {
   const { token } = useAuth();
   const [leaveTypes, setLeaveTypes] = useState([]);
+  const [systemSettings, setSystemSettings] = useState(null);
   const [leaveBalance, setLeaveBalance] = useState(null);
+  const [compOffBalance, setCompOffBalance] = useState(null);
   const [myRequests, setMyRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -21,6 +23,7 @@ const EmployeeLeaveRequest = () => {
 
   useEffect(() => {
     fetchLeaveTypes();
+    fetchSystemSettings();
     if (token) {
       fetchLeaveBalance();
       fetchMyRequests();
@@ -30,10 +33,26 @@ const EmployeeLeaveRequest = () => {
 
   const fetchLeaveTypes = async () => {
     try {
-      const response = await axios.get("http://localhost:5001/api/leave/types");
+      const response = await axios.get("/leave/types");
       setLeaveTypes(response.data);
     } catch (error) {
       console.error("Error fetching leave types:", error);
+    }
+  };
+
+  const fetchSystemSettings = async () => {
+    try {
+      // For employees, we can fetch basic system settings without auth if needed
+      // Or we can make a public endpoint for basic settings
+      const response = await axios.get("/leave/system-info");
+      setSystemSettings(response.data);
+    } catch (error) {
+      console.error("Error fetching system settings:", error);
+      // Set default values if API fails
+      setSystemSettings({
+        allow_half_day: true,
+        total_annual_leaves: 27,
+      });
     }
   };
 
@@ -44,14 +63,11 @@ const EmployeeLeaveRequest = () => {
         return;
       }
 
-      const response = await axios.get(
-        "http://localhost:5001/api/leave/balance",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get("/leave/balance", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setLeaveBalance(response.data);
     } catch (error) {
       console.error("Error fetching leave balance:", error);
@@ -65,14 +81,11 @@ const EmployeeLeaveRequest = () => {
         return;
       }
 
-      const response = await axios.get(
-        "http://localhost:5001/api/leave/my-requests",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get("/leave/my-requests", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setMyRequests(response.data);
     } catch (error) {
       console.error("Error fetching my requests:", error);
@@ -117,12 +130,23 @@ const EmployeeLeaveRequest = () => {
         return;
       }
 
-      if (totalDays > leaveBalance.leaves_remaining) {
-        setMessage(
-          `Insufficient leave balance. You have ${leaveBalance.leaves_remaining} days remaining, but requesting ${totalDays} days.`
-        );
-        setLoading(false);
-        return;
+      // Validate based on leave type
+      if (formData.leaveType === "Unpaid Leave") {
+        // Unpaid Leave: No balance validation needed
+        console.log("🔍 Unpaid Leave - No balance validation required");
+      } else if (formData.leaveType === "Comp Off") {
+        // Comp Off: Check Comp Off balance (we'll need to implement this)
+        console.log("🔍 Comp Off - Comp Off balance validation needed");
+        // For now, allow Comp Off requests (balance will be checked on approval)
+      } else {
+        // Paid Leave, Privilege Leave, Sick Leave, etc.: Check annual leave balance
+        if (totalDays > leaveBalance.leaves_remaining) {
+          setMessage(
+            `Insufficient leave balance. You have ${leaveBalance.leaves_remaining} days remaining, but requesting ${totalDays} days.`
+          );
+          setLoading(false);
+          return;
+        }
       }
 
       const requestData = {
@@ -134,7 +158,7 @@ const EmployeeLeaveRequest = () => {
       console.log("🔍 Frontend - Data being sent:", requestData);
       console.log("🔍 Frontend - Token available:", !!token);
 
-      await axios.post("http://localhost:5001/api/leave/submit", requestData, {
+      await axios.post("/leave/submit", requestData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -220,6 +244,34 @@ const EmployeeLeaveRequest = () => {
                 <p className="text-sm text-green-600">Remaining</p>
               </div>
             </div>
+
+            {/* Leave Type Information */}
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <h4 className="text-sm font-semibold text-blue-700 mb-2">
+                Leave Type Information:
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-blue-600">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                  <span>
+                    <strong>Paid Leave:</strong> Deducted from annual allocation
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+                  <span>
+                    <strong>Unpaid Leave:</strong> No deduction from annual
+                    allocation
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                  <span>
+                    <strong>Comp Off:</strong> Deducted from Comp Off balance
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
@@ -257,45 +309,62 @@ const EmployeeLeaveRequest = () => {
                 ))}
               </select>
               {formData.leaveType && (
-                <div className="mt-2 flex items-center">
-                  {leaveTypes.find((t) => t.type_name === formData.leaveType)
-                    ?.color && (
-                    <div
-                      className="w-4 h-4 rounded-full mr-2"
-                      style={{
-                        backgroundColor: leaveTypes.find(
+                <div className="mt-2">
+                  <div className="flex items-center mb-1">
+                    {leaveTypes.find((t) => t.type_name === formData.leaveType)
+                      ?.color && (
+                      <div
+                        className="w-4 h-4 rounded-full mr-2"
+                        style={{
+                          backgroundColor: leaveTypes.find(
+                            (t) => t.type_name === formData.leaveType
+                          )?.color,
+                        }}
+                      ></div>
+                    )}
+                    <span className="text-sm text-gray-600">
+                      {
+                        leaveTypes.find(
                           (t) => t.type_name === formData.leaveType
-                        )?.color,
-                      }}
-                    ></div>
+                        )?.description
+                      }
+                    </span>
+                  </div>
+                  {leaveTypes.find((t) => t.type_name === formData.leaveType)
+                    ?.max_days && (
+                    <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                      Maximum allowed:{" "}
+                      {
+                        leaveTypes.find(
+                          (t) => t.type_name === formData.leaveType
+                        )?.max_days
+                      }{" "}
+                      days per year
+                    </div>
                   )}
-                  <span className="text-sm text-gray-600">
-                    {
-                      leaveTypes.find((t) => t.type_name === formData.leaveType)
-                        ?.description
-                    }
-                  </span>
                 </div>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Half Day
-              </label>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="halfDay"
-                  checked={formData.halfDay}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 text-sm text-gray-700">
-                  Check if this is a half-day leave
+            {systemSettings?.allow_half_day && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Half Day
                 </label>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="halfDay"
+                    checked={formData.halfDay}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 text-sm text-gray-700">
+                    Check if this is a half-day leave
+                  </label>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

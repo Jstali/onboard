@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+.login-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5rem; /* Equivalent to Tailwind's mb-6 */
+}
+
+.login-logo {
+  height: 100px; /* Adjust as needed */
+  width: auto;
+  max-width: 100%;
+}
+
 @layer base {
   body {
     margin: 0;

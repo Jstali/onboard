@@ -2,6 +2,10 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+// Configure axios defaults
+axios.defaults.timeout = 10000; // 10 second timeout
+axios.defaults.baseURL = "http://localhost:5001/api";
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -29,21 +33,41 @@ export const AuthProvider = ({ children }) => {
         );
 
         try {
-          const response = await axios.get("http://localhost:5001/api/auth/me");
+          const response = await axios.get("/auth/me");
           setUser(response.data.user);
         } catch (error) {
           console.error("Auth check failed:", error);
-          
-          // Check if user needs to change password
-          if (error.response?.data?.requiresPasswordReset) {
+
+          // Handle different types of errors
+          if (
+            error.code === "ECONNABORTED" ||
+            error.message === "Request aborted"
+          ) {
+            console.log("🔐 Auth request timed out or was aborted");
+            // Don't clear token for timeout errors, just log and continue
+            setUser(null);
+          } else if (error.response?.data?.requiresPasswordReset) {
             console.log("🔐 User needs to change temporary password");
             toast.error("Please change your temporary password to continue");
+            localStorage.removeItem("token");
+            setToken(null);
+            setUser(null);
+            delete axios.defaults.headers.common["Authorization"];
+          } else if (error.response?.status === 401) {
+            // Invalid token - clear it
+            console.log("🔐 Invalid token, clearing auth");
+            localStorage.removeItem("token");
+            setToken(null);
+            setUser(null);
+            delete axios.defaults.headers.common["Authorization"];
+          } else {
+            // Other errors - clear auth to be safe
+            console.log("🔐 Auth error, clearing auth:", error.message);
+            localStorage.removeItem("token");
+            setToken(null);
+            setUser(null);
+            delete axios.defaults.headers.common["Authorization"];
           }
-          
-          localStorage.removeItem("token");
-          setToken(null);
-          setUser(null);
-          delete axios.defaults.headers.common["Authorization"];
         }
       } else {
         delete axios.defaults.headers.common["Authorization"];
@@ -57,13 +81,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(
-        "http://localhost:5001/api/auth/login",
-        {
-          email,
-          password,
-        }
-      );
+      const response = await axios.post("/auth/login", {
+        email,
+        password,
+      });
 
       if (response.data.requiresPasswordReset) {
         return {
@@ -92,7 +113,7 @@ export const AuthProvider = ({ children }) => {
 
   const resetPassword = async (userId, newPassword) => {
     try {
-      await axios.post("http://localhost:5001/api/auth/reset-password", {
+      await axios.post("/auth/reset-password", {
         userId,
         newPassword,
       });
@@ -117,7 +138,7 @@ export const AuthProvider = ({ children }) => {
 
   const changePassword = async (currentPassword, newPassword) => {
     try {
-      await axios.post("http://localhost:5001/api/auth/change-password", {
+      await axios.post("/auth/change-password", {
         currentPassword,
         newPassword,
       });

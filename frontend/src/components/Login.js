@@ -93,7 +93,9 @@ const Login = () => {
           // Login Form
           <>
             <div>
-              <img className="mx-auto h-12 w-auto" src="/nxzen logo.jpg" alt="Nxzen Logo" />
+              <div className="login-logo-container">
+                <img key={Date.now()} className="login-logo" src={process.env.PUBLIC_URL + '/nxzen_logo.jpg'} alt="Company Logo" />
+              </div>
               <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                 Welcome to Onboarding
               </h2>

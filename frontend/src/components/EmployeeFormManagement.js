@@ -8,7 +8,10 @@ import {
   FaSearch,
   FaCheck,
   FaTimes,
+  FaFileAlt,
+  FaEdit,
 } from "react-icons/fa";
+import DocumentStatus from "./DocumentStatus";
 
 const EmployeeFormManagement = ({ onRefresh }) => {
   const [employeeForms, setEmployeeForms] = useState([]);
@@ -17,6 +20,10 @@ const EmployeeFormManagement = ({ onRefresh }) => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedForm, setSelectedForm] = useState(null);
   const [showFormDetails, setShowFormDetails] = useState(false);
+  const [showDocumentStatus, setShowDocumentStatus] = useState(false);
+  const [selectedEmployeeForDocs, setSelectedEmployeeForDocs] = useState(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
 
   // Helpers for rendering attached files nicely (avoid dumping base64 strings)
   const parseDataUrl = (dataUrl) => {
@@ -105,6 +112,37 @@ const EmployeeFormManagement = ({ onRefresh }) => {
     setShowFormDetails(true);
   };
 
+  const handleViewDocuments = (form) => {
+    setSelectedEmployeeForDocs({
+      id: form.employee_id,
+      name: form.form_data?.name || `${form.first_name} ${form.last_name}`,
+      employmentType: form.employee_type,
+    });
+    setShowDocumentStatus(true);
+  };
+
+  const handleEditEmployee = (form) => {
+    setEditingEmployee(form);
+    setShowEditForm(true);
+  };
+
+  const handleUpdateEmployee = async (updatedData) => {
+    try {
+      await axios.put(
+        `http://localhost:5001/api/hr/employee-forms/${editingEmployee.id}`,
+        updatedData
+      );
+      toast.success("Employee details updated successfully!");
+      setShowEditForm(false);
+      setEditingEmployee(null);
+      fetchEmployeeForms();
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Update employee error:", error);
+      toast.error(error.response?.data?.error || "Failed to update employee");
+    }
+  };
+
   const handleDeleteForm = async (formId) => {
     if (
       window.confirm(
@@ -126,9 +164,11 @@ const EmployeeFormManagement = ({ onRefresh }) => {
   };
 
   const handleApproveForm = async (form) => {
+    const employeeName =
+      form.form_data?.name || `${form.first_name} ${form.last_name}`;
     if (
       window.confirm(
-        `Are you sure you want to approve ${form.full_name}'s application?`
+        `Are you sure you want to approve ${employeeName}'s application?\n\nNote: Employee can be approved even with missing documents. Documents can be uploaded later during employment.`
       )
     ) {
       try {
@@ -331,6 +371,9 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Documents
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Manager
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -368,6 +411,17 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     {getStatusBadge(form.status)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleViewDocuments(form)}
+                        className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200"
+                      >
+                        <FaFileAlt className="mr-1" />
+                        View Status
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     {form.assigned_manager ? (
                       <span className="text-sm text-green-600 font-medium">
                         {form.assigned_manager}
@@ -389,6 +443,14 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                         title="View Form Details"
                       >
                         <FaEye className="inline-block" />
+                      </button>
+
+                      <button
+                        onClick={() => handleEditEmployee(form)}
+                        className="text-purple-600 hover:text-purple-900"
+                        title="Edit Employee Details"
+                      >
+                        <FaEdit className="inline-block" />
                       </button>
 
                       {/* Show approve/reject buttons only for submitted forms */}
@@ -579,11 +641,27 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                 </div>
               </div>
 
-              {/* Files */}
+              {/* Document Status */}
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">
+                  Document Upload Status
+                </h4>
+                <DocumentStatus
+                  employeeId={selectedForm.employee_id}
+                  employeeName={
+                    selectedForm.form_data?.name ||
+                    `${selectedForm.first_name} ${selectedForm.last_name}`
+                  }
+                  employmentType={selectedForm.employee_type}
+                  isHR={true}
+                />
+              </div>
+
+              {/* Legacy Files (if any from old system) */}
               {selectedForm.files && selectedForm.files.length > 0 && (
                 <div>
                   <h4 className="text-md font-medium text-gray-900 mb-3">
-                    Attached Files
+                    Legacy Attached Files
                   </h4>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -643,6 +721,314 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Status Modal */}
+      {showDocumentStatus && selectedEmployeeForDocs && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Document Status - {selectedEmployeeForDocs.name}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDocumentStatus(false);
+                  setSelectedEmployeeForDocs(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="sr-only">Close</span>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <DocumentStatus
+              employeeId={selectedEmployeeForDocs.id}
+              employeeName={selectedEmployeeForDocs.name}
+              employmentType={selectedEmployeeForDocs.employmentType}
+              isHR={true}
+            />
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => {
+                  setShowDocumentStatus(false);
+                  setSelectedEmployeeForDocs(null);
+                }}
+                className="btn-secondary"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Employee Modal */}
+      {showEditForm && editingEmployee && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Edit Employee Details
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditForm(false);
+                  setEditingEmployee(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="sr-only">Close</span>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const updatedData = {
+                  form_data: {
+                    ...editingEmployee.form_data,
+                    name: formData.get("name"),
+                    email: formData.get("email"),
+                    phone: formData.get("phone"),
+                    address: formData.get("address"),
+                    education: formData.get("education"),
+                    experience: formData.get("experience"),
+                    doj: formData.get("doj"),
+                    emergencyContact: {
+                      name: formData.get("emergency_name"),
+                      phone: formData.get("emergency_phone"),
+                      relationship: formData.get("emergency_relationship"),
+                    },
+                  },
+                  employee_type: formData.get("employment_type"),
+                };
+                handleUpdateEmployee(updatedData);
+              }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    defaultValue={editingEmployee.form_data?.name || ""}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    defaultValue={editingEmployee.form_data?.email || ""}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Employee ID (6 digits) *
+                  </label>
+                  <input
+                    type="text"
+                    value={editingEmployee.form_data?.employee_id || ""}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                    readOnly
+                    disabled
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Employee ID is permanent and cannot be changed
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    defaultValue={editingEmployee.form_data?.phone || ""}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Joining *
+                  </label>
+                  <input
+                    type="date"
+                    name="doj"
+                    defaultValue={editingEmployee.form_data?.doj || ""}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Employment Type *
+                  </label>
+                  <select
+                    name="employment_type"
+                    defaultValue={editingEmployee.employee_type || ""}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Intern">Intern</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <textarea
+                  name="address"
+                  defaultValue={editingEmployee.form_data?.address || ""}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Education
+                  </label>
+                  <textarea
+                    name="education"
+                    defaultValue={editingEmployee.form_data?.education || ""}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Experience
+                  </label>
+                  <textarea
+                    name="experience"
+                    defaultValue={editingEmployee.form_data?.experience || ""}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">
+                  Emergency Contact
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Name
+                    </label>
+                    <input
+                      type="text"
+                      name="emergency_name"
+                      defaultValue={
+                        editingEmployee.form_data?.emergencyContact?.name || ""
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      name="emergency_phone"
+                      defaultValue={
+                        editingEmployee.form_data?.emergencyContact?.phone || ""
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Relationship
+                    </label>
+                    <input
+                      type="text"
+                      name="emergency_relationship"
+                      defaultValue={
+                        editingEmployee.form_data?.emergencyContact
+                          ?.relationship || ""
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditingEmployee(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Update Employee
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

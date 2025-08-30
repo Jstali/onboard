@@ -23,7 +23,7 @@ const HRAttendanceDetails = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5001/api/attendance/hr/details?month=${selectedMonth}&year=${selectedYear}`
+        `/attendance/hr/details?month=${selectedMonth}&year=${selectedYear}`
       );
       setAttendanceRecords(response.data.records || []);
     } catch (error) {
@@ -68,7 +68,7 @@ const HRAttendanceDetails = () => {
 
     try {
       setDeletingId(id);
-      await axios.delete(`http://localhost:5001/api/attendance/${id}`);
+      await axios.delete(`/attendance/${id}`);
       toast.success("Attendance record deleted successfully");
 
       // Refresh the attendance data

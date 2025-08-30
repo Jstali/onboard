@@ -6,9 +6,11 @@ require("dotenv").config({ path: "./config.env" });
 
 const authRoutes = require("./routes/auth");
 const hrRoutes = require("./routes/hr");
+const hrConfigRoutes = require("./routes/hrConfig");
 const employeeRoutes = require("./routes/employee");
 const attendanceRoutes = require("./routes/attendance");
 const leaveRoutes = require("./routes/leave.js");
+const documentsRoutes = require("./routes/documents");
 const { connectDB } = require("./config/database");
 
 const app = express();
@@ -68,9 +70,11 @@ app.use("/uploads", express.static("uploads"));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/hr", hrRoutes);
+app.use("/api/hr-config", hrConfigRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leave", leaveRoutes);
+app.use("/api/documents", documentsRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

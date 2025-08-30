@@ -6,28 +6,32 @@ import {
   FaCalendarAlt,
   FaCheckCircle,
   FaCalendarPlus,
+  FaFileAlt,
 } from "react-icons/fa";
 import axios from "axios";
 import OnboardingForm from "./OnboardingForm";
 import OnboardingStatus from "./OnboardingStatus";
+import DocumentStatus from "./DocumentStatus";
 import { Link } from "react-router-dom";
 
 const EmployeeDashboard = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [onboardingStatus, setOnboardingStatus] = useState(null);
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [employeeData, setEmployeeData] = useState(null);
 
   useEffect(() => {
     checkOnboardingStatus();
     checkIfOnboarded();
-  }, []);
+    if (user) {
+      fetchEmployeeData();
+    }
+  }, [user]);
 
   const checkOnboardingStatus = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5001/api/employee/onboarding-status"
-      );
+      const response = await axios.get("/employee/onboarding-status");
       setOnboardingStatus(response.data);
     } catch (error) {
       console.error("Failed to get onboarding status:", error);
@@ -38,12 +42,19 @@ const EmployeeDashboard = () => {
 
   const checkIfOnboarded = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5001/api/employee/is-onboarded"
-      );
+      const response = await axios.get("/employee/is-onboarded");
       setIsOnboarded(response.data.isOnboarded);
     } catch (error) {
       console.error("Failed to check onboarding status:", error);
+    }
+  };
+
+  const fetchEmployeeData = async () => {
+    try {
+      const response = await axios.get("/employee/onboarding-form");
+      setEmployeeData(response.data.form);
+    } catch (error) {
+      console.error("Failed to fetch employee data:", error);
     }
   };
 
@@ -67,7 +78,7 @@ const EmployeeDashboard = () => {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900">
-                ONDOARD Employee Portal
+                Employee Portal
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -110,9 +121,7 @@ const EmployeeDashboard = () => {
               </div>
             </div>
             <div className="ml-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Welcome to ONDOARD!
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-900">Welcome!</h2>
               <p className="text-gray-600">
                 Complete your onboarding process to get started with the
                 company.
@@ -145,7 +154,7 @@ const EmployeeDashboard = () => {
                   </p>
                 </div>
               </div>
-              <div className="mt-4">
+              <div className="mt-4 flex space-x-3">
                 <a
                   href="/attendance"
                   className="btn-success inline-flex items-center"
@@ -153,6 +162,13 @@ const EmployeeDashboard = () => {
                   <FaCalendarAlt className="mr-2" />
                   Go to Attendance Portal
                 </a>
+                <button
+                  onClick={() => (window.location.href = "#documents")}
+                  className="btn-secondary inline-flex items-center"
+                >
+                  <FaFileAlt className="mr-2" />
+                  Manage Documents
+                </button>
               </div>
             </div>
           ) : onboardingStatus.status === "submitted" ? (
@@ -177,6 +193,21 @@ const EmployeeDashboard = () => {
           )
         ) : (
           <OnboardingForm onSuccess={checkOnboardingStatus} />
+        )}
+
+        {/* Document Status Section - Show for approved employees */}
+        {onboardingStatus?.status === "approved" && employeeData && (
+          <div className="mt-6">
+            <DocumentStatus
+              employeeId={user?.id}
+              employeeName={
+                `${user?.first_name} ${user?.last_name}`.trim() ||
+                employeeData.form_data?.name
+              }
+              employmentType={employeeData.employee_type}
+              isHR={false}
+            />
+          </div>
         )}
 
         {/* Quick Actions */}

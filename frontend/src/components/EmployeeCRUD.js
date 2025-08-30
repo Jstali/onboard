@@ -315,7 +315,15 @@ const EmployeeCRUD = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {employee.assigned_employee_id || employee.id}
+                        {employee.assigned_employee_id ? (
+                          <span className="font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            {employee.assigned_employee_id}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 italic">
+                            Not Assigned
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -577,6 +585,20 @@ const EmployeeCRUD = () => {
                         selectedEmployee.last_name ||
                         selectedEmployee.email ||
                         "Unknown Employee"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium text-gray-700">
+                    Employee ID:
+                  </span>
+                  <span className="text-gray-900">
+                    {selectedEmployee.assigned_employee_id ? (
+                      <span className="font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                        {selectedEmployee.assigned_employee_id}
+                      </span>
+                    ) : (
+                      <span className="text-gray-500 italic">Not Assigned</span>
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between">

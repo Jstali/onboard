@@ -102,16 +102,45 @@ const getHRUsers = async () => {
   }
 };
 
-// Get leave types
+// Get leave types (only active ones for employee use)
 router.get("/types", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM leave_types ORDER BY type_name"
-    );
+    const result = await pool.query(`
+      SELECT * FROM leave_types 
+      WHERE is_active = true 
+      ORDER BY type_name
+    `);
     res.json(result.rows);
   } catch (error) {
     console.error("Error fetching leave types:", error);
     res.status(500).json({ error: "Failed to fetch leave types" });
+  }
+});
+
+// Get basic system settings for employees (public endpoint)
+router.get("/system-info", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT allow_half_day, total_annual_leaves 
+      FROM system_settings 
+      ORDER BY id LIMIT 1
+    `);
+
+    if (result.rows.length === 0) {
+      // Return default settings if none exist
+      return res.json({
+        allow_half_day: true,
+        total_annual_leaves: 27,
+      });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error fetching system settings:", error);
+    res.json({
+      allow_half_day: true,
+      total_annual_leaves: 27,
+    });
   }
 });
 
@@ -414,7 +443,7 @@ router.get("/my-requests", authenticateToken, async (req, res) => {
   }
 });
 
-// Get pending leave requests for manager
+// Get pending leave requests for manager (filtered by department)
 router.get("/manager/pending", authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== "manager") {
@@ -423,31 +452,65 @@ router.get("/manager/pending", authenticateToken, async (req, res) => {
         .json({ error: "Access denied. Manager role required." });
     }
 
-    // Get manager ID from current user
-    const managerResult = await pool.query(
-      "SELECT manager_id FROM managers WHERE email = $1 AND status = 'active'",
-      [req.user.email]
+    // Get manager's department from departments table
+    const departmentResult = await pool.query(
+      "SELECT id, name FROM departments WHERE manager_id = $1 AND is_active = true",
+      [req.user.userId]
     );
 
-    if (managerResult.rows.length === 0) {
-      return res.status(403).json({ error: "Manager not found or inactive" });
+    if (departmentResult.rows.length === 0) {
+      // Fallback to old manager system if no department assigned
+      const managerResult = await pool.query(
+        "SELECT manager_id FROM managers WHERE email = $1 AND status = 'active'",
+        [req.user.email]
+      );
+
+      if (managerResult.rows.length === 0) {
+        return res
+          .status(403)
+          .json({ error: "Manager not found or no department assigned" });
+      }
+
+      const managerId = managerResult.rows[0].manager_id;
+
+      const result = await pool.query(
+        `
+        SELECT 
+          lrm.*, 
+          u.email as employee_email,
+          lrm.current_manager_name as manager_name
+        FROM leave_requests_with_manager lrm
+        JOIN users u ON lrm.employee_id = u.id
+        WHERE lrm.status = 'pending_manager_approval' 
+          AND lrm.current_manager_id = $1
+        ORDER BY lrm.created_at ASC
+      `,
+        [managerId]
+      );
+
+      return res.json(result.rows);
     }
 
-    const managerId = managerResult.rows[0].manager_id;
+    const departmentId = departmentResult.rows[0].id;
 
+    // Get leave requests from employees in manager's department
     const result = await pool.query(
       `
       SELECT 
-        lrm.*, 
+        lr.*, 
         u.email as employee_email,
-        lrm.current_manager_name as manager_name
-      FROM leave_requests_with_manager lrm
-      JOIN users u ON lrm.employee_id = u.id
-      WHERE lrm.status = 'pending_manager_approval' 
-        AND lrm.current_manager_id = $1
-      ORDER BY lrm.created_at ASC
+        em.employee_name,
+        d.name as department_name
+      FROM leave_requests lr
+      JOIN users u ON lr.employee_id = u.id
+      JOIN employee_master em ON em.company_email = u.email
+      JOIN departments d ON em.department_id = d.id
+      WHERE lr.status = 'pending_manager_approval' 
+        AND d.id = $1
+        AND d.manager_id = $2
+      ORDER BY lr.created_at ASC
     `,
-      [managerId]
+      [departmentId, req.user.userId]
     );
 
     res.json(result.rows);
@@ -819,7 +882,7 @@ router.put(
       // If approved, update leave balance and attendance
       if (action === "approve") {
         try {
-          // Update leave balance - convert total_leave_days to integer
+          // Update leave balance based on leave type
           const currentYear = new Date().getFullYear();
           const totalDays = Math.round(
             parseFloat(leaveRequest.total_leave_days) || 1
@@ -829,20 +892,59 @@ router.put(
             employeeId: leaveRequest.employee_id,
             year: currentYear,
             totalDays: totalDays,
+            leaveType: leaveRequest.leave_type,
             originalValue: leaveRequest.total_leave_days,
           });
 
-          await pool.query(
-            `
-          UPDATE leave_balances 
-          SET 
-            leaves_taken = leaves_taken + $1,
-            leaves_remaining = leaves_remaining - $1,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE employee_id = $2 AND year = $3
-        `,
-            [totalDays, leaveRequest.employee_id, currentYear]
-          );
+          // Handle different leave types
+          if (leaveRequest.leave_type === "Unpaid Leave") {
+            // Unpaid Leave: Do not deduct from annual allocation
+            console.log(
+              "🔍 Unpaid Leave - No deduction from annual allocation"
+            );
+          } else if (leaveRequest.leave_type === "Comp Off") {
+            // Comp Off: Deduct from Comp Off balance
+            console.log("🔍 Comp Off - Deducting from Comp Off balance");
+
+            // Check if employee has Comp Off balance
+            const compOffResult = await pool.query(
+              `SELECT * FROM comp_off_balances WHERE employee_id = $1 AND year = $2`,
+              [leaveRequest.employee_id, currentYear]
+            );
+
+            if (compOffResult.rows.length === 0) {
+              // Create Comp Off balance record if it doesn't exist
+              await pool.query(
+                `INSERT INTO comp_off_balances (employee_id, year, total_earned, comp_off_taken, comp_off_remaining) 
+                 VALUES ($1, $2, 0, 0, 0)`,
+                [leaveRequest.employee_id, currentYear]
+              );
+            }
+
+            // Update Comp Off balance
+            await pool.query(
+              `UPDATE comp_off_balances 
+               SET 
+                 comp_off_taken = comp_off_taken + $1,
+                 comp_off_remaining = comp_off_remaining - $1,
+                 updated_at = CURRENT_TIMESTAMP
+               WHERE employee_id = $2 AND year = $3`,
+              [totalDays, leaveRequest.employee_id, currentYear]
+            );
+          } else {
+            // Paid Leave, Privilege Leave, Sick Leave, Casual Leave, etc.: Deduct from annual allocation
+            console.log("🔍 Paid Leave - Deducting from annual allocation");
+
+            await pool.query(
+              `UPDATE leave_balances 
+               SET 
+                 leaves_taken = leaves_taken + $1,
+                 leaves_remaining = leaves_remaining - $1,
+                 updated_at = CURRENT_TIMESTAMP
+               WHERE employee_id = $2 AND year = $3`,
+              [totalDays, leaveRequest.employee_id, currentYear]
+            );
+          }
 
           console.log("✅ Leave balance updated successfully");
         } catch (balanceError) {
@@ -1033,6 +1135,75 @@ router.delete("/:id", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Delete leave request error:", error);
     res.status(500).json({ error: "Failed to delete leave request" });
+  }
+});
+
+// Get comprehensive leave balances including Comp Off
+router.get("/balances/:employeeId", authenticateToken, async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const currentYear = new Date().getFullYear();
+
+    // Get annual leave balance
+    const leaveBalanceResult = await pool.query(
+      `SELECT * FROM leave_balances WHERE employee_id = $1 AND year = $2`,
+      [employeeId, currentYear]
+    );
+
+    // Get Comp Off balance
+    const compOffBalanceResult = await pool.query(
+      `SELECT * FROM comp_off_balances WHERE employee_id = $1 AND year = $2`,
+      [employeeId, currentYear]
+    );
+
+    // Create default balances if they don't exist
+    let leaveBalance = leaveBalanceResult.rows[0];
+    if (!leaveBalance) {
+      await pool.query(
+        `INSERT INTO leave_balances (employee_id, year, total_allocated, leaves_taken, leaves_remaining) 
+         VALUES ($1, $2, 27, 0, 27)`,
+        [employeeId, currentYear]
+      );
+      leaveBalance = {
+        employee_id: employeeId,
+        year: currentYear,
+        total_allocated: 27,
+        leaves_taken: 0,
+        leaves_remaining: 27,
+      };
+    }
+
+    let compOffBalance = compOffBalanceResult.rows[0];
+    if (!compOffBalance) {
+      await pool.query(
+        `INSERT INTO comp_off_balances (employee_id, year, total_earned, comp_off_taken, comp_off_remaining) 
+         VALUES ($1, $2, 0, 0, 0)`,
+        [employeeId, currentYear]
+      );
+      compOffBalance = {
+        employee_id: employeeId,
+        year: currentYear,
+        total_earned: 0,
+        comp_off_taken: 0,
+        comp_off_remaining: 0,
+      };
+    }
+
+    res.json({
+      annualLeave: {
+        totalAllocated: leaveBalance.total_allocated,
+        leavesTaken: leaveBalance.leaves_taken,
+        leavesRemaining: leaveBalance.leaves_remaining,
+      },
+      compOff: {
+        totalEarned: compOffBalance.total_earned,
+        compOffTaken: compOffBalance.comp_off_taken,
+        compOffRemaining: compOffBalance.comp_off_remaining,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching leave balances:", error);
+    res.status(500).json({ error: "Failed to fetch leave balances" });
   }
 });
 

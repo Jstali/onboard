@@ -167,7 +167,7 @@ const initializeTables = async () => {
       )
     `);
 
-    // Create leave_types table
+    // Create leave_types table - Enhanced for HR Config
     await pool.query(`
       CREATE TABLE IF NOT EXISTS leave_types (
         id SERIAL PRIMARY KEY,
@@ -177,6 +177,29 @@ const initializeTables = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Add new columns to existing leave_types table
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_types' AND column_name = 'max_days'
+        ) THEN
+          ALTER TABLE leave_types ADD COLUMN max_days INTEGER;
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_types' AND column_name = 'is_active'
+        ) THEN
+          ALTER TABLE leave_types ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+        END IF;
+      END $$;
     `);
 
     // Create leave_balances table
@@ -195,14 +218,108 @@ const initializeTables = async () => {
       )
     `);
 
+    // Create comp_off_balances table for tracking Comp Off separately
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS comp_off_balances (
+        id SERIAL PRIMARY KEY,
+        employee_id INTEGER NOT NULL,
+        year INTEGER NOT NULL,
+        total_earned DECIMAL(5,1) DEFAULT 0,
+        comp_off_taken DECIMAL(5,1) DEFAULT 0,
+        comp_off_remaining DECIMAL(5,1) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(employee_id, year),
+        FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create system_settings table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        id SERIAL PRIMARY KEY,
+        total_annual_leaves INTEGER DEFAULT 27,
+        allow_half_day BOOLEAN DEFAULT TRUE,
+        approval_workflow VARCHAR(50) DEFAULT 'manager_then_hr',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create departments table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS departments (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        code VARCHAR(20) NOT NULL UNIQUE,
+        description TEXT,
+        manager_id INTEGER,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Add department_id to employee_master table if not exists
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'employee_master' AND column_name = 'department_id'
+        ) THEN
+          ALTER TABLE employee_master ADD COLUMN department_id INTEGER REFERENCES departments(id) ON DELETE SET NULL;
+        END IF;
+      END $$;
+    `);
+
+    // Create employee_documents table for document uploads
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS employee_documents (
+        id SERIAL PRIMARY KEY,
+        employee_id INTEGER NOT NULL,
+        document_type VARCHAR(100) NOT NULL,
+        document_category VARCHAR(50) NOT NULL,
+        file_name VARCHAR(255) NOT NULL,
+        file_url VARCHAR(500) NOT NULL,
+        file_size INTEGER,
+        mime_type VARCHAR(100),
+        is_required BOOLEAN DEFAULT FALSE,
+        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Insert default system settings
+    await pool.query(`
+      INSERT INTO system_settings (total_annual_leaves, allow_half_day, approval_workflow)
+      SELECT 27, TRUE, 'manager_then_hr'
+      WHERE NOT EXISTS (SELECT 1 FROM system_settings)
+    `);
+
+    // Insert default departments
+    await pool.query(`
+      INSERT INTO departments (name, code, description) VALUES
+      ('Engineering', 'ENG', 'Software development and technical teams'),
+      ('Product', 'PRD', 'Product management and strategy'),
+      ('Design', 'DSN', 'UI/UX and graphic design'),
+      ('Marketing', 'MKT', 'Marketing and communications'),
+      ('Human Resources', 'HR', 'HR and administrative functions')
+      ON CONFLICT (name) DO NOTHING
+    `);
+
     // Insert default leave types
     await pool.query(`
-      INSERT INTO leave_types (type_name, description, color) VALUES
-      ('Privilege Leave', 'Annual leave for personal reasons', '#3B82F6'),
-      ('Sick Leave', 'Medical leave for health reasons', '#EF4444'),
-      ('Casual Leave', 'Short-term leave for urgent matters', '#10B981'),
-      ('Maternity Leave', 'Leave for expecting mothers', '#8B5CF6'),
-      ('Paternity Leave', 'Leave for new fathers', '#F59E0B')
+      INSERT INTO leave_types (type_name, description, max_days, color) VALUES
+      ('Privilege Leave', 'Annual leave for personal reasons', NULL, '#3B82F6'),
+      ('Sick Leave', 'Medical leave for health reasons', 12, '#EF4444'),
+      ('Casual Leave', 'Short-term leave for urgent matters', 12, '#10B981'),
+      ('Maternity Leave', 'Leave for expecting mothers', 180, '#8B5CF6'),
+      ('Paternity Leave', 'Leave for new fathers', 15, '#F59E0B'),
+      ('Paid Leave', 'Paid leave deducted from annual allocation', NULL, '#06B6D4'),
+      ('Unpaid Leave', 'Unpaid leave not affecting annual allocation', NULL, '#F97316'),
+      ('Comp Off', 'Compensatory off for overtime work', NULL, '#84CC16')
       ON CONFLICT (type_name) DO NOTHING
     `);
 
@@ -225,6 +342,14 @@ const initializeTables = async () => {
       CREATE INDEX IF NOT EXISTS idx_leave_requests_hr_id ON leave_requests(hr_id);
       CREATE INDEX IF NOT EXISTS idx_leave_requests_dates ON leave_requests(from_date, to_date);
       CREATE INDEX IF NOT EXISTS idx_leave_balances_employee_year ON leave_balances(employee_id, year);
+      CREATE INDEX IF NOT EXISTS idx_departments_manager_id ON departments(manager_id);
+      CREATE INDEX IF NOT EXISTS idx_departments_code ON departments(code);
+      CREATE INDEX IF NOT EXISTS idx_employee_master_department_id ON employee_master(department_id);
+      CREATE INDEX IF NOT EXISTS idx_leave_types_active ON leave_types(is_active);
+      CREATE INDEX IF NOT EXISTS idx_comp_off_balances_employee_year ON comp_off_balances(employee_id, year);
+      CREATE INDEX IF NOT EXISTS idx_employee_documents_employee_id ON employee_documents(employee_id);
+      CREATE INDEX IF NOT EXISTS idx_employee_documents_type ON employee_documents(document_type);
+      CREATE INDEX IF NOT EXISTS idx_employee_documents_category ON employee_documents(document_category);
     `);
 
     // Insert default HR user if not exists

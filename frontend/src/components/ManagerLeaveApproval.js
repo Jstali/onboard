@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import { format } from "date-fns";
@@ -16,14 +16,6 @@ const ManagerLeaveApproval = () => {
   });
   const [leaveTypes, setLeaveTypes] = useState([]);
 
-  useEffect(() => {
-    fetchLeaveTypes();
-    if (token) {
-      fetchPendingRequests();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
-
   const fetchLeaveTypes = async () => {
     try {
       const response = await axios.get("http://localhost:5001/api/leave/types");
@@ -33,7 +25,7 @@ const ManagerLeaveApproval = () => {
     }
   };
 
-  const fetchPendingRequests = async () => {
+  const fetchPendingRequests = useCallback(async () => {
     try {
       if (!token) {
         console.error("No token available");
@@ -55,7 +47,14 @@ const ManagerLeaveApproval = () => {
         setMessage("Access denied. Manager role required.");
       }
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchLeaveTypes();
+    if (token) {
+      fetchPendingRequests();
+    }
+  }, [token, fetchPendingRequests]);
 
   const handleApproval = (request) => {
     setSelectedRequest(request);

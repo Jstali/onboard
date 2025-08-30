@@ -22,7 +22,6 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
   const [formData, setFormData] = useState({
     email: "",
     employeeName: "",
-    employeeId: "",
     companyEmail: "",
     managerId: "",
     managerName: "",
@@ -279,19 +278,11 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
               Company Information
             </h3>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Employee ID *
-              </label>
-              <input
-                type="text"
-                name="employeeId"
-                value={formData.employeeId || ""}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="EMP001"
-              />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> Employee ID will be automatically
+                generated as a unique 6-digit number when you submit this form.
+              </p>
             </div>
 
             <div>

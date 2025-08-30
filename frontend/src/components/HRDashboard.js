@@ -8,6 +8,7 @@ import {
   FaClipboardList,
   FaCalendarCheck,
   FaUserEdit,
+  FaCog,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -20,6 +21,7 @@ import OnboardedEmployees from "./OnboardedEmployees";
 import EmployeeFormManagement from "./EmployeeFormManagement";
 import HRAttendanceDetails from "./HRAttendanceDetails";
 import EmployeeCRUD from "./EmployeeCRUD";
+import HRConfig from "./HRConfig";
 
 const HRDashboard = () => {
   const { logout } = useAuth();
@@ -93,6 +95,7 @@ const HRDashboard = () => {
     { id: "master", label: "Employee Master", icon: FaUsers },
     { id: "attendance", label: "Attendance", icon: FaCalendarAlt },
     { id: "leave", label: "Leave Management", icon: FaCalendarCheck },
+    { id: "config", label: "HR Config", icon: FaCog },
   ];
 
   return (
@@ -102,9 +105,7 @@ const HRDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">
-                ONDOARD HR Dashboard
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900">HR Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
               <Link
@@ -231,6 +232,13 @@ const HRDashboard = () => {
         {activeTab === "leave" && (
           <div>
             <HRLeaveApproval />
+          </div>
+        )}
+
+        {/* HR Config Tab */}
+        {activeTab === "config" && (
+          <div>
+            <HRConfig />
           </div>
         )}
 

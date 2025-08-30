@@ -4,6 +4,10 @@ const { body, validationResult } = require("express-validator");
 const { pool } = require("../config/database");
 const { authenticateToken, requireHR } = require("../middleware/auth");
 const { sendOnboardingEmail } = require("../utils/mailer");
+const {
+  generateEmployeeId,
+  validateEmployeeId,
+} = require("../utils/employeeIdGenerator");
 
 const router = express.Router();
 
@@ -653,19 +657,20 @@ router.put(
       .isEmail()
       .withMessage("Valid company email is required"),
     body("manager").notEmpty().withMessage("Manager is required"),
-    body("employeeId")
-      .matches(/^\d{6}$/)
-      .withMessage("Employee ID must be exactly 6 digits"),
   ],
   async (req, res) => {
     try {
+      console.log("🔍 Assignment request body:", req.body);
+      console.log("🔍 Assignment request params:", req.params);
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("🔍 Validation errors:", errors.array());
         return res.status(400).json({ errors: errors.array() });
       }
 
       const { id } = req.params;
-      const { name, companyEmail, manager, employeeId } = req.body;
+      const { name, companyEmail, manager } = req.body;
 
       console.log("🔍 Assigning details to onboarded employee:", {
         id,
@@ -723,6 +728,10 @@ router.put(
       }
 
       const managerInfo = managerResult.rows[0];
+
+      // Generate unique 6-digit employee ID
+      const employeeId = await generateEmployeeId();
+      console.log("🔢 Generated Employee ID:", employeeId);
 
       // Update the user's email to the company email (keep same password)
       await pool.query(
@@ -852,7 +861,6 @@ router.get("/debug/employees", async (req, res) => {
 router.post(
   "/master",
   [
-    body("employeeId").notEmpty(),
     body("employeeName").notEmpty(),
     body("companyEmail").isEmail(),
     body("type").isIn(["Intern", "Contract", "Full-Time"]),
@@ -866,10 +874,13 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { employeeId, employeeName, companyEmail, type, doj, managerId } =
-        req.body;
+      const { employeeName, companyEmail, type, doj, managerId } = req.body;
 
-      // Check if employee ID already exists
+      // Generate unique 6-digit employee ID
+      const employeeId = await generateEmployeeId();
+      console.log("🔢 Generated Employee ID for manual add:", employeeId);
+
+      // Check if employee ID already exists (should not happen with generated ID)
       const existing = await pool.query(
         "SELECT id FROM employee_master WHERE employee_id = $1",
         [employeeId]
@@ -1430,5 +1441,52 @@ router.get("/employees/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch employee" });
   }
 });
+
+// Update employee form
+router.put(
+  "/employee-forms/:id",
+  [
+    body("form_data").isObject(),
+    body("employee_type").isIn(["Intern", "Contract", "Full-Time"]),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { id } = req.params;
+      const { form_data, employee_type } = req.body;
+
+      // Check if form exists
+      const existingForm = await pool.query(
+        "SELECT * FROM employee_forms WHERE id = $1",
+        [id]
+      );
+
+      if (existingForm.rows.length === 0) {
+        return res.status(404).json({ error: "Employee form not found" });
+      }
+
+      // Update form
+      await pool.query(
+        `
+        UPDATE employee_forms 
+        SET form_data = $1, type = $2, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $3
+      `,
+        [form_data, employee_type, id]
+      );
+
+      res.json({
+        message: "Employee form updated successfully",
+      });
+    } catch (error) {
+      console.error("Update employee form error:", error);
+      res.status(500).json({ error: "Failed to update employee form" });
+    }
+  }
+);
 
 module.exports = router;
