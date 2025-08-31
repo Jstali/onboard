@@ -961,3 +961,590 @@
 ✅ Leave balance updated successfully
 ✅ Leave approval notification sent to employee: stalin31@nxzen.com
 ✅ Expense approval notification sent to employee: stalin31@nxzen.com
+🔍 Checking onboarding status for user ID: 22
+🔍 Checking onboarding status for user ID: 22
+🔍 Query result: [
+  {
+    id: 11,
+    employee_id: 22,
+    type: 'Full-Time',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinj4747@gmail.com',
+      phone: '536536556656',
+      address: 'ghchgchch',
+      education: 'fcyfytfty',
+      experience: '',
+      submittedAt: '2025-08-30T14:27:49.900Z',
+      employmentType: 'Full-Time',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-30T14:27:49.935Z,
+    updated_at: 2025-08-30T14:28:56.655Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: null,
+    manager2_name: null,
+    manager3_name: null,
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 11,
+  employee_id: 22,
+  type: 'Full-Time',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinj4747@gmail.com',
+    phone: '536536556656',
+    address: 'ghchgchch',
+    education: 'fcyfytfty',
+    experience: '',
+    submittedAt: '2025-08-30T14:27:49.900Z',
+    employmentType: 'Full-Time',
+    emergencyContact: { name: 'fcyfyyf', phone: '65767567', relationship: 'gvjgvj' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-30T14:27:49.935Z,
+  updated_at: 2025-08-30T14:28:56.655Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: null,
+  manager2_name: null,
+  manager3_name: null,
+  master_status: 'active'
+}
+🔍 Query result: [
+  {
+    id: 11,
+    employee_id: 22,
+    type: 'Full-Time',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinj4747@gmail.com',
+      phone: '536536556656',
+      address: 'ghchgchch',
+      education: 'fcyfytfty',
+      experience: '',
+      submittedAt: '2025-08-30T14:27:49.900Z',
+      employmentType: 'Full-Time',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-30T14:27:49.935Z,
+    updated_at: 2025-08-30T14:28:56.655Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: null,
+    manager2_name: null,
+    manager3_name: null,
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 11,
+  employee_id: 22,
+  type: 'Full-Time',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinj4747@gmail.com',
+    phone: '536536556656',
+    address: 'ghchgchch',
+    education: 'fcyfytfty',
+    experience: '',
+    submittedAt: '2025-08-30T14:27:49.900Z',
+    employmentType: 'Full-Time',
+    emergencyContact: { name: 'fcyfyyf', phone: '65767567', relationship: 'gvjgvj' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-30T14:27:49.935Z,
+  updated_at: 2025-08-30T14:28:56.655Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: null,
+  manager2_name: null,
+  manager3_name: null,
+  master_status: 'active'
+}
+🔍 Checking onboarding status for user ID: 22
+🔍 Query result: [
+  {
+    id: 11,
+    employee_id: 22,
+    type: 'Full-Time',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinj4747@gmail.com',
+      phone: '536536556656',
+      address: 'ghchgchch',
+      education: 'fcyfytfty',
+      experience: '',
+      submittedAt: '2025-08-30T14:27:49.900Z',
+      employmentType: 'Full-Time',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-30T14:27:49.935Z,
+    updated_at: 2025-08-30T14:28:56.655Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: null,
+    manager2_name: null,
+    manager3_name: null,
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 11,
+  employee_id: 22,
+  type: 'Full-Time',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinj4747@gmail.com',
+    phone: '536536556656',
+    address: 'ghchgchch',
+    education: 'fcyfytfty',
+    experience: '',
+    submittedAt: '2025-08-30T14:27:49.900Z',
+    employmentType: 'Full-Time',
+    emergencyContact: { name: 'fcyfyyf', phone: '65767567', relationship: 'gvjgvj' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-30T14:27:49.935Z,
+  updated_at: 2025-08-30T14:28:56.655Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: null,
+  manager2_name: null,
+  manager3_name: null,
+  master_status: 'active'
+}
+🔍 Expense request received: [Object: null prototype] {
+  expenseCategory: 'Food',
+  expenseType: 'Meals',
+  amount: '500',
+  currency: 'INR',
+  description: 'kbedaskjncl',
+  expenseDate: '2025-08-20',
+  taxIncluded: 'false'
+}
+🔍 Files uploaded: [
+  {
+    fieldname: 'attachments',
+    originalname: '1-230ed728-bd80-4ed7-ab27-a68b0e5a1cb3.pdf',
+    encoding: '7bit',
+    mimetype: 'application/pdf',
+    destination: '/Users/stalin_j/Downloads/ONDOARD/backend/uploads/expenses',
+    filename: 'attachments-1756644956576-670460977.pdf',
+    path: '/Users/stalin_j/Downloads/ONDOARD/backend/uploads/expenses/attachments-1756644956576-670460977.pdf',
+    size: 120795
+  }
+]
+🔍 Found managers for employee 22 : [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+🔍 Retrieved managers: [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+🔍 Managers found: [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+📧 Sending email to manager: strawhatluff124@gmail.com
+📧 Email data: {
+  id: 7,
+  employeeName: 'stalin j',
+  employeeEmail: 'stalinj@nxzen.com',
+  expenseCategory: 'Food',
+  expenseType: 'Meals',
+  amount: '500',
+  currency: 'INR',
+  description: 'kbedaskjncl',
+  expenseDate: '2025-08-20',
+  attachmentUrl: '/uploads/expenses/attachments-1756644956576-670460977.pdf',
+  attachmentName: '1-230ed728-bd80-4ed7-ab27-a68b0e5a1cb3.pdf',
+  approvalToken: '57f74bcce41c74bcd241bdf8658945b7524410a81d9384db41cea372e53bf28f',
+  totalManagers: 2
+}
+📧 sendExpenseRequestToManager called with: {
+  managerEmail: 'strawhatluff124@gmail.com',
+  expenseRequest: { id: 7, employeeName: 'stalin j' }
+}
+📧 Sending email to manager: stalinstalin11112@gmail.com
+📧 Email data: {
+  id: 7,
+  employeeName: 'stalin j',
+  employeeEmail: 'stalinj@nxzen.com',
+  expenseCategory: 'Food',
+  expenseType: 'Meals',
+  amount: '500',
+  currency: 'INR',
+  description: 'kbedaskjncl',
+  expenseDate: '2025-08-20',
+  attachmentUrl: '/uploads/expenses/attachments-1756644956576-670460977.pdf',
+  attachmentName: '1-230ed728-bd80-4ed7-ab27-a68b0e5a1cb3.pdf',
+  approvalToken: '57f74bcce41c74bcd241bdf8658945b7524410a81d9384db41cea372e53bf28f',
+  totalManagers: 2
+}
+📧 sendExpenseRequestToManager called with: {
+  managerEmail: 'stalinstalin11112@gmail.com',
+  expenseRequest: { id: 7, employeeName: 'stalin j' }
+}
+✅ Expense request email sent to manager: strawhatluff124@gmail.com
+📧 Email send result: true
+✅ Expense request email sent to manager: stalinstalin11112@gmail.com
+📧 Email send result: true
+✅ Manager approval notification sent to HR: hr@nxzen.com
+✅ Expense approval notification sent to employee: stalinj@nxzen.com
+🔍 Checking onboarding status for user ID: 22
+🔍 Query result: [
+  {
+    id: 11,
+    employee_id: 22,
+    type: 'Full-Time',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinj4747@gmail.com',
+      phone: '536536556656',
+      address: 'ghchgchch',
+      education: 'fcyfytfty',
+      experience: '',
+      submittedAt: '2025-08-30T14:27:49.900Z',
+      employmentType: 'Full-Time',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-30T14:27:49.935Z,
+    updated_at: 2025-08-30T14:28:56.655Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: null,
+    manager2_name: null,
+    manager3_name: null,
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 11,
+  employee_id: 22,
+  type: 'Full-Time',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinj4747@gmail.com',
+    phone: '536536556656',
+    address: 'ghchgchch',
+    education: 'fcyfytfty',
+    experience: '',
+    submittedAt: '2025-08-30T14:27:49.900Z',
+    employmentType: 'Full-Time',
+    emergencyContact: { name: 'fcyfyyf', phone: '65767567', relationship: 'gvjgvj' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-30T14:27:49.935Z,
+  updated_at: 2025-08-30T14:28:56.655Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: null,
+  manager2_name: null,
+  manager3_name: null,
+  master_status: 'active'
+}
+🔍 Checking onboarding status for user ID: 22
+🔍 Query result: [
+  {
+    id: 11,
+    employee_id: 22,
+    type: 'Full-Time',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinj4747@gmail.com',
+      phone: '536536556656',
+      address: 'ghchgchch',
+      education: 'fcyfytfty',
+      experience: '',
+      submittedAt: '2025-08-30T14:27:49.900Z',
+      employmentType: 'Full-Time',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-30T14:27:49.935Z,
+    updated_at: 2025-08-30T14:28:56.655Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: null,
+    manager2_name: null,
+    manager3_name: null,
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 11,
+  employee_id: 22,
+  type: 'Full-Time',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinj4747@gmail.com',
+    phone: '536536556656',
+    address: 'ghchgchch',
+    education: 'fcyfytfty',
+    experience: '',
+    submittedAt: '2025-08-30T14:27:49.900Z',
+    employmentType: 'Full-Time',
+    emergencyContact: { name: 'fcyfyyf', phone: '65767567', relationship: 'gvjgvj' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-30T14:27:49.935Z,
+  updated_at: 2025-08-30T14:28:56.655Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: null,
+  manager2_name: null,
+  manager3_name: null,
+  master_status: 'active'
+}
+🔍 Checking onboarding status for user ID: 22
+🔍 Query result: [
+  {
+    id: 11,
+    employee_id: 22,
+    type: 'Full-Time',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinj4747@gmail.com',
+      phone: '536536556656',
+      address: 'ghchgchch',
+      education: 'fcyfytfty',
+      experience: '',
+      submittedAt: '2025-08-30T14:27:49.900Z',
+      employmentType: 'Full-Time',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-30T14:27:49.935Z,
+    updated_at: 2025-08-30T14:28:56.655Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: null,
+    manager2_name: null,
+    manager3_name: null,
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 11,
+  employee_id: 22,
+  type: 'Full-Time',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinj4747@gmail.com',
+    phone: '536536556656',
+    address: 'ghchgchch',
+    education: 'fcyfytfty',
+    experience: '',
+    submittedAt: '2025-08-30T14:27:49.900Z',
+    employmentType: 'Full-Time',
+    emergencyContact: { name: 'fcyfyyf', phone: '65767567', relationship: 'gvjgvj' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-30T14:27:49.935Z,
+  updated_at: 2025-08-30T14:28:56.655Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: null,
+  manager2_name: null,
+  manager3_name: null,
+  master_status: 'active'
+}
+🔍 Checking onboarding status for user ID: 22
+🔍 Checking onboarding status for user ID: 22
+🔍 Query result: [
+  {
+    id: 11,
+    employee_id: 22,
+    type: 'Full-Time',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinj4747@gmail.com',
+      phone: '536536556656',
+      address: 'ghchgchch',
+      education: 'fcyfytfty',
+      experience: '',
+      submittedAt: '2025-08-30T14:27:49.900Z',
+      employmentType: 'Full-Time',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-30T14:27:49.935Z,
+    updated_at: 2025-08-30T14:28:56.655Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: null,
+    manager2_name: null,
+    manager3_name: null,
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 11,
+  employee_id: 22,
+  type: 'Full-Time',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinj4747@gmail.com',
+    phone: '536536556656',
+    address: 'ghchgchch',
+    education: 'fcyfytfty',
+    experience: '',
+    submittedAt: '2025-08-30T14:27:49.900Z',
+    employmentType: 'Full-Time',
+    emergencyContact: { name: 'fcyfyyf', phone: '65767567', relationship: 'gvjgvj' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-30T14:27:49.935Z,
+  updated_at: 2025-08-30T14:28:56.655Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: null,
+  manager2_name: null,
+  manager3_name: null,
+  master_status: 'active'
+}
+🔍 Query result: [
+  {
+    id: 11,
+    employee_id: 22,
+    type: 'Full-Time',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinj4747@gmail.com',
+      phone: '536536556656',
+      address: 'ghchgchch',
+      education: 'fcyfytfty',
+      experience: '',
+      submittedAt: '2025-08-30T14:27:49.900Z',
+      employmentType: 'Full-Time',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-30T14:27:49.935Z,
+    updated_at: 2025-08-30T14:28:56.655Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: null,
+    manager2_name: null,
+    manager3_name: null,
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 11,
+  employee_id: 22,
+  type: 'Full-Time',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinj4747@gmail.com',
+    phone: '536536556656',
+    address: 'ghchgchch',
+    education: 'fcyfytfty',
+    experience: '',
+    submittedAt: '2025-08-30T14:27:49.900Z',
+    employmentType: 'Full-Time',
+    emergencyContact: { name: 'fcyfyyf', phone: '65767567', relationship: 'gvjgvj' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-30T14:27:49.935Z,
+  updated_at: 2025-08-30T14:28:56.655Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: null,
+  manager2_name: null,
+  manager3_name: null,
+  master_status: 'active'
+}
+🔍 Employee onboarding status check for user 22 Result: {
+  status: 'onboarded',
+  master_id: 27,
+  onboarded_id: 10,
+  onboarded_status: 'assigned'
+}

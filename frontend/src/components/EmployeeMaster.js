@@ -10,8 +10,11 @@ import {
   FaEye,
   FaTrash,
   FaEdit,
+  FaDownload,
+  FaUpload,
 } from "react-icons/fa";
 import ManualEmployeeAdd from "./ManualEmployeeAdd";
+import toast from "react-hot-toast";
 
 const EmployeeMaster = ({ employees, onRefresh }) => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -19,6 +22,9 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [managers, setManagers] = useState([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleEmployeeAdded = () => {
     setShowAddForm(false);
@@ -81,29 +87,207 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
     }
   };
 
+  const handleDownloadExcel = async () => {
+    try {
+      const response = await axios.get("/hr/master/export", {
+        responseType: "blob",
+      });
+
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Get filename from response headers or create default
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = "employee_master.xlsx";
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Employee master data downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading Excel:", error);
+      toast.error("Failed to download employee data");
+    }
+  };
+
+  const handleDownloadCSV = async () => {
+    try {
+      const response = await axios.get("/hr/master/export-csv", {
+        responseType: "blob",
+      });
+
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Get filename from response headers or create default
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = "employee_master.csv";
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Employee master data downloaded as CSV successfully!");
+    } catch (error) {
+      console.error("Error downloading CSV:", error);
+      toast.error("Failed to download employee data as CSV");
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const validTypes = [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+        "text/csv",
+      ];
+
+      if (
+        !validTypes.includes(file.type) &&
+        !file.name.endsWith(".xlsx") &&
+        !file.name.endsWith(".xls") &&
+        !file.name.endsWith(".csv")
+      ) {
+        toast.error(
+          "Please select a valid Excel (.xlsx, .xls) or CSV (.csv) file"
+        );
+        return;
+      }
+
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size must be less than 10MB");
+        return;
+      }
+
+      setUploadFile(file);
+    }
+  };
+
+  const handleUploadExcel = async () => {
+    if (!uploadFile) {
+      toast.error("Please select a file to upload");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("excelFile", uploadFile);
+
+      const response = await axios.post("/hr/master/import", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const results = response.data.results;
+
+      // Show detailed results
+      let message = `Import completed! `;
+      message += `Total: ${results.total}, `;
+      message += `Success: ${results.success}, `;
+      message += `Skipped: ${results.skipped.length}, `;
+      message += `Errors: ${results.errors.length}`;
+
+      if (results.errors.length > 0) {
+        message += `\n\nErrors:\n${results.errors
+          .map((e) => `Row ${e.row}: ${e.error}`)
+          .join("\n")}`;
+      }
+
+      toast.success(message, { duration: 8000 });
+
+      // Reset form and refresh data
+      setUploadFile(null);
+      setShowUploadModal(false);
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error uploading Excel:", error);
+      const errorMessage =
+        error.response?.data?.error || "Failed to upload file";
+      toast.error(errorMessage);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div>
-      {/* Header with Add Employee Button */}
+      {/* Header with Action Buttons */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900">
           Employee Master Table
         </h2>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="btn-primary flex items-center"
-        >
-          {showAddForm ? (
-            <>
-              <FaTimes className="mr-2" />
-              Hide Form
-            </>
-          ) : (
-            <>
-              <FaPlus className="mr-2" />
-              Add Employee
-            </>
-          )}
-        </button>
+        <div className="flex space-x-3">
+          <div className="flex space-x-2">
+            <button
+              onClick={handleDownloadExcel}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+              title="Download employee data as Excel"
+            >
+              <FaDownload className="mr-2" />
+              Excel
+            </button>
+            <button
+              onClick={handleDownloadCSV}
+              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center"
+              title="Download employee data as CSV"
+            >
+              <FaDownload className="mr-2" />
+              CSV
+            </button>
+          </div>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+            title="Upload employee data from Excel or CSV"
+          >
+            <FaUpload className="mr-2" />
+            Upload Excel/CSV
+          </button>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="btn-primary flex items-center"
+          >
+            {showAddForm ? (
+              <>
+                <FaTimes className="mr-2" />
+                Hide Form
+              </>
+            ) : (
+              <>
+                <FaPlus className="mr-2" />
+                Add Employee
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Add Employee Form */}
@@ -518,6 +702,107 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Excel Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Upload Employee Data from Excel/CSV
+              </h3>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Excel/CSV File
+                </label>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleFileChange}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {uploadFile && (
+                  <p className="mt-2 text-sm text-green-600">
+                    Selected: {uploadFile.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="mb-4 p-3 bg-blue-50 rounded-md">
+                <h4 className="text-sm font-medium text-blue-800 mb-2">
+                  Required Columns:
+                </h4>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• employee_name (required)</li>
+                  <li>• company_email (required)</li>
+                  <li>
+                    • type (required: Intern, Contract, Full-Time, Manager)
+                  </li>
+                  <li>• doj (required: Date of Joining)</li>
+                  <li>
+                    • employee_id (optional: will be auto-generated if not
+                    provided)
+                  </li>
+                  <li>• manager_name (optional)</li>
+                  <li>
+                    • department, designation, salary_band, location (optional)
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUploadModal(false);
+                    setUploadFile(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUploadExcel}
+                  disabled={!uploadFile || uploading}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {uploading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <FaUpload className="mr-2" />
+                      Upload
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

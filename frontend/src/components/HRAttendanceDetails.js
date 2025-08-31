@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { FaCalendarAlt, FaUsers, FaDownload, FaTrash } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaUsers,
+  FaDownload,
+  FaTrash,
+  FaSync,
+} from "react-icons/fa";
 import { format } from "date-fns";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -83,6 +89,68 @@ const HRAttendanceDetails = () => {
     }
   };
 
+  const handleDownloadAttendance = () => {
+    try {
+      // Prepare CSV data
+      const csvHeaders = [
+        "Employee Name",
+        "Employee Email",
+        "Date",
+        "Status",
+        "Clock In",
+        "Clock Out",
+        "Reason",
+      ];
+
+      const csvData = filteredRecords.map((record) => [
+        record.employee_name || "Unknown",
+        record.employee_email || "",
+        formatDate(record.date),
+        record.status || "",
+        formatTime(record.clock_in_time),
+        formatTime(record.clock_out_time),
+        record.reason || "",
+      ]);
+
+      // Convert to CSV string
+      const csvContent = [
+        csvHeaders.join(","),
+        ...csvData.map((row) => row.map((field) => `"${field}"`).join(",")),
+      ].join("\n");
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+
+      // Generate filename with current date and filters
+      const currentDate = new Date().toISOString().split("T")[0];
+      const monthName = format(
+        new Date(selectedYear, selectedMonth - 1, 1),
+        "MMMM"
+      );
+      const filename = `attendance_${monthName}_${selectedYear}_${currentDate}.csv`;
+
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Attendance data downloaded as ${filename}`, {
+        duration: 4000,
+        position: "top-right",
+      });
+    } catch (error) {
+      console.error("Error downloading attendance data:", error);
+      toast.error("Failed to download attendance data", {
+        duration: 4000,
+        position: "top-right",
+      });
+    }
+  };
+
   const filteredRecords = attendanceRecords.filter((record) => {
     const matchesSearch =
       !searchTerm ||
@@ -111,13 +179,24 @@ const HRAttendanceDetails = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Attendance Details</h2>
-        <button
-          onClick={fetchAttendanceDetails}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <FaDownload className="mr-2 inline" />
-          Refresh
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={fetchAttendanceDetails}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+            title="Refresh data"
+          >
+            <FaSync className="mr-2" />
+            Refresh
+          </button>
+          <button
+            onClick={handleDownloadAttendance}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+            title="Download attendance data as CSV"
+          >
+            <FaDownload className="mr-2" />
+            Download CSV
+          </button>
+        </div>
       </div>
 
       {/* Month/Year Filter */}

@@ -8,8 +8,37 @@ const {
   generateEmployeeId,
   validateEmployeeId,
 } = require("../utils/employeeIdGenerator");
+const multer = require("multer");
+const XLSX = require("xlsx");
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.mimetype === "application/vnd.ms-excel" ||
+      file.mimetype === "text/csv" ||
+      file.originalname.endsWith(".xlsx") ||
+      file.originalname.endsWith(".xls") ||
+      file.originalname.endsWith(".csv")
+    ) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error("Only Excel (.xlsx, .xls) and CSV (.csv) files are allowed"),
+        false
+      );
+    }
+  },
+});
 
 // Apply authentication to all HR routes
 router.use(authenticateToken, requireHR);
@@ -521,6 +550,390 @@ router.get("/master", async (req, res) => {
   } catch (error) {
     console.error("Get master table error:", error);
     res.status(500).json({ error: "Failed to get master table" });
+  }
+});
+
+// Download employee master data as Excel
+router.get("/master/export", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        em.employee_id,
+        em.employee_name,
+        em.company_email,
+        em.type,
+        em.doj,
+        em.status,
+        em.department,
+        em.designation,
+        em.salary_band,
+        em.location,
+        em.manager_name,
+        em.manager2_name,
+        em.manager3_name,
+        em.created_at,
+        em.updated_at
+      FROM employee_master em
+      ORDER BY em.created_at DESC
+    `);
+
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(result.rows);
+
+    // Set column widths
+    const columnWidths = [
+      { wch: 12 }, // employee_id
+      { wch: 20 }, // employee_name
+      { wch: 25 }, // company_email
+      { wch: 12 }, // type
+      { wch: 12 }, // doj
+      { wch: 10 }, // status
+      { wch: 15 }, // department
+      { wch: 15 }, // designation
+      { wch: 12 }, // salary_band
+      { wch: 15 }, // location
+      { wch: 20 }, // manager_name
+      { wch: 20 }, // manager2_name
+      { wch: 20 }, // manager3_name
+      { wch: 20 }, // created_at
+      { wch: 20 }, // updated_at
+    ];
+    worksheet["!cols"] = columnWidths;
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employee Master");
+
+    // Generate Excel file buffer
+    const excelBuffer = XLSX.write(workbook, {
+      type: "buffer",
+      bookType: "xlsx",
+    });
+
+    // Set response headers
+    const filename = `employee_master_${
+      new Date().toISOString().split("T")[0]
+    }.xlsx`;
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", excelBuffer.length);
+
+    res.send(excelBuffer);
+  } catch (error) {
+    console.error("Export employee master error:", error);
+    res.status(500).json({ error: "Failed to export employee master data" });
+  }
+});
+
+// Upload Excel file and bulk import employees
+router.post("/master/import", upload.single("excelFile"), async (req, res) => {
+  const client = await pool.connect();
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Parse file based on type
+    let jsonData;
+    const fileName = req.file.originalname.toLowerCase();
+
+    if (fileName.endsWith(".csv")) {
+      // Parse CSV file
+      const csvString = req.file.buffer.toString("utf8");
+      const workbook = XLSX.read(csvString, { type: "string" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      jsonData = XLSX.utils.sheet_to_json(worksheet);
+    } else {
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      jsonData = XLSX.utils.sheet_to_json(worksheet);
+    }
+
+    if (jsonData.length === 0) {
+      return res.status(400).json({ error: "File is empty or has no data" });
+    }
+
+    // Validate required columns
+    const requiredColumns = ["employee_name", "company_email", "type", "doj"];
+    const firstRow = jsonData[0];
+    const missingColumns = requiredColumns.filter((col) => !(col in firstRow));
+
+    if (missingColumns.length > 0) {
+      return res.status(400).json({
+        error: `Missing required columns: ${missingColumns.join(", ")}`,
+        requiredColumns: requiredColumns,
+        foundColumns: Object.keys(firstRow),
+      });
+    }
+
+    const results = {
+      total: jsonData.length,
+      success: 0,
+      errors: [],
+      created: [],
+      skipped: [],
+    };
+
+    await client.query("BEGIN");
+
+    for (let i = 0; i < jsonData.length; i++) {
+      const row = jsonData[i];
+      const rowNumber = i + 2; // Excel row number (accounting for header)
+
+      try {
+        // Validate required fields
+        if (!row.employee_name || !row.company_email || !row.type || !row.doj) {
+          results.errors.push({
+            row: rowNumber,
+            error: "Missing required fields",
+            data: row,
+          });
+          continue;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(row.company_email)) {
+          results.errors.push({
+            row: rowNumber,
+            error: "Invalid email format",
+            data: row,
+          });
+          continue;
+        }
+
+        // Validate employment type
+        const validTypes = ["Intern", "Contract", "Full-Time", "Manager"];
+        if (!validTypes.includes(row.type)) {
+          results.errors.push({
+            row: rowNumber,
+            error: `Invalid type. Must be one of: ${validTypes.join(", ")}`,
+            data: row,
+          });
+          continue;
+        }
+
+        // Validate date
+        const dojDate = new Date(row.doj);
+        if (isNaN(dojDate.getTime())) {
+          results.errors.push({
+            row: rowNumber,
+            error: "Invalid date format for DOJ",
+            data: row,
+          });
+          continue;
+        }
+
+        // Check if employee already exists
+        const existingEmployee = await client.query(
+          "SELECT id FROM employee_master WHERE company_email = $1 OR employee_id = $2",
+          [row.company_email, row.employee_id || ""]
+        );
+
+        if (existingEmployee.rows.length > 0) {
+          results.skipped.push({
+            row: rowNumber,
+            reason: "Employee already exists",
+            data: row,
+          });
+          continue;
+        }
+
+        // Generate employee ID if not provided
+        let employeeId = row.employee_id;
+        if (!employeeId) {
+          employeeId = await generateEmployeeId();
+        }
+
+        // Get manager information if provided
+        let managerId = null;
+        let managerName = null;
+        if (row.manager_name) {
+          const managerResult = await client.query(
+            "SELECT manager_id, manager_name FROM managers WHERE manager_name ILIKE $1 AND status = 'active'",
+            [row.manager_name]
+          );
+          if (managerResult.rows.length > 0) {
+            managerId = managerResult.rows[0].manager_id;
+            managerName = managerResult.rows[0].manager_name;
+          }
+        }
+
+        // Insert employee into master table
+        await client.query(
+          `INSERT INTO employee_master (
+            employee_id, employee_name, company_email, type, doj, status,
+            department, designation, salary_band, location,
+            manager_id, manager_name, created_at, updated_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          [
+            employeeId,
+            row.employee_name,
+            row.company_email,
+            row.type,
+            dojDate,
+            row.status || "active",
+            row.department || null,
+            row.designation || null,
+            row.salary_band || null,
+            row.location || null,
+            managerId,
+            managerName,
+          ]
+        );
+
+        // Create user account if it doesn't exist
+        const userExists = await client.query(
+          "SELECT id FROM users WHERE email = $1",
+          [row.company_email]
+        );
+
+        if (userExists.rows.length === 0) {
+          const tempPassword = Math.random().toString(36).slice(-8);
+          const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+          await client.query(
+            `INSERT INTO users (email, password, role, first_name, last_name, temp_password, created_at, updated_at) 
+             VALUES ($1, $2, 'employee', $3, 'Employee', $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            [row.company_email, hashedPassword, row.employee_name, tempPassword]
+          );
+
+          // Initialize leave balance
+          const currentYear = new Date().getFullYear();
+          const userId = (
+            await client.query("SELECT id FROM users WHERE email = $1", [
+              row.company_email,
+            ])
+          ).rows[0].id;
+
+          await client.query(
+            `INSERT INTO leave_balances (employee_id, year, total_allocated, leaves_taken, leaves_remaining) 
+             VALUES ($1, $2, 27, 0, 27)`,
+            [userId, currentYear]
+          );
+        }
+
+        results.success++;
+        results.created.push({
+          row: rowNumber,
+          employee_id: employeeId,
+          employee_name: row.employee_name,
+          company_email: row.company_email,
+        });
+      } catch (error) {
+        console.error(`Error processing row ${rowNumber}:`, error);
+        results.errors.push({
+          row: rowNumber,
+          error: error.message,
+          data: row,
+        });
+      }
+    }
+
+    await client.query("COMMIT");
+
+    res.json({
+      message: "Excel import completed",
+      results: results,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Excel import error:", error);
+    res.status(500).json({
+      error: "Failed to import file",
+      details: error.message,
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// Download employee master data as CSV
+router.get("/master/export-csv", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        em.employee_id,
+        em.employee_name,
+        em.company_email,
+        em.type,
+        em.doj,
+        em.status,
+        em.department,
+        em.designation,
+        em.salary_band,
+        em.location,
+        em.manager_name,
+        em.manager2_name,
+        em.manager3_name,
+        em.created_at,
+        em.updated_at
+      FROM employee_master em
+      ORDER BY em.created_at DESC
+    `);
+
+    // Create CSV content
+    const headers = [
+      "employee_id",
+      "employee_name",
+      "company_email",
+      "type",
+      "doj",
+      "status",
+      "department",
+      "designation",
+      "salary_band",
+      "location",
+      "manager_name",
+      "manager2_name",
+      "manager3_name",
+      "created_at",
+      "updated_at",
+    ];
+
+    const csvRows = [
+      headers.join(","),
+      ...result.rows.map((row) =>
+        headers
+          .map((header) => {
+            const value = row[header];
+            // Escape commas and quotes in CSV
+            if (value === null || value === undefined) return "";
+            const stringValue = String(value);
+            if (
+              stringValue.includes(",") ||
+              stringValue.includes('"') ||
+              stringValue.includes("\n")
+            ) {
+              return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+          })
+          .join(",")
+      ),
+    ];
+
+    const csvContent = csvRows.join("\n");
+
+    // Set response headers
+    const filename = `employee_master_${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", Buffer.byteLength(csvContent, "utf8"));
+
+    res.send(csvContent);
+  } catch (error) {
+    console.error("Export employee master CSV error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to export employee master data as CSV" });
   }
 });
 
