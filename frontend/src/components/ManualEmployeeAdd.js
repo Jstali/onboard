@@ -25,6 +25,10 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
     companyEmail: "",
     managerId: "",
     managerName: "",
+    manager2Id: "",
+    manager2Name: "",
+    manager3Id: "",
+    manager3Name: "",
     department: "",
     location: "",
     role: "Product Developer",
@@ -48,6 +52,10 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
       companyEmail: "",
       managerId: "",
       managerName: "",
+      manager2Id: "",
+      manager2Name: "",
+      manager3Id: "",
+      manager3Name: "",
       department: "",
       location: "",
       role: "Product Developer",
@@ -92,6 +100,26 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
         setFormData((prev) => ({
           ...prev,
           managerName: selectedManager.manager_name || "",
+        }));
+      }
+    } else if (name === "manager2Id") {
+      const selectedManager = managers.find(
+        (m) => m.manager_id === stringValue
+      );
+      if (selectedManager) {
+        setFormData((prev) => ({
+          ...prev,
+          manager2Name: selectedManager.manager_name || "",
+        }));
+      }
+    } else if (name === "manager3Id") {
+      const selectedManager = managers.find(
+        (m) => m.manager_id === stringValue
+      );
+      if (selectedManager) {
+        setFormData((prev) => ({
+          ...prev,
+          manager3Name: selectedManager.manager_name || "",
         }));
       }
     }
@@ -344,13 +372,14 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Manager (Optional)
+                Manager 1 (Required)
               </label>
               <select
                 name="managerId"
                 value={formData.managerId || ""}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               >
                 <option value="">Select Manager</option>
                 {managers.map((manager) => (
@@ -363,12 +392,78 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Manager Name (Auto-filled)
+                Manager 1 Name (Auto-filled)
               </label>
               <input
                 type="text"
                 name="managerName"
                 value={formData.managerName || ""}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                placeholder="Will be auto-filled"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Manager 2 (Optional)
+              </label>
+              <select
+                name="manager2Id"
+                value={formData.manager2Id || ""}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Manager (Optional)</option>
+                {managers.map((manager) => (
+                  <option key={manager.id} value={manager.manager_id}>
+                    {manager.manager_name} - {manager.department}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Manager 2 Name (Auto-filled)
+              </label>
+              <input
+                type="text"
+                name="manager2Name"
+                value={formData.manager2Name || ""}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                placeholder="Will be auto-filled"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Manager 3 (Optional)
+              </label>
+              <select
+                name="manager3Id"
+                value={formData.manager3Id || ""}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Manager (Optional)</option>
+                {managers.map((manager) => (
+                  <option key={manager.id} value={manager.manager_id}>
+                    {manager.manager_name} - {manager.department}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Manager 3 Name (Auto-filled)
+              </label>
+              <input
+                type="text"
+                name="manager3Name"
+                value={formData.manager3Name || ""}
                 readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
                 placeholder="Will be auto-filled"

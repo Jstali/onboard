@@ -17,6 +17,44 @@ const generateSeriesId = () => {
   return `LR-${timestamp}-${random}`.toUpperCase();
 };
 
+// Helper functions for multi-manager approval workflow
+const checkAllManagersApproved = (leaveRequest) => {
+  const managers = [];
+  if (leaveRequest.manager1_id) managers.push(leaveRequest.manager1_status);
+  if (leaveRequest.manager2_id) managers.push(leaveRequest.manager2_status);
+  if (leaveRequest.manager3_id) managers.push(leaveRequest.manager3_status);
+
+  return (
+    managers.length > 0 && managers.every((status) => status === "Approved")
+  );
+};
+
+const checkAnyManagerRejected = (leaveRequest) => {
+  const managers = [];
+  if (leaveRequest.manager1_id) managers.push(leaveRequest.manager1_status);
+  if (leaveRequest.manager2_id) managers.push(leaveRequest.manager2_status);
+  if (leaveRequest.manager3_id) managers.push(leaveRequest.manager3_status);
+
+  return managers.some((status) => status === "Rejected");
+};
+
+const getApprovedManagerCount = (leaveRequest) => {
+  const managers = [];
+  if (leaveRequest.manager1_id) managers.push(leaveRequest.manager1_status);
+  if (leaveRequest.manager2_id) managers.push(leaveRequest.manager2_status);
+  if (leaveRequest.manager3_id) managers.push(leaveRequest.manager3_status);
+
+  return managers.filter((status) => status === "Approved").length;
+};
+
+const getTotalManagerCount = (leaveRequest) => {
+  let count = 0;
+  if (leaveRequest.manager1_id) count++;
+  if (leaveRequest.manager2_id) count++;
+  if (leaveRequest.manager3_id) count++;
+  return count;
+};
+
 // Helper function to calculate leave days
 const calculateLeaveDays = (fromDate, toDate, halfDay) => {
   const start = new Date(fromDate);
@@ -26,63 +64,126 @@ const calculateLeaveDays = (fromDate, toDate, halfDay) => {
   return halfDay ? diffDays - 0.5 : diffDays;
 };
 
-// Helper function to get employee's manager
-const getEmployeeManager = async (employeeId) => {
+// Helper function to get employee's managers
+const getEmployeeManagers = async (employeeId) => {
   try {
-    // Get the manager information from employee_master table
-    // Use the same email for both user account and company email
+    // Get all manager information from employee_master table
     const employeeResult = await pool.query(
-      `SELECT em.manager_name, em.manager_id, m.email
+      `SELECT em.manager_id, em.manager_name, 
+              em.manager2_id, em.manager2_name, 
+              em.manager3_id, em.manager3_name
        FROM employee_master em
-       LEFT JOIN managers m ON em.manager_id = m.manager_id
        WHERE em.company_email = (
          SELECT email FROM users WHERE id = $1
        )`,
       [employeeId]
     );
 
-    if (
-      employeeResult.rows.length === 0 ||
-      !employeeResult.rows[0].manager_name
-    ) {
-      console.log("🔍 No manager found for employee", employeeId);
+    if (employeeResult.rows.length === 0) {
+      console.log("🔍 No employee found", employeeId);
       return null;
     }
 
     const employee = employeeResult.rows[0];
+    const managers = [];
 
-    // Then get the manager details from managers table and users table
-    const managerResult = await pool.query(
-      `SELECT m.manager_name, m.email, u.id as user_id
-       FROM managers m
-       LEFT JOIN users u ON u.email = m.email
-       WHERE m.manager_id = $1 AND m.status = 'active'`,
-      [employee.manager_id]
-    );
+    // Get manager 1 details
+    if (employee.manager_id && employee.manager_name) {
+      const manager1Result = await pool.query(
+        `SELECT em.employee_name as manager_name, em.company_email, u.id as user_id
+         FROM employee_master em
+         LEFT JOIN users u ON u.email = em.company_email
+         WHERE em.employee_name = $1 AND em.status = 'active'`,
+        [employee.manager_name]
+      );
 
-    console.log(
-      "🔍 Manager lookup for employee",
-      employeeId,
-      "Manager ID:",
-      employee.manager_id,
-      "Manager name:",
-      employee.manager_name,
-      "Result:",
-      managerResult.rows
-    );
-
-    if (managerResult.rows.length > 0) {
-      const manager = managerResult.rows[0];
-      return {
-        id: manager.user_id,
-        manager_name: manager.manager_name,
-        email: manager.email,
-      };
+      if (manager1Result.rows.length > 0) {
+        const manager = manager1Result.rows[0];
+        // Use company email from employee_master table (HR assigned)
+        const email = manager.company_email;
+        if (email) {
+          managers.push({
+            id: manager.user_id,
+            manager_id: employee.manager_id,
+            manager_name: employee.manager_name,
+            email: email,
+          });
+        }
+      }
     }
 
-    return null;
+    // Get manager 2 details
+    if (employee.manager2_id && employee.manager2_name) {
+      const manager2Result = await pool.query(
+        `SELECT em.employee_name as manager_name, em.company_email, u.id as user_id
+         FROM employee_master em
+         LEFT JOIN users u ON u.email = em.company_email
+         WHERE em.employee_name = $1 AND em.status = 'active'`,
+        [employee.manager2_name]
+      );
+
+      if (manager2Result.rows.length > 0) {
+        const manager = manager2Result.rows[0];
+        // Use company email from employee_master table (HR assigned)
+        const email = manager.company_email;
+        if (email) {
+          managers.push({
+            id: manager.user_id,
+            manager_id: employee.manager2_id,
+            manager_name: employee.manager2_name,
+            email: email,
+          });
+        }
+      }
+    }
+
+    // Get manager 3 details
+    if (employee.manager3_id && employee.manager3_name) {
+      const manager3Result = await pool.query(
+        `SELECT em.employee_name as manager_name, em.company_email, u.id as user_id
+         FROM employee_master em
+         LEFT JOIN users u ON u.email = em.company_email
+         WHERE em.employee_name = $1 AND em.status = 'active'`,
+        [employee.manager3_name]
+      );
+
+      if (manager3Result.rows.length > 0) {
+        const manager = manager3Result.rows[0];
+        // Use company email from employee_master table (HR assigned)
+        const email = manager.company_email;
+        if (email) {
+          managers.push({
+            id: manager.user_id,
+            manager_id: employee.manager3_id,
+            manager_name: employee.manager3_name,
+            email: email,
+          });
+        }
+      }
+    }
+
+    if (managers.length === 0) {
+      console.log("🔍 No managers found for employee", employeeId);
+      return null;
+    }
+
+    console.log("🔍 Found managers for employee", employeeId, ":", managers);
+    console.log(
+      "🔍 Manager emails:",
+      managers.map((m) => ({ name: m.manager_name, email: m.email }))
+    );
+    console.log("🔍 Manager count:", managers.length);
+    managers.forEach((m, index) => {
+      console.log(`🔍 Manager ${index + 1}:`, {
+        name: m.manager_name,
+        email: m.email,
+        id: m.manager_id,
+        user_id: m.id,
+      });
+    });
+    return managers;
   } catch (error) {
-    console.error("Error getting employee manager:", error);
+    console.error("Error getting employee managers:", error);
     return null;
   }
 };
@@ -327,16 +428,20 @@ router.post(
       const approvalToken = require("crypto").randomBytes(32).toString("hex");
 
       // Get employee's manager
-      const manager = await getEmployeeManager(employeeId);
+      const managers = await getEmployeeManagers(employeeId);
+      console.log("🔍 Retrieved managers:", managers);
 
-      // Insert leave request without storing manager info (will fetch from employee_master)
+      // Insert leave request with manager information
       const insertResult = await pool.query(
         `
       INSERT INTO leave_requests (
         series, employee_id, employee_name, leave_type, leave_balance_before,
         from_date, to_date, half_day, total_leave_days, reason, 
-        status, approval_token
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        status, approval_token,
+        manager1_id, manager1_name, manager1_status,
+        manager2_id, manager2_name, manager2_status,
+        manager3_id, manager3_name, manager3_status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
       RETURNING *
     `,
         [
@@ -352,14 +457,23 @@ router.post(
           reason,
           "pending_manager_approval", // Start with manager approval
           approvalToken,
+          managers[0]?.manager_id || null,
+          managers[0]?.manager_name || null,
+          "Pending",
+          managers[1]?.manager_id || null,
+          managers[1]?.manager_name || null,
+          managers[1] ? "Pending" : null,
+          managers[2]?.manager_id || null,
+          managers[2]?.manager_name || null,
+          managers[2] ? "Pending" : null,
         ]
       );
 
       const leaveRequest = insertResult.rows[0];
 
-      // Send email notification to manager with approval buttons
-      console.log("🔍 Manager found:", manager);
-      if (manager) {
+      // Send email notification to all managers
+      console.log("🔍 Managers found:", managers);
+      if (managers && managers.length > 0) {
         const emailData = {
           id: leaveRequest.id,
           employeeName,
@@ -370,20 +484,23 @@ router.post(
           totalDays: totalLeaveDays,
           reason,
           approvalToken,
+          totalManagers: managers.length,
         };
 
-        console.log("📧 Sending email to manager:", manager.email);
-        console.log("📧 Email data:", emailData);
+        // Send email to each manager asynchronously (non-blocking)
+        managers.forEach((manager) => {
+          console.log("📧 Sending email to manager:", manager.email);
+          console.log("📧 Email data:", emailData);
 
-        try {
-          const emailResult = await sendLeaveRequestToManager(
-            manager.email,
-            emailData
-          );
-          console.log("📧 Email send result:", emailResult);
-        } catch (emailError) {
-          console.error("❌ Email sending failed:", emailError);
-        }
+          // Send email asynchronously without waiting
+          sendLeaveRequestToManager(manager.email, emailData)
+            .then((emailResult) => {
+              console.log("📧 Email send result:", emailResult);
+            })
+            .catch((emailError) => {
+              console.error("❌ Email sending failed:", emailError);
+            });
+        });
       } else {
         console.log("❌ No manager found for employee:", employeeId);
       }
@@ -409,7 +526,7 @@ router.post(
   }
 );
 
-// Get employee's leave requests with current manager info from employee_master
+// Get employee's leave requests with all manager info
 router.get("/my-requests", authenticateToken, async (req, res) => {
   try {
     console.log("🔍 Fetching leave requests for user ID:", req.user.userId);
@@ -418,8 +535,16 @@ router.get("/my-requests", authenticateToken, async (req, res) => {
       `
       SELECT 
         *,
-        current_manager_name as manager_name
-      FROM leave_requests_with_manager
+        manager1_name as manager_name,
+        CASE 
+          WHEN manager2_name IS NOT NULL AND manager3_name IS NOT NULL THEN 
+            manager1_name || ', ' || manager2_name || ', ' || manager3_name
+          WHEN manager2_name IS NOT NULL THEN 
+            manager1_name || ', ' || manager2_name
+          ELSE 
+            manager1_name
+        END as all_managers
+      FROM leave_requests
       WHERE employee_id = $1 
       ORDER BY created_at DESC
     `,
@@ -556,20 +681,55 @@ router.get("/approve/:id", async (req, res) => {
 
     const leaveRequest = tokenResult.rows[0];
 
-    // Check if already processed
-    if (leaveRequest.status !== "pending_manager_approval") {
+    // Check if already processed (allow partial approvals to continue)
+    if (
+      leaveRequest.status === "rejected" ||
+      leaveRequest.status === "hr_approved"
+    ) {
       return res.status(400).json({
         error: "Request already processed",
         message: `This request has already been ${leaveRequest.status.toLowerCase()}`,
       });
     }
 
-    // Update the request status
-    const newStatus = action === "approve" ? "manager_approved" : "rejected";
+    // For email-based approval, we need to identify which manager is approving
+    // This is tricky since we don't have the manager's user ID from the email link
+    // We'll need to match by manager name or use a different approach
+
+    // For now, let's use a simplified approach - update the first available manager status
+    let managerStatusField = null;
+    let managerName = "Manager";
+
+    if (
+      leaveRequest.manager1_id &&
+      leaveRequest.manager1_status === "Pending"
+    ) {
+      managerStatusField = "manager1_status";
+      managerName = leaveRequest.manager1_name;
+    } else if (
+      leaveRequest.manager2_id &&
+      leaveRequest.manager2_status === "Pending"
+    ) {
+      managerStatusField = "manager2_status";
+      managerName = leaveRequest.manager2_name;
+    } else if (
+      leaveRequest.manager3_id &&
+      leaveRequest.manager3_status === "Pending"
+    ) {
+      managerStatusField = "manager3_status";
+      managerName = leaveRequest.manager3_name;
+    } else {
+      return res.status(400).json({
+        error: "No pending manager approval",
+        message: "All assigned managers have already processed this request",
+      });
+    }
+
+    // Update the specific manager's status
+    const newStatus = action === "approve" ? "Approved" : "Rejected";
     const updateResult = await pool.query(
       `UPDATE leave_requests 
-       SET status = $1, 
-           manager_approved_at = CURRENT_TIMESTAMP,
+       SET ${managerStatusField} = $1,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $2
        RETURNING *`,
@@ -578,23 +738,67 @@ router.get("/approve/:id", async (req, res) => {
 
     const updatedRequest = updateResult.rows[0];
 
-    if (action === "approve") {
-      // Send notification to HR
+    // Check if all assigned managers have approved (for multi-manager workflow)
+    const allManagersApproved = checkAllManagersApproved(updatedRequest);
+    const anyManagerRejected = checkAnyManagerRejected(updatedRequest);
+
+    let finalStatus = updatedRequest.status;
+    let shouldNotifyHR = false;
+
+    if (anyManagerRejected) {
+      // If any manager rejects, the request is rejected
+      finalStatus = "rejected";
+      await pool.query(
+        `UPDATE leave_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+        [finalStatus, id]
+      );
+    } else if (allManagersApproved) {
+      // If all assigned managers approve, move to HR approval
+      finalStatus = "manager_approved";
+      await pool.query(
+        `UPDATE leave_requests SET status = $1, manager_approved_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+        [finalStatus, id]
+      );
+      shouldNotifyHR = true;
+    } else {
+      // Update status to show partial approval
+      const approvedCount = getApprovedManagerCount(updatedRequest);
+      const totalManagers = getTotalManagerCount(updatedRequest);
+      finalStatus = `Partially Approved (${approvedCount}/${totalManagers})`;
+      await pool.query(
+        `UPDATE leave_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+        [finalStatus, id]
+      );
+    }
+
+    // If all managers approved, notify HR
+    if (shouldNotifyHR) {
       const hrUsers = await getHRUsers();
       for (const hrUser of hrUsers) {
         await sendManagerApprovalToHR(
           hrUser.email,
           updatedRequest,
-          leaveRequest.manager_name || "Manager"
+          managerName
         );
       }
 
       // Return success page for manager approval
+      const isFullApproval = finalStatus === "manager_approved";
+      const title = isFullApproval
+        ? "Leave Request Approved!"
+        : "Manager Approval Recorded";
+      const message = isFullApproval
+        ? `<p>You have successfully approved the leave request from <strong>${leaveRequest.employee_name}</strong>.</p>
+           <p>The request has been forwarded to HR for final approval.</p>`
+        : `<p>You have successfully approved the leave request from <strong>${leaveRequest.employee_name}</strong>.</p>
+           <p>Status: <strong>${finalStatus}</strong></p>
+           <p>Waiting for other managers to approve before forwarding to HR.</p>`;
+
       res.send(`
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Leave Request Approved</title>
+          <title>${title}</title>
           <style>
             body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
             .success { color: #28a745; font-size: 24px; margin-bottom: 20px; }
@@ -603,10 +807,34 @@ router.get("/approve/:id", async (req, res) => {
           </style>
         </head>
         <body>
-          <div class="success">✅ Leave Request Approved!</div>
+          <div class="success">✅ ${title}</div>
+          <div class="info">
+            ${message}
+          </div>
+          <a href="http://localhost:3001/manager/leave-requests" class="button">View All Requests</a>
+        </body>
+        </html>
+      `);
+    } else if (action === "approve") {
+      // Partial approval - show status
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Manager Approval Recorded</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .success { color: #28a745; font-size: 24px; margin-bottom: 20px; }
+            .info { color: #666; margin-bottom: 30px; }
+            .button { background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
+          </style>
+        </head>
+        <body>
+          <div class="success">✅ Manager Approval Recorded</div>
           <div class="info">
             <p>You have successfully approved the leave request from <strong>${leaveRequest.employee_name}</strong>.</p>
-            <p>The request has been forwarded to HR for final approval.</p>
+            <p>Status: <strong>${finalStatus}</strong></p>
+            <p>Waiting for other managers to approve before forwarding to HR.</p>
           </div>
           <a href="http://localhost:3001/manager/leave-requests" class="button">View All Requests</a>
         </body>
@@ -709,30 +937,104 @@ router.put(
       );
       const managerName = `${managerResult.rows[0].first_name} ${managerResult.rows[0].last_name}`;
 
-      // Update leave request (manager info comes from employee_master)
-      const status = action === "approve" ? "manager_approved" : "rejected";
+      // First, get the current leave request to check manager assignments
+      const leaveRequestResult = await pool.query(
+        `
+      SELECT * FROM leave_requests WHERE id = $1
+    `,
+        [id]
+      );
+
+      if (leaveRequestResult.rows.length === 0) {
+        return res.status(404).json({ error: "Leave request not found" });
+      }
+
+      const leaveRequest = leaveRequestResult.rows[0];
+
+      // Check if this manager is assigned to this leave request
+      let managerStatusField = null;
+
+      if (
+        leaveRequest.manager1_id &&
+        leaveRequest.manager1_name === managerName
+      ) {
+        managerStatusField = "manager1_status";
+      } else if (
+        leaveRequest.manager2_id &&
+        leaveRequest.manager2_name === managerName
+      ) {
+        managerStatusField = "manager2_status";
+      } else if (
+        leaveRequest.manager3_id &&
+        leaveRequest.manager3_name === managerName
+      ) {
+        managerStatusField = "manager3_status";
+      } else {
+        return res.status(403).json({
+          error: "You are not assigned as a manager for this leave request",
+        });
+      }
+
+      // Check if this manager has already processed this request
+      const currentStatus = leaveRequest[managerStatusField];
+      if (currentStatus === "Approved" || currentStatus === "Rejected") {
+        return res.status(400).json({
+          error: "Request already processed",
+          message: `This request has already been ${currentStatus.toLowerCase()} by you`,
+        });
+      }
+
+      // Update the specific manager's status
+      const newStatus = action === "approve" ? "Approved" : "Rejected";
       const updateResult = await pool.query(
         `
       UPDATE leave_requests 
       SET 
-        status = $1,
-        manager_approved_at = CURRENT_TIMESTAMP,
-        manager_approval_notes = $2,
+        ${managerStatusField} = $1,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $3
+      WHERE id = $2
       RETURNING *
     `,
-        [status, notes, id]
+        [newStatus, id]
       );
 
-      if (updateResult.rows.length === 0) {
-        return res.status(404).json({ error: "Leave request not found" });
+      const updatedLeaveRequest = updateResult.rows[0];
+
+      // Check if all assigned managers have approved (for multi-manager workflow)
+      const allManagersApproved = checkAllManagersApproved(updatedLeaveRequest);
+      const anyManagerRejected = checkAnyManagerRejected(updatedLeaveRequest);
+
+      let finalStatus = updatedLeaveRequest.status;
+      let shouldNotifyHR = false;
+
+      if (anyManagerRejected) {
+        // If any manager rejects, the request is rejected
+        finalStatus = "rejected";
+        await pool.query(
+          `UPDATE leave_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+          [finalStatus, id]
+        );
+      } else if (allManagersApproved) {
+        // If all assigned managers approve, move to HR approval
+        finalStatus = "manager_approved";
+        await pool.query(
+          `UPDATE leave_requests SET status = $1, manager_approved_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+          [finalStatus, id]
+        );
+        shouldNotifyHR = true;
+      } else {
+        // Update status to show partial approval
+        const approvedCount = getApprovedManagerCount(updatedLeaveRequest);
+        const totalManagers = getTotalManagerCount(updatedLeaveRequest);
+        finalStatus = `Partially Approved (${approvedCount}/${totalManagers})`;
+        await pool.query(
+          `UPDATE leave_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+          [finalStatus, id]
+        );
       }
 
-      const leaveRequest = updateResult.rows[0];
-
-      // If approved, notify HR
-      if (action === "approve") {
+      // If all managers approved, notify HR
+      if (shouldNotifyHR) {
         const hrUsers = await getHRUsers();
 
         for (const hr of hrUsers) {
@@ -763,7 +1065,9 @@ router.put(
 
       res.json({
         message: `Leave request ${action}d successfully`,
-        leaveRequest,
+        leaveRequest: updatedLeaveRequest,
+        status: finalStatus,
+        managerStatus: newStatus,
       });
     } catch (error) {
       console.error("❌ Error processing manager approval:", error);
@@ -803,7 +1107,22 @@ router.get("/hr/pending", authenticateToken, async (req, res) => {
     }
 
     const result = await pool.query(`
-      SELECT lr.*, u.email as employee_email
+      SELECT 
+        lr.*, 
+        u.email as employee_email,
+        CASE 
+          WHEN lr.manager1_id IS NOT NULL THEN
+            CONCAT(
+              'Manager 1: ', lr.manager1_name, ' (', lr.manager1_status, ')',
+              CASE WHEN lr.manager2_id IS NOT NULL THEN 
+                CONCAT(' | Manager 2: ', lr.manager2_name, ' (', lr.manager2_status, ')')
+              ELSE '' END,
+              CASE WHEN lr.manager3_id IS NOT NULL THEN 
+                CONCAT(' | Manager 3: ', lr.manager3_name, ' (', lr.manager3_status, ')')
+              ELSE '' END
+            )
+          ELSE 'No managers assigned'
+        END as manager_approval_status
       FROM leave_requests lr
       JOIN users u ON lr.employee_id = u.id
       WHERE lr.status = 'manager_approved'
@@ -1097,12 +1416,24 @@ router.get("/all", authenticateToken, async (req, res) => {
 
     const result = await pool.query(`
       SELECT 
-        lrm.*, 
+        lr.*, 
         u.email as employee_email,
-        lrm.current_manager_name as manager_name
-      FROM leave_requests_with_manager lrm
-      JOIN users u ON lrm.employee_id = u.id
-      ORDER BY lrm.created_at DESC
+        CASE 
+          WHEN lr.manager1_id IS NOT NULL THEN
+            CONCAT(
+              'Manager 1: ', lr.manager1_name, ' (', lr.manager1_status, ')',
+              CASE WHEN lr.manager2_id IS NOT NULL THEN 
+                CONCAT(' | Manager 2: ', lr.manager2_name, ' (', lr.manager2_status, ')')
+              ELSE '' END,
+              CASE WHEN lr.manager3_id IS NOT NULL THEN 
+                CONCAT(' | Manager 3: ', lr.manager3_name, ' (', lr.manager3_status, ')')
+              ELSE '' END
+            )
+          ELSE 'No managers assigned'
+        END as manager_approval_status
+      FROM leave_requests lr
+      JOIN users u ON lr.employee_id = u.id
+      ORDER BY lr.created_at DESC
     `);
 
     res.json(result.rows);

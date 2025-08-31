@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 
 const Profile = () => {
   const { user, changePassword, logout } = useAuth();
+  const navigate = useNavigate();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -14,7 +17,7 @@ const Profile = () => {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error("New passwords do not match!");
       return;
@@ -31,7 +34,7 @@ const Profile = () => {
         passwordData.currentPassword,
         passwordData.newPassword
       );
-      
+
       if (result.success) {
         setPasswordData({
           currentPassword: "",
@@ -61,10 +64,23 @@ const Profile = () => {
         <div className="bg-white shadow rounded-lg">
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Manage your account settings and password
-            </p>
+            <div className="flex items-center">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 mr-4"
+              >
+                <FaArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Profile Settings
+                </h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Manage your account settings and password
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="px-6 py-6">

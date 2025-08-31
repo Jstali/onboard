@@ -93,6 +93,14 @@ async function sendPasswordResetEmail(to, resetToken) {
 }
 
 async function sendLeaveRequestToManager(managerEmail, leaveRequest) {
+  console.log("📧 sendLeaveRequestToManager called with:", {
+    managerEmail,
+    leaveRequest: {
+      id: leaveRequest.id,
+      employeeName: leaveRequest.employeeName,
+    },
+  });
+
   const mailOptions = {
     from: `"${leaveRequest.employeeName}" <${process.env.EMAIL_USER}>`,
     to: managerEmail,
@@ -368,10 +376,242 @@ async function sendLeaveApprovalToEmployee(
   }
 }
 
+async function sendExpenseRequestToManager(managerEmail, expenseRequest) {
+  console.log("📧 sendExpenseRequestToManager called with:", {
+    managerEmail,
+    expenseRequest: {
+      id: expenseRequest.id,
+      employeeName: expenseRequest.employeeName,
+    },
+  });
+
+  const mailOptions = {
+    from: `"${expenseRequest.employeeName}" <${process.env.EMAIL_USER}>`,
+    to: managerEmail,
+    replyTo: expenseRequest.employeeEmail, // Set reply-to to employee's email
+    subject: `Expense Request from ${expenseRequest.employeeName} - Action Required`,
+    text: `Expense Request Details:\n\nEmployee: ${expenseRequest.employeeName}\nEmployee Email: ${expenseRequest.employeeEmail}\nCategory: ${expenseRequest.expenseCategory}\nType: ${expenseRequest.expenseType}\nAmount: ${expenseRequest.amount} ${expenseRequest.currency}\nDate: ${expenseRequest.expenseDate}\nDescription: ${expenseRequest.description}\nAttachment: ${expenseRequest.attachmentName}\n\nPlease approve or reject this request by clicking the links below:\n\nApprove: http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=approve&token=${expenseRequest.approvalToken}\nReject: http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=reject&token=${expenseRequest.approvalToken}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Expense Request - Action Required</h2>
+        <p>You have received an expense request that requires your approval.</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #007bff; margin-top: 0;">Request Details</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Employee:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.employeeName}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Employee Email:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.employeeEmail}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Category:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.expenseCategory}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Type:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.expenseType}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Amount:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.amount} ${expenseRequest.currency}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Date:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.expenseDate}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Description:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.description}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Attachment:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.attachmentName}</td></tr>
+          </table>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=approve&token=${expenseRequest.approvalToken}" 
+             style="background-color: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin-right: 15px;">
+            ✅ Approve Request
+          </a>
+          <a href="http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=reject&token=${expenseRequest.approvalToken}" 
+             style="background-color: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            ❌ Reject Request
+          </a>
+        </div>
+        
+        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #856404;"><strong>Note:</strong> Clicking the buttons above will automatically approve or reject this expense request. You can also copy and paste the URLs into your browser.</p>
+        </div>
+        
+        <div style="background-color: #e7f3ff; border: 1px solid #b3d9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #0066cc;"><strong>Reply:</strong> You can reply to this email to communicate directly with ${expenseRequest.employeeName} at ${expenseRequest.employeeEmail}</p>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="color: #666; font-size: 12px;">This is an automated message. You can reply to communicate with the employee.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("✅ Expense request email sent to manager: " + managerEmail);
+    return true;
+  } catch (err) {
+    console.error("❌ Failed to send expense request email to manager:", err);
+    return false;
+  }
+}
+
+async function sendManagerApprovalToHR(hrEmail, expenseRequest, managerName) {
+  const mailOptions = {
+    from: `"${managerName} (Manager)" <${process.env.EMAIL_USER}>`,
+    to: hrEmail,
+    replyTo: expenseRequest.employeeEmail, // Set reply-to to employee's email
+    subject: `Expense Request Approved by Manager - HR Action Required`,
+    text: `Expense Request Details:\n\nEmployee: ${expenseRequest.employeeName}\nEmployee Email: ${expenseRequest.employeeEmail}\nCategory: ${expenseRequest.expenseCategory}\nType: ${expenseRequest.expenseType}\nAmount: ${expenseRequest.amount} ${expenseRequest.currency}\nDate: ${expenseRequest.expenseDate}\nDescription: ${expenseRequest.description}\nAttachment: ${expenseRequest.attachmentName}\nManager: ${managerName}\nStatus: Manager Approved\n\nPlease review and approve/reject this request in the Expense Management system.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Expense Request - Manager Approved</h2>
+        <p>An expense request has been approved by a manager and now requires HR review.</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #007bff; margin-top: 0;">Request Details</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Employee:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.employeeName}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Employee Email:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.employeeEmail}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Category:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.expenseCategory}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Type:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.expenseType}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Amount:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.amount} ${expenseRequest.currency}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Date:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.expenseDate}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Description:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.description}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Attachment:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${expenseRequest.attachmentName}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Manager:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${managerName}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Status:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><span style="color: #28a745; font-weight: bold;">✅ Manager Approved</span></td></tr>
+          </table>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="http://localhost:3001/hr/expense-management" 
+             style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            📋 Review in Expense Management
+          </a>
+        </div>
+        
+        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #856404;"><strong>Action Required:</strong> Please review this request in the Expense Management system and approve or reject it.</p>
+        </div>
+        
+        <div style="background-color: #e7f3ff; border: 1px solid #b3d9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #0066cc;"><strong>Reply:</strong> You can reply to this email to communicate directly with ${expenseRequest.employeeName} at ${expenseRequest.employeeEmail}</p>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="color: #666; font-size: 12px;">This is an automated message. You can reply to communicate with the employee.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("✅ Manager approval notification sent to HR: " + hrEmail);
+    return true;
+  } catch (err) {
+    console.error(
+      "❌ Failed to send manager approval notification to HR:",
+      err
+    );
+    return false;
+  }
+}
+
+async function sendExpenseApprovalToEmployee(
+  employeeEmail,
+  expenseRequest,
+  status,
+  approverName
+) {
+  const mailOptions = {
+    from: `"${approverName} (${
+      status === "approved" ? "Approver" : "Reviewer"
+    })" <${process.env.EMAIL_USER}>`,
+    to: employeeEmail,
+    replyTo: process.env.EMAIL_USER, // Set reply-to to company email for HR inquiries
+    subject: `Expense Request ${
+      status === "approved" ? "Approved" : "Rejected"
+    }`,
+    text: `Your expense request has been ${status}.\n\nDetails:\nCategory: ${
+      expenseRequest.expense_category
+    }\nType: ${expenseRequest.expense_type}\nAmount: ${expenseRequest.amount} ${
+      expenseRequest.currency
+    }\nDate: ${expenseRequest.expense_date}\nDescription: ${
+      expenseRequest.description
+    }\nStatus: ${status.toUpperCase()}\nApproved by: ${approverName}\n\nIf you have any questions, please contact HR.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Expense Request ${
+          status === "approved" ? "Approved" : "Rejected"
+        }</h2>
+        <p>Your expense request has been <strong>${status}</strong> by ${approverName}.</p>
+        
+        <div style="background-color: ${
+          status === "approved" ? "#d4edda" : "#f8d7da"
+        }; border: 1px solid ${
+      status === "approved" ? "#c3e6cb" : "#f5c6cb"
+    }; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: ${
+            status === "approved" ? "#155724" : "#721c24"
+          }; margin-top: 0;">Request Details</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Category:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${
+              expenseRequest.expense_category
+            }</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Type:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${
+              expenseRequest.expense_type
+            }</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Amount:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${
+              expenseRequest.amount
+            } ${expenseRequest.currency}</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Date:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${
+              expenseRequest.expense_date
+            }</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Description:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${
+              expenseRequest.description
+            }</td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Status:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><span style="color: ${
+              status === "approved" ? "#155724" : "#721c24"
+            }; font-weight: bold;">${status.toUpperCase()}</span></td></tr>
+            <tr><td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Approved by:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${approverName}</td></tr>
+          </table>
+        </div>
+        
+        ${
+          status === "approved"
+            ? `
+        <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #0c5460;"><strong>✅ Approved!</strong> Your expense has been approved and will be processed for reimbursement.</p>
+        </div>
+        `
+            : `
+        <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #721c24;"><strong>❌ Rejected!</strong> Your expense request has been rejected. Please contact your manager or HR for more details.</p>
+        </div>
+        `
+        }
+        
+        <div style="background-color: #e7f3ff; border: 1px solid #b3d9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #0066cc;"><strong>Contact:</strong> If you have questions about this decision, please contact HR or reply to this email.</p>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="color: #666; font-size: 12px;">This is an automated message. You can reply for HR inquiries.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(
+      "✅ Expense approval notification sent to employee: " + employeeEmail
+    );
+    return true;
+  } catch (err) {
+    console.error(
+      "❌ Failed to send expense approval notification to employee:",
+      err
+    );
+    return false;
+  }
+}
+
 module.exports = {
   sendOnboardingEmail,
   sendPasswordResetEmail,
   sendLeaveRequestToManager,
   sendManagerApprovalToHR,
   sendLeaveApprovalToEmployee,
+  sendExpenseRequestToManager,
+  sendExpenseApprovalToEmployee,
 };

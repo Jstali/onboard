@@ -24,6 +24,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
   const [selectedEmployeeForDocs, setSelectedEmployeeForDocs] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const [availableManagers, setAvailableManagers] = useState([]);
 
   // Helpers for rendering attached files nicely (avoid dumping base64 strings)
   const parseDataUrl = (dataUrl) => {
@@ -90,7 +91,27 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
   useEffect(() => {
     fetchEmployeeForms();
+    fetchAvailableManagers();
   }, []);
+
+  const fetchAvailableManagers = async () => {
+    try {
+      const response = await axios.get("http://localhost:5001/api/hr/managers");
+      setAvailableManagers(response.data.managers || []);
+    } catch (error) {
+      console.error("Error fetching managers:", error);
+      // Fallback to hardcoded managers if API fails
+      setAvailableManagers([
+        { employee_name: "Pradeep", company_email: "pradeep@nxzen.com" },
+        {
+          employee_name: "Vinod",
+          company_email: "stalinstalin11112@gmail.com",
+        },
+        { employee_name: "Vamshi", company_email: "vamshi@company.com" },
+        { employee_name: "Rakesh", company_email: "rakesh@company.com" },
+      ]);
+    }
+  };
 
   const fetchEmployeeForms = async () => {
     try {
@@ -268,6 +289,12 @@ const EmployeeFormManagement = ({ onRefresh }) => {
         return (
           <span className="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">
             Intern
+          </span>
+        );
+      case "Manager":
+        return (
+          <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+            Manager
           </span>
         );
       default:
@@ -832,6 +859,9 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     },
                   },
                   employee_type: formData.get("employment_type"),
+                  manager1: formData.get("manager1"),
+                  manager2: formData.get("manager2"),
+                  manager3: formData.get("manager3"),
                 };
                 handleUpdateEmployee(updatedData);
               }}
@@ -918,8 +948,85 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     <option value="Full-Time">Full-Time</option>
                     <option value="Contract">Contract</option>
                     <option value="Intern">Intern</option>
+                    <option value="Manager">Manager</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Manager Assignment Section */}
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">
+                  Manager Assignment
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Manager 1 *
+                    </label>
+                    <select
+                      name="manager1"
+                      defaultValue={editingEmployee.assigned_manager || ""}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="">Select Manager 1</option>
+                      {availableManagers.map((manager) => (
+                        <option
+                          key={manager.employee_name}
+                          value={manager.employee_name}
+                        >
+                          {manager.employee_name} ({manager.company_email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Manager 2 (Optional)
+                    </label>
+                    <select
+                      name="manager2"
+                      defaultValue={editingEmployee.manager2_name || ""}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select Manager 2</option>
+                      {availableManagers.map((manager) => (
+                        <option
+                          key={manager.employee_name}
+                          value={manager.employee_name}
+                        >
+                          {manager.employee_name} ({manager.company_email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Manager 3 (Optional)
+                    </label>
+                    <select
+                      name="manager3"
+                      defaultValue={editingEmployee.manager3_name || ""}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select Manager 3</option>
+                      {availableManagers.map((manager) => (
+                        <option
+                          key={manager.employee_name}
+                          value={manager.employee_name}
+                        >
+                          {manager.employee_name} ({manager.company_email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Manager 1 is required. Manager 2 and 3 are optional for
+                  multi-manager approval workflow.
+                </p>
               </div>
 
               <div>

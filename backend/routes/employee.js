@@ -37,11 +37,72 @@ router.get("/onboarding-status", async (req, res) => {
     console.log("🔍 Form found:", form);
 
     if (form.status === "submitted" && !form.master_status) {
-      return res.json({
-        hasForm: true,
-        status: "submitted",
-        message: "Your form is submitted, awaiting HR approval.",
-      });
+      // Check if documents are uploaded
+      try {
+        const docValidationResponse = await pool.query(
+          `
+          SELECT 
+            ed.document_type,
+            COUNT(*) as count
+          FROM employee_documents ed
+          WHERE ed.employee_id = $1
+          GROUP BY ed.document_type
+        `,
+          [req.user.userId]
+        );
+
+        const uploadedDocs = docValidationResponse.rows.reduce((acc, doc) => {
+          acc[doc.document_type] = doc.count;
+          return acc;
+        }, {});
+
+        // Check if all required documents are uploaded based on employment type
+        const requirements = {
+          "Full-Time": [
+            "resume",
+            "id_proof",
+            "address_proof",
+            "education_certificate",
+            "experience_certificate",
+          ],
+          Contract: ["resume", "id_proof", "address_proof"],
+          Intern: ["resume", "id_proof", "education_certificate"],
+        };
+
+        const requiredDocs = requirements[form.type] || [];
+        const allDocsUploaded = requiredDocs.every(
+          (docType) => uploadedDocs[docType] > 0
+        );
+
+        if (allDocsUploaded) {
+          return res.json({
+            hasForm: true,
+            status: "submitted",
+            message:
+              "Your form and documents are submitted, awaiting HR approval.",
+            documentsUploaded: true,
+            documentStatus: "All required documents uploaded",
+          });
+        } else {
+          return res.json({
+            hasForm: true,
+            status: "submitted",
+            message:
+              "Your form is submitted, but documents are pending. Please upload required documents.",
+            documentsUploaded: false,
+            documentStatus: "Documents pending upload",
+          });
+        }
+      } catch (docError) {
+        console.error("Error checking documents:", docError);
+        return res.json({
+          hasForm: true,
+          status: "submitted",
+          message: "Your form is submitted, awaiting HR approval.",
+          documentsUploaded: false,
+          documentStatus: "Document status unknown",
+        });
+      }
     }
 
     if (form.master_status === "active" || form.status === "approved") {
@@ -68,7 +129,7 @@ router.get("/onboarding-status", async (req, res) => {
 router.post(
   "/onboarding-form",
   [
-    body("type").isIn(["Intern", "Contract", "Full-Time"]),
+    body("type").isIn(["Intern", "Contract", "Full-Time", "Manager"]),
     body("formData").isObject(),
     body("files").optional().isArray(),
   ],
@@ -139,7 +200,7 @@ router.get("/onboarding-form", async (req, res) => {
 router.put(
   "/onboarding-form",
   [
-    body("type").isIn(["Intern", "Contract", "Full-Time"]),
+    body("type").isIn(["Intern", "Contract", "Full-Time", "Manager"]),
     body("formData").isObject(),
     body("files").optional().isArray(),
   ],

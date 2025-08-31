@@ -13,6 +13,8 @@ const OnboardedEmployees = ({ onRefresh }) => {
     name: "",
     companyEmail: "",
     manager: "",
+    manager2: "",
+    manager3: "",
   });
 
   useEffect(() => {
@@ -26,6 +28,8 @@ const OnboardedEmployees = ({ onRefresh }) => {
         name: "",
         companyEmail: "",
         manager: "",
+        manager2: "",
+        manager3: "",
       });
     }
   }, [showAssignmentModal]);
@@ -319,7 +323,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Manager *
+                  Manager 1 *
                 </label>
                 <select
                   value={assignmentData.manager}
@@ -333,6 +337,50 @@ const OnboardedEmployees = ({ onRefresh }) => {
                   required
                 >
                   <option value="">Select a manager</option>
+                  <option value="pradeep">Pradeep</option>
+                  <option value="vamshi">Vamshi</option>
+                  <option value="vinod">Vinod</option>
+                  <option value="rakesh">Rakesh</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Manager 2 (Optional)
+                </label>
+                <select
+                  value={assignmentData.manager2}
+                  onChange={(e) =>
+                    setAssignmentData((prev) => ({
+                      ...prev,
+                      manager2: e.target.value,
+                    }))
+                  }
+                  className="input-field"
+                >
+                  <option value="">Select a manager (optional)</option>
+                  <option value="pradeep">Pradeep</option>
+                  <option value="vamshi">Vamshi</option>
+                  <option value="vinod">Vinod</option>
+                  <option value="rakesh">Rakesh</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Manager 3 (Optional)
+                </label>
+                <select
+                  value={assignmentData.manager3}
+                  onChange={(e) =>
+                    setAssignmentData((prev) => ({
+                      ...prev,
+                      manager3: e.target.value,
+                    }))
+                  }
+                  className="input-field"
+                >
+                  <option value="">Select a manager (optional)</option>
                   <option value="pradeep">Pradeep</option>
                   <option value="vamshi">Vamshi</option>
                   <option value="vinod">Vinod</option>

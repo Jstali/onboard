@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   FaUser,
@@ -9,16 +9,75 @@ import {
   FaTimes,
   FaEye,
   FaTrash,
+  FaEdit,
 } from "react-icons/fa";
 import ManualEmployeeAdd from "./ManualEmployeeAdd";
 
 const EmployeeMaster = ({ employees, onRefresh }) => {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
+  const [managers, setManagers] = useState([]);
 
   const handleEmployeeAdded = () => {
     setShowAddForm(false);
     if (onRefresh) {
       onRefresh();
+    }
+  };
+
+  const fetchManagers = async () => {
+    try {
+      const response = await axios.get("/hr-config/managers");
+      setManagers(response.data.managers);
+    } catch (error) {
+      console.error("Error fetching managers:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchManagers();
+  }, []);
+
+  const handleEditEmployee = (employee) => {
+    setEditingEmployee(employee);
+    setEditFormData({
+      employee_name: employee.employee_name,
+      company_email: employee.company_email,
+      type: employee.type,
+      doj: employee.doj,
+      status: employee.status,
+      department: employee.department || "",
+      designation: employee.designation || "",
+      salary_band: employee.salary_band || "",
+      location: employee.location || "",
+      manager_id: employee.manager_id || "",
+      manager2_id: employee.manager2_id || "",
+      manager3_id: employee.manager3_id || "",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleUpdateEmployee = async () => {
+    try {
+      await axios.put(`/hr/master/${editingEmployee.id}`, editFormData);
+      setShowEditModal(false);
+      setEditingEmployee(null);
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      alert(error.response?.data?.error || "Failed to update employee");
     }
   };
 
@@ -74,7 +133,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                 Date of Joining
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Manager
+                Managers
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -126,8 +185,37 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                     </span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {employee.display_manager_name || "Not Assigned"}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {employee.manager_name && (
+                      <div className="mb-1">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {employee.manager_name}
+                        </span>
+                      </div>
+                    )}
+                    {employee.manager2_name && (
+                      <div className="mb-1">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {employee.manager2_name}
+                        </span>
+                      </div>
+                    )}
+                    {employee.manager3_name && (
+                      <div>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          {employee.manager3_name}
+                        </span>
+                      </div>
+                    )}
+                    {!employee.manager_name &&
+                      !employee.manager2_name &&
+                      !employee.manager3_name && (
+                        <span className="text-gray-500 italic">
+                          No Managers
+                        </span>
+                      )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -159,6 +247,13 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                     title="View"
                   >
                     <FaEye className="inline" />
+                  </button>
+                  <button
+                    onClick={() => handleEditEmployee(employee)}
+                    className="text-green-600 hover:text-green-900 mr-3"
+                    title="Edit"
+                  >
+                    <FaEdit className="inline" />
                   </button>
                   <button
                     onClick={async () => {
@@ -206,6 +301,227 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
           </div>
         )}
       </div>
+
+      {/* Edit Employee Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Edit Employee
+              </h3>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleUpdateEmployee();
+                }}
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Employee Name
+                    </label>
+                    <input
+                      type="text"
+                      name="employee_name"
+                      value={editFormData.employee_name || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Company Email
+                    </label>
+                    <input
+                      type="email"
+                      name="company_email"
+                      value={editFormData.company_email || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Employment Type
+                    </label>
+                    <select
+                      name="type"
+                      value={editFormData.type || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      required
+                    >
+                      <option value="">Select Type</option>
+                      <option value="Full-Time">Full-Time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Intern">Intern</option>
+                      <option value="Manager">Manager</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Date of Joining
+                    </label>
+                    <input
+                      type="date"
+                      name="doj"
+                      value={editFormData.doj || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      value={editFormData.status || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      required
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Department
+                    </label>
+                    <input
+                      type="text"
+                      name="department"
+                      value={editFormData.department || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Designation
+                    </label>
+                    <input
+                      type="text"
+                      name="designation"
+                      value={editFormData.designation || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={editFormData.location || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Manager 1 (Optional)
+                    </label>
+                    <select
+                      name="manager_id"
+                      value={editFormData.manager_id || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="">Select Manager 1</option>
+                      {managers &&
+                        managers.map((manager) => (
+                          <option
+                            key={manager.manager_id}
+                            value={manager.manager_id}
+                          >
+                            {manager.manager_name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Manager 2 (Optional)
+                    </label>
+                    <select
+                      name="manager2_id"
+                      value={editFormData.manager2_id || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="">Select Manager 2</option>
+                      {managers &&
+                        managers.map((manager) => (
+                          <option
+                            key={manager.manager_id}
+                            value={manager.manager_id}
+                          >
+                            {manager.manager_name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Manager 3 (Optional)
+                    </label>
+                    <select
+                      name="manager3_id"
+                      value={editFormData.manager3_id || ""}
+                      onChange={handleEditInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="">Select Manager 3</option>
+                      {managers &&
+                        managers.map((manager) => (
+                          <option
+                            key={manager.manager_id}
+                            value={manager.manager_id}
+                          >
+                            {manager.manager_name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                  >
+                    Update Employee
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

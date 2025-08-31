@@ -23,19 +23,10 @@ const DocumentUploadSection = ({
   const [uploading, setUploading] = useState({});
   const [validation, setValidation] = useState({});
 
-  useEffect(() => {
-    if (employmentType) {
-      fetchRequirements();
-      if (employeeId) {
-        fetchUploadedDocuments();
-      }
-    }
-  }, [employmentType, employeeId, fetchRequirements, fetchUploadedDocuments]);
-
   const fetchRequirements = useCallback(async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/documents/requirements/${employmentType}`
+        `/documents/requirements/${employmentType}`
       );
       setRequirements(response.data);
     } catch (error) {
@@ -47,15 +38,14 @@ const DocumentUploadSection = ({
   const fetchUploadedDocuments = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `http://localhost:5001/api/documents/employee/${employeeId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.get(`/documents/employee/${employeeId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setUploadedDocuments(response.data);
 
       // Also fetch validation status
       const validationResponse = await axios.get(
-        `http://localhost:5001/api/documents/validation/${employeeId}/${employmentType}`,
+        `/documents/validation/${employeeId}/${employmentType}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setValidation(validationResponse.data.validation);
@@ -63,6 +53,15 @@ const DocumentUploadSection = ({
       console.error("Error fetching uploaded documents:", error);
     }
   }, [employeeId, employmentType]);
+
+  useEffect(() => {
+    if (employmentType) {
+      fetchRequirements();
+      if (employeeId) {
+        fetchUploadedDocuments();
+      }
+    }
+  }, [employmentType, employeeId, fetchRequirements, fetchUploadedDocuments]);
 
   const handleFileUpload = async (documentType, documentCategory, files) => {
     if (!files || files.length === 0) return;
@@ -84,16 +83,12 @@ const DocumentUploadSection = ({
       formData.append("documentCategories", JSON.stringify(documentCategories));
 
       const token = localStorage.getItem("token");
-      await axios.post(
-        `http://localhost:5001/api/documents/upload/${employeeId}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await axios.post(`/documents/upload/${employeeId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       toast.success("Documents uploaded successfully!");
       fetchUploadedDocuments();
@@ -116,7 +111,7 @@ const DocumentUploadSection = ({
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5001/api/documents/${documentId}`, {
+      await axios.delete(`/documents/${documentId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -280,7 +275,7 @@ const DocumentUploadSection = ({
                           <button
                             onClick={() =>
                               window.open(
-                                `http://localhost:5001/api/documents/download/${document.id}`,
+                                `/documents/download/${document.id}`,
                                 "_blank"
                               )
                             }

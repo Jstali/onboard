@@ -1,4 +1,963 @@
 ✅ Connected to PostgreSQL database
+🔄 Setting up company emails for existing users and managers...
 ✅ Database tables initialized successfully
 🚀 Server running on port 5001
 📧 Email configured for: alphanxzen@gmail.com
+🔍 Expense request received: [Object: null prototype] {
+  expenseCategory: 'Travel',
+  expenseType: 'Taxi',
+  amount: '500',
+  currency: 'INR',
+  description: 'skskldk',
+  expenseDate: '2025-08-22',
+  taxIncluded: 'false'
+}
+🔍 Files uploaded: [
+  {
+    fieldname: 'attachments',
+    originalname: '1-a0a2d4c7-0bc6-4c06-900e-0db6f449656e.pdf',
+    encoding: '7bit',
+    mimetype: 'application/pdf',
+    destination: '/Users/stalin_j/Downloads/ONDOARD/backend/uploads/expenses',
+    filename: 'attachments-1756628878157-61241728.pdf',
+    path: '/Users/stalin_j/Downloads/ONDOARD/backend/uploads/expenses/attachments-1756628878157-61241728.pdf',
+    size: 120461
+  }
+]
+🔍 Found managers for employee 22 : [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+🔍 Retrieved managers: [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+🔍 Managers found: [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+📧 Sending email to manager: strawhatluff124@gmail.com
+📧 Email data: {
+  id: 5,
+  employeeName: 'stalin j',
+  employeeEmail: 'stalinj@nxzen.com',
+  expenseCategory: 'Travel',
+  expenseType: 'Taxi',
+  amount: '500',
+  currency: 'INR',
+  description: 'skskldk',
+  expenseDate: '2025-08-22',
+  attachmentUrl: '/uploads/expenses/attachments-1756628878157-61241728.pdf',
+  attachmentName: '1-a0a2d4c7-0bc6-4c06-900e-0db6f449656e.pdf',
+  approvalToken: '1629ccde66723d1db2f7b8008d8631c02526b89cd689ff48080c352c44a329fe',
+  totalManagers: 2
+}
+📧 sendExpenseRequestToManager called with: {
+  managerEmail: 'strawhatluff124@gmail.com',
+  expenseRequest: { id: 5, employeeName: 'stalin j' }
+}
+📧 Sending email to manager: stalinstalin11112@gmail.com
+📧 Email data: {
+  id: 5,
+  employeeName: 'stalin j',
+  employeeEmail: 'stalinj@nxzen.com',
+  expenseCategory: 'Travel',
+  expenseType: 'Taxi',
+  amount: '500',
+  currency: 'INR',
+  description: 'skskldk',
+  expenseDate: '2025-08-22',
+  attachmentUrl: '/uploads/expenses/attachments-1756628878157-61241728.pdf',
+  attachmentName: '1-a0a2d4c7-0bc6-4c06-900e-0db6f449656e.pdf',
+  approvalToken: '1629ccde66723d1db2f7b8008d8631c02526b89cd689ff48080c352c44a329fe',
+  totalManagers: 2
+}
+📧 sendExpenseRequestToManager called with: {
+  managerEmail: 'stalinstalin11112@gmail.com',
+  expenseRequest: { id: 5, employeeName: 'stalin j' }
+}
+🔍 Fetching expense requests for user ID: 22
+🔍 Expense requests with manager data: 5
+🔍 Fetching expense requests for user ID: 22
+🔍 Expense requests with manager data: 5
+✅ Expense request email sent to manager: strawhatluff124@gmail.com
+📧 Email send result: true
+✅ Expense request email sent to manager: stalinstalin11112@gmail.com
+📧 Email send result: true
+✅ Manager approval notification sent to HR: hr@nxzen.com
+✅ Expense approval notification sent to employee: stalinj@nxzen.com
+✅ Expense approval notification sent to employee: stalinj@nxzen.com
+✅ Expense approval notification sent to employee: stalinj@nxzen.com
+✅ Expense approval notification sent to employee: stalinj@nxzen.com
+✅ Expense approval notification sent to employee: stalinj@nxzen.com
+🔍 Employee creation request received: {
+  name: 'stalin j',
+  email: 'stalinnithin31@gmail.com',
+  type: 'Intern',
+  doj: 2025-08-31T08:41:55.014Z
+}
+✅ Validated data: {
+  email: 'stalinnithin31@gmail.com',
+  name: 'stalin j',
+  type: 'Intern',
+  doj: 2025-08-31T08:41:55.014Z
+}
+🔍 Checking if email exists: stalinnithin31@gmail.com
+✅ Email is unique
+🔍 Generated temp password: UgQpZktP
+🔍 Creating user in database...
+✅ User created with ID: 24
+🔍 Sending onboarding email to: stalinnithin31@gmail.com
+✅ Email sent successfully to stalinnithin31@gmail.com
+✅ Email sent successfully
+🔍 Checking onboarding status for user ID: 24
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: []
+🔍 Query result: []
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: []
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: [
+  {
+    id: 12,
+    employee_id: 24,
+    type: 'Intern',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinnithin31@gmail.com',
+      phone: '4534455443',
+      address: 'rgreththyhghy',
+      education: 'fgsgsgff',
+      experience: '',
+      submittedAt: '2025-08-31T08:46:54.682Z',
+      employmentType: 'Intern',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'submitted',
+    submitted_at: 2025-08-31T08:46:54.726Z,
+    updated_at: 2025-08-31T08:46:54.726Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: null,
+    manager2_name: null,
+    manager3_name: null,
+    master_status: null
+  }
+]
+🔍 Form found: {
+  id: 12,
+  employee_id: 24,
+  type: 'Intern',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinnithin31@gmail.com',
+    phone: '4534455443',
+    address: 'rgreththyhghy',
+    education: 'fgsgsgff',
+    experience: '',
+    submittedAt: '2025-08-31T08:46:54.682Z',
+    employmentType: 'Intern',
+    emergencyContact: { name: 'dgfgd', phone: '325454354', relationship: 'cbfggfss' }
+  },
+  files: [],
+  status: 'submitted',
+  submitted_at: 2025-08-31T08:46:54.726Z,
+  updated_at: 2025-08-31T08:46:54.726Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: null,
+  manager2_name: null,
+  manager3_name: null,
+  master_status: null
+}
+🔍 Assignment request body: {
+  name: 'stalin',
+  companyEmail: 'stalin31@nxzen.com',
+  manager: 'pradeep',
+  manager2: 'vinod',
+  manager3: ''
+}
+🔍 Assignment request params: { id: '11' }
+🔍 Assigning details to onboarded employee: {
+  id: '11',
+  name: 'stalin',
+  companyEmail: 'stalin31@nxzen.com',
+  manager: 'pradeep'
+}
+🔢 Generated Employee ID: 397409
+✅ Employee moved to master table successfully
+🔍 Update employee master request: { id: '29' } {
+  employee_name: 'stalin',
+  company_email: 'stalin31@nxzen.com',
+  type: 'Intern',
+  doj: '2025-07-31T18:30:00.000Z',
+  status: 'active',
+  department: '',
+  designation: '',
+  salary_band: '',
+  location: '',
+  manager_id: 'MGR001',
+  manager2_id: 'MGR003',
+  manager3_id: ''
+}
+🔄 Synchronizing Employee Master changes with database...
+✅ Employee Master synchronization completed successfully
+🔍 Checking onboarding status for user ID: 24
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: [
+  {
+    id: 12,
+    employee_id: 24,
+    type: 'Intern',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinnithin31@gmail.com',
+      phone: '4534455443',
+      address: 'rgreththyhghy',
+      education: 'fgsgsgff',
+      experience: '',
+      submittedAt: '2025-08-31T08:46:54.682Z',
+      employmentType: 'Intern',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-31T08:46:54.726Z,
+    updated_at: 2025-08-31T08:47:48.554Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: 'Pradeep',
+    manager2_name: 'Vinod',
+    manager3_name: '',
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 12,
+  employee_id: 24,
+  type: 'Intern',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinnithin31@gmail.com',
+    phone: '4534455443',
+    address: 'rgreththyhghy',
+    education: 'fgsgsgff',
+    experience: '',
+    submittedAt: '2025-08-31T08:46:54.682Z',
+    employmentType: 'Intern',
+    emergencyContact: { name: 'dgfgd', phone: '325454354', relationship: 'cbfggfss' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-31T08:46:54.726Z,
+  updated_at: 2025-08-31T08:47:48.554Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: 'Pradeep',
+  manager2_name: 'Vinod',
+  manager3_name: '',
+  master_status: 'active'
+}
+🔍 Query result: [
+  {
+    id: 12,
+    employee_id: 24,
+    type: 'Intern',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinnithin31@gmail.com',
+      phone: '4534455443',
+      address: 'rgreththyhghy',
+      education: 'fgsgsgff',
+      experience: '',
+      submittedAt: '2025-08-31T08:46:54.682Z',
+      employmentType: 'Intern',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-31T08:46:54.726Z,
+    updated_at: 2025-08-31T08:47:48.554Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: 'Pradeep',
+    manager2_name: 'Vinod',
+    manager3_name: '',
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 12,
+  employee_id: 24,
+  type: 'Intern',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinnithin31@gmail.com',
+    phone: '4534455443',
+    address: 'rgreththyhghy',
+    education: 'fgsgsgff',
+    experience: '',
+    submittedAt: '2025-08-31T08:46:54.682Z',
+    employmentType: 'Intern',
+    emergencyContact: { name: 'dgfgd', phone: '325454354', relationship: 'cbfggfss' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-31T08:46:54.726Z,
+  updated_at: 2025-08-31T08:47:48.554Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: 'Pradeep',
+  manager2_name: 'Vinod',
+  manager3_name: '',
+  master_status: 'active'
+}
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: [
+  {
+    id: 12,
+    employee_id: 24,
+    type: 'Intern',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinnithin31@gmail.com',
+      phone: '4534455443',
+      address: 'rgreththyhghy',
+      education: 'fgsgsgff',
+      experience: '',
+      submittedAt: '2025-08-31T08:46:54.682Z',
+      employmentType: 'Intern',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-31T08:46:54.726Z,
+    updated_at: 2025-08-31T08:47:48.554Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: 'Pradeep',
+    manager2_name: 'Vinod',
+    manager3_name: '',
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 12,
+  employee_id: 24,
+  type: 'Intern',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinnithin31@gmail.com',
+    phone: '4534455443',
+    address: 'rgreththyhghy',
+    education: 'fgsgsgff',
+    experience: '',
+    submittedAt: '2025-08-31T08:46:54.682Z',
+    employmentType: 'Intern',
+    emergencyContact: { name: 'dgfgd', phone: '325454354', relationship: 'cbfggfss' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-31T08:46:54.726Z,
+  updated_at: 2025-08-31T08:47:48.554Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: 'Pradeep',
+  manager2_name: 'Vinod',
+  manager3_name: '',
+  master_status: 'active'
+}
+🔍 Employee onboarding status check for user 24 Result: {
+  status: 'onboarded',
+  master_id: 29,
+  onboarded_id: 11,
+  onboarded_status: 'assigned'
+}
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: [
+  {
+    id: 12,
+    employee_id: 24,
+    type: 'Intern',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinnithin31@gmail.com',
+      phone: '4534455443',
+      address: 'rgreththyhghy',
+      education: 'fgsgsgff',
+      experience: '',
+      submittedAt: '2025-08-31T08:46:54.682Z',
+      employmentType: 'Intern',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-31T08:46:54.726Z,
+    updated_at: 2025-08-31T08:47:48.554Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: 'Pradeep',
+    manager2_name: 'Vinod',
+    manager3_name: '',
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 12,
+  employee_id: 24,
+  type: 'Intern',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinnithin31@gmail.com',
+    phone: '4534455443',
+    address: 'rgreththyhghy',
+    education: 'fgsgsgff',
+    experience: '',
+    submittedAt: '2025-08-31T08:46:54.682Z',
+    employmentType: 'Intern',
+    emergencyContact: { name: 'dgfgd', phone: '325454354', relationship: 'cbfggfss' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-31T08:46:54.726Z,
+  updated_at: 2025-08-31T08:47:48.554Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: 'Pradeep',
+  manager2_name: 'Vinod',
+  manager3_name: '',
+  master_status: 'active'
+}
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: [
+  {
+    id: 12,
+    employee_id: 24,
+    type: 'Intern',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinnithin31@gmail.com',
+      phone: '4534455443',
+      address: 'rgreththyhghy',
+      education: 'fgsgsgff',
+      experience: '',
+      submittedAt: '2025-08-31T08:46:54.682Z',
+      employmentType: 'Intern',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-31T08:46:54.726Z,
+    updated_at: 2025-08-31T08:47:48.554Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: 'Pradeep',
+    manager2_name: 'Vinod',
+    manager3_name: '',
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 12,
+  employee_id: 24,
+  type: 'Intern',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinnithin31@gmail.com',
+    phone: '4534455443',
+    address: 'rgreththyhghy',
+    education: 'fgsgsgff',
+    experience: '',
+    submittedAt: '2025-08-31T08:46:54.682Z',
+    employmentType: 'Intern',
+    emergencyContact: { name: 'dgfgd', phone: '325454354', relationship: 'cbfggfss' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-31T08:46:54.726Z,
+  updated_at: 2025-08-31T08:47:48.554Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: 'Pradeep',
+  manager2_name: 'Vinod',
+  manager3_name: '',
+  master_status: 'active'
+}
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: [
+  {
+    id: 12,
+    employee_id: 24,
+    type: 'Intern',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinnithin31@gmail.com',
+      phone: '4534455443',
+      address: 'rgreththyhghy',
+      education: 'fgsgsgff',
+      experience: '',
+      submittedAt: '2025-08-31T08:46:54.682Z',
+      employmentType: 'Intern',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-31T08:46:54.726Z,
+    updated_at: 2025-08-31T08:47:48.554Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: 'Pradeep',
+    manager2_name: 'Vinod',
+    manager3_name: '',
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 12,
+  employee_id: 24,
+  type: 'Intern',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinnithin31@gmail.com',
+    phone: '4534455443',
+    address: 'rgreththyhghy',
+    education: 'fgsgsgff',
+    experience: '',
+    submittedAt: '2025-08-31T08:46:54.682Z',
+    employmentType: 'Intern',
+    emergencyContact: { name: 'dgfgd', phone: '325454354', relationship: 'cbfggfss' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-31T08:46:54.726Z,
+  updated_at: 2025-08-31T08:47:48.554Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: 'Pradeep',
+  manager2_name: 'Vinod',
+  manager3_name: '',
+  master_status: 'active'
+}
+🔍 Fetching leave requests for user ID: 24
+🔍 Leave requests with manager data: []
+🔍 Fetching leave requests for user ID: 24
+🔍 Leave requests with manager data: []
+🔍 Leave request received: {
+  leaveType: 'Casual Leave',
+  fromDate: '2025-09-05',
+  toDate: null,
+  halfDay: false,
+  reason: 'rgergeaeate',
+  totalDays: 1
+}
+🔍 Request body types: {
+  leaveType: 'string',
+  fromDate: 'string',
+  toDate: 'object',
+  reason: 'string',
+  halfDay: 'boolean'
+}
+🔍 User: { userId: 24, email: 'stalin31@nxzen.com', role: 'employee' }
+🔍 Found managers for employee 24 : [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+🔍 Manager emails: [
+  { name: 'Pradeep', email: 'strawhatluff124@gmail.com' },
+  { name: 'Vinod', email: 'stalinstalin11112@gmail.com' }
+]
+🔍 Manager count: 2
+🔍 Manager 1: {
+  name: 'Pradeep',
+  email: 'strawhatluff124@gmail.com',
+  id: 'MGR001',
+  user_id: 17
+}
+🔍 Manager 2: {
+  name: 'Vinod',
+  email: 'stalinstalin11112@gmail.com',
+  id: 'MGR003',
+  user_id: null
+}
+🔍 Retrieved managers: [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+🔍 Managers found: [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+📧 Sending email to manager: strawhatluff124@gmail.com
+📧 Email data: {
+  id: 25,
+  employeeName: 'stalin j',
+  employeeEmail: 'stalin31@nxzen.com',
+  leaveType: 'Casual Leave',
+  fromDate: '2025-09-05',
+  toDate: null,
+  totalDays: 1,
+  reason: 'rgergeaeate',
+  approvalToken: '3767ac494cd397639654dcea88658d7c863aedb35ef8083b02a50b1ab0cb4aef',
+  totalManagers: 2
+}
+📧 sendLeaveRequestToManager called with: {
+  managerEmail: 'strawhatluff124@gmail.com',
+  leaveRequest: { id: 25, employeeName: 'stalin j' }
+}
+📧 Sending email to manager: stalinstalin11112@gmail.com
+📧 Email data: {
+  id: 25,
+  employeeName: 'stalin j',
+  employeeEmail: 'stalin31@nxzen.com',
+  leaveType: 'Casual Leave',
+  fromDate: '2025-09-05',
+  toDate: null,
+  totalDays: 1,
+  reason: 'rgergeaeate',
+  approvalToken: '3767ac494cd397639654dcea88658d7c863aedb35ef8083b02a50b1ab0cb4aef',
+  totalManagers: 2
+}
+📧 sendLeaveRequestToManager called with: {
+  managerEmail: 'stalinstalin11112@gmail.com',
+  leaveRequest: { id: 25, employeeName: 'stalin j' }
+}
+🔍 Fetching leave requests for user ID: 24
+🔍 Leave requests with manager data: [
+  {
+    id: 25,
+    from_date: 2025-09-04T18:30:00.000Z,
+    manager_name: 'Pradeep',
+    current_manager_name: undefined
+  }
+]
+✅ Leave request email sent to manager: stalinstalin11112@gmail.com
+📧 Email send result: true
+✅ Leave request email sent to manager: strawhatluff124@gmail.com
+📧 Email send result: true
+✅ Manager approval notification sent to HR: hr@nxzen.com
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: [
+  {
+    id: 12,
+    employee_id: 24,
+    type: 'Intern',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinnithin31@gmail.com',
+      phone: '4534455443',
+      address: 'rgreththyhghy',
+      education: 'fgsgsgff',
+      experience: '',
+      submittedAt: '2025-08-31T08:46:54.682Z',
+      employmentType: 'Intern',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-31T08:46:54.726Z,
+    updated_at: 2025-08-31T08:47:48.554Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: 'Pradeep',
+    manager2_name: 'Vinod',
+    manager3_name: '',
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 12,
+  employee_id: 24,
+  type: 'Intern',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinnithin31@gmail.com',
+    phone: '4534455443',
+    address: 'rgreththyhghy',
+    education: 'fgsgsgff',
+    experience: '',
+    submittedAt: '2025-08-31T08:46:54.682Z',
+    employmentType: 'Intern',
+    emergencyContact: { name: 'dgfgd', phone: '325454354', relationship: 'cbfggfss' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-31T08:46:54.726Z,
+  updated_at: 2025-08-31T08:47:48.554Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: 'Pradeep',
+  manager2_name: 'Vinod',
+  manager3_name: '',
+  master_status: 'active'
+}
+🔍 Checking onboarding status for user ID: 24
+🔍 Query result: [
+  {
+    id: 12,
+    employee_id: 24,
+    type: 'Intern',
+    form_data: {
+      doj: '2025-08-01',
+      name: 'stalin',
+      email: 'stalinnithin31@gmail.com',
+      phone: '4534455443',
+      address: 'rgreththyhghy',
+      education: 'fgsgsgff',
+      experience: '',
+      submittedAt: '2025-08-31T08:46:54.682Z',
+      employmentType: 'Intern',
+      emergencyContact: [Object]
+    },
+    files: [],
+    status: 'approved',
+    submitted_at: 2025-08-31T08:46:54.726Z,
+    updated_at: 2025-08-31T08:47:48.554Z,
+    reviewed_by: null,
+    reviewed_at: null,
+    review_notes: null,
+    assigned_manager: 'Pradeep',
+    manager2_name: 'Vinod',
+    manager3_name: '',
+    master_status: 'active'
+  }
+]
+🔍 Form found: {
+  id: 12,
+  employee_id: 24,
+  type: 'Intern',
+  form_data: {
+    doj: '2025-08-01',
+    name: 'stalin',
+    email: 'stalinnithin31@gmail.com',
+    phone: '4534455443',
+    address: 'rgreththyhghy',
+    education: 'fgsgsgff',
+    experience: '',
+    submittedAt: '2025-08-31T08:46:54.682Z',
+    employmentType: 'Intern',
+    emergencyContact: { name: 'dgfgd', phone: '325454354', relationship: 'cbfggfss' }
+  },
+  files: [],
+  status: 'approved',
+  submitted_at: 2025-08-31T08:46:54.726Z,
+  updated_at: 2025-08-31T08:47:48.554Z,
+  reviewed_by: null,
+  reviewed_at: null,
+  review_notes: null,
+  assigned_manager: 'Pradeep',
+  manager2_name: 'Vinod',
+  manager3_name: '',
+  master_status: 'active'
+}
+🔍 Expense request received: [Object: null prototype] {
+  expenseCategory: 'Travel',
+  expenseType: 'Train',
+  amount: '700',
+  currency: 'INR',
+  description: 'bdggfgfg',
+  expenseDate: '2025-08-06',
+  taxIncluded: 'false'
+}
+🔍 Files uploaded: [
+  {
+    fieldname: 'attachments',
+    originalname: '1-230ed728-bd80-4ed7-ab27-a68b0e5a1cb3.pdf',
+    encoding: '7bit',
+    mimetype: 'application/pdf',
+    destination: '/Users/stalin_j/Downloads/ONDOARD/backend/uploads/expenses',
+    filename: 'attachments-1756630389781-508198856.pdf',
+    path: '/Users/stalin_j/Downloads/ONDOARD/backend/uploads/expenses/attachments-1756630389781-508198856.pdf',
+    size: 120795
+  }
+]
+🔍 Found managers for employee 24 : [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+🔍 Retrieved managers: [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+🔍 Managers found: [
+  {
+    id: 17,
+    manager_id: 'MGR001',
+    manager_name: 'Pradeep',
+    email: 'strawhatluff124@gmail.com'
+  },
+  {
+    id: null,
+    manager_id: 'MGR003',
+    manager_name: 'Vinod',
+    email: 'stalinstalin11112@gmail.com'
+  }
+]
+📧 Sending email to manager: strawhatluff124@gmail.com
+📧 Email data: {
+  id: 6,
+  employeeName: 'stalin j',
+  employeeEmail: 'stalin31@nxzen.com',
+  expenseCategory: 'Travel',
+  expenseType: 'Train',
+  amount: '700',
+  currency: 'INR',
+  description: 'bdggfgfg',
+  expenseDate: '2025-08-06',
+  attachmentUrl: '/uploads/expenses/attachments-1756630389781-508198856.pdf',
+  attachmentName: '1-230ed728-bd80-4ed7-ab27-a68b0e5a1cb3.pdf',
+  approvalToken: 'da80194bd54d83a9b4681558b2ee7577bd33353ad9e65cfc32b20add7530e0f1',
+  totalManagers: 2
+}
+📧 sendExpenseRequestToManager called with: {
+  managerEmail: 'strawhatluff124@gmail.com',
+  expenseRequest: { id: 6, employeeName: 'stalin j' }
+}
+📧 Sending email to manager: stalinstalin11112@gmail.com
+📧 Email data: {
+  id: 6,
+  employeeName: 'stalin j',
+  employeeEmail: 'stalin31@nxzen.com',
+  expenseCategory: 'Travel',
+  expenseType: 'Train',
+  amount: '700',
+  currency: 'INR',
+  description: 'bdggfgfg',
+  expenseDate: '2025-08-06',
+  attachmentUrl: '/uploads/expenses/attachments-1756630389781-508198856.pdf',
+  attachmentName: '1-230ed728-bd80-4ed7-ab27-a68b0e5a1cb3.pdf',
+  approvalToken: 'da80194bd54d83a9b4681558b2ee7577bd33353ad9e65cfc32b20add7530e0f1',
+  totalManagers: 2
+}
+📧 sendExpenseRequestToManager called with: {
+  managerEmail: 'stalinstalin11112@gmail.com',
+  expenseRequest: { id: 6, employeeName: 'stalin j' }
+}
+✅ Expense request email sent to manager: stalinstalin11112@gmail.com
+📧 Email send result: true
+✅ Expense request email sent to manager: strawhatluff124@gmail.com
+📧 Email send result: true
+✅ Manager approval notification sent to HR: hr@nxzen.com
+🔍 Updating leave balance: {
+  employeeId: 24,
+  year: 2025,
+  totalDays: 1,
+  leaveType: 'Casual Leave',
+  originalValue: '1.0'
+}
+🔍 Paid Leave - Deducting from annual allocation
+✅ Leave balance updated successfully
+✅ Leave approval notification sent to employee: stalin31@nxzen.com
+✅ Expense approval notification sent to employee: stalin31@nxzen.com

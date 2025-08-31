@@ -96,6 +96,7 @@ const AddEmployeeModal = ({ onClose, onSubmit }) => {
               <option value="Full-Time">Full-Time</option>
               <option value="Contract">Contract</option>
               <option value="Intern">Intern</option>
+              <option value="Manager">Manager</option>
             </select>
           </div>
 

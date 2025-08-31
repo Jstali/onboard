@@ -639,21 +639,13 @@ router.delete(
 router.get("/managers", [authenticateToken, checkHRRole], async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, first_name, last_name, email
-      FROM users 
-      WHERE role IN ('manager', 'hr') AND id NOT IN (
-        SELECT COALESCE(manager_id, 0) FROM departments WHERE manager_id IS NOT NULL
-      )
-      ORDER BY first_name, last_name
+      SELECT manager_id, manager_name, email, department, designation
+      FROM managers 
+      WHERE status = 'active'
+      ORDER BY manager_name
     `);
 
-    // Format the response
-    const managers = result.rows.map((manager) => ({
-      ...manager,
-      full_name: `${manager.first_name} ${manager.last_name}`,
-    }));
-
-    res.json(managers);
+    res.json({ managers: result.rows });
   } catch (error) {
     console.error("Error fetching available managers:", error);
     res.status(500).json({ error: "Failed to fetch available managers" });

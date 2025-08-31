@@ -11,6 +11,9 @@ import {
   FaBuilding,
   FaUsers,
   FaCalendarAlt,
+  FaDownload,
+  FaFileExcel,
+  FaChartBar,
 } from "react-icons/fa";
 
 const HRConfig = () => {
@@ -273,10 +276,57 @@ const HRConfig = () => {
     }
   };
 
+  const exportHierarchy = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("/expenses/hierarchy-export");
+
+      if (response.status === 200) {
+        const data = response.data;
+
+        // Convert to Excel format
+        const csvContent = [
+          data.headers.join(","),
+          ...data.data.map((row) =>
+            data.headers
+              .map((header) => {
+                const value =
+                  row[header.toLowerCase().replace(/\s+/g, "_")] || "";
+                return `"${value}"`;
+              })
+              .join(",")
+          ),
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `employee_hierarchy_${
+          new Date().toISOString().split("T")[0]
+        }.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        toast.success("Hierarchy report exported successfully!");
+      } else {
+        toast.error("Failed to export hierarchy report");
+      }
+    } catch (error) {
+      console.error("Error exporting hierarchy:", error);
+      toast.error("Failed to export hierarchy report");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const sections = [
     { id: "leave-types", label: "Leave Types", icon: FaCalendarAlt },
     { id: "system-settings", label: "System Settings", icon: FaCog },
     { id: "departments", label: "Departments", icon: FaBuilding },
+    { id: "reports", label: "Reports", icon: FaDownload },
   ];
 
   return (
@@ -858,6 +908,79 @@ const HRConfig = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reports Section */}
+      {activeSection === "reports" && (
+        <div className="p-6">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Reports & Exports
+            </h3>
+            <p className="text-gray-600">
+              Generate and download various reports
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Hierarchy Report */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <FaFileExcel className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    Employee Hierarchy Report
+                  </h4>
+                  <p className="text-gray-600">
+                    Export complete organizational structure
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Download a comprehensive report containing employee details,
+                manager assignments, and organizational hierarchy.
+              </p>
+              <button
+                onClick={exportHierarchy}
+                disabled={loading}
+                className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                <FaDownload className="mr-2" />
+                {loading ? "Generating..." : "Download Hierarchy Report"}
+              </button>
+            </div>
+
+            {/* Expense Reports */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <FaFileExcel className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    Expense Reports
+                  </h4>
+                  <p className="text-gray-600">
+                    Access expense analytics and reports
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                View detailed expense analytics, category breakdowns, and export
+                expense data in various formats.
+              </p>
+              <button
+                onClick={() => (window.location.href = "#expense-analytics")}
+                className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <FaChartBar className="mr-2" />
+                Go to Expense Analytics
+              </button>
             </div>
           </div>
         </div>

@@ -11,6 +11,7 @@ const employeeRoutes = require("./routes/employee");
 const attendanceRoutes = require("./routes/attendance");
 const leaveRoutes = require("./routes/leave.js");
 const documentsRoutes = require("./routes/documents");
+const expensesRoutes = require("./routes/expenses");
 const { connectDB } = require("./config/database");
 
 const app = express();
@@ -29,29 +30,50 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS - Comprehensive configuration for development
+// CORS - More permissive configuration for development
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://localhost:3002",
-      "http://127.0.0.1:3000",
-      "http://127.0.0.1:3001",
-      "http://127.0.0.1:3002",
-      // Allow any localhost port for development
-      /^http:\/\/localhost:\d+$/,
-      /^http:\/\/127\.0\.0\.1:\d+$/,
-    ],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      // Allow all localhost and 127.0.0.1 origins for development
+      if (
+        origin.includes("localhost") ||
+        origin.includes("127.0.0.1") ||
+        origin.includes("0.0.0.0")
+      ) {
+        return callback(null, true);
+      }
+
+      // Allow specific origins
+      const allowedOrigins = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
+      ];
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
     allowedHeaders: [
       "Content-Type",
       "Authorization",
       "X-Requested-With",
       "Accept",
       "Origin",
+      "Access-Control-Request-Method",
+      "Access-Control-Request-Headers",
     ],
+    exposedHeaders: ["Authorization"],
     optionsSuccessStatus: 200,
     preflightContinue: false,
   })
@@ -59,6 +81,22 @@ app.use(
 
 // Handle preflight requests
 app.options("*", cors());
+
+// Additional CORS headers for all responses
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Max-Age", "86400"); // 24 hours
+  next();
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
@@ -75,6 +113,7 @@ app.use("/api/employee", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leave", leaveRoutes);
 app.use("/api/documents", documentsRoutes);
+app.use("/api/expenses", expensesRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { format } from "date-fns";
+import { FaArrowLeft } from "react-icons/fa";
 
 const EmployeeLeaveRequest = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [systemSettings, setSystemSettings] = useState(null);
   const [leaveBalance, setLeaveBalance] = useState(null);
@@ -71,6 +74,13 @@ const EmployeeLeaveRequest = () => {
       setLeaveBalance(response.data);
     } catch (error) {
       console.error("Error fetching leave balance:", error);
+      // Set default values if fetch fails
+      setLeaveBalance({
+        total_allocated: 27,
+        leaves_taken: 0,
+        leaves_remaining: 27,
+        year: new Date().getFullYear(),
+      });
     }
   };
 
@@ -162,6 +172,7 @@ const EmployeeLeaveRequest = () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        timeout: 15000, // 15 second timeout for leave submission
       });
 
       setMessage("Leave request submitted successfully!");
@@ -214,9 +225,20 @@ const EmployeeLeaveRequest = () => {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          Leave Request Form
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 mr-4"
+            >
+              <FaArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </button>
+            <h2 className="text-2xl font-bold text-gray-800">
+              Leave Request Form
+            </h2>
+          </div>
+        </div>
 
         {/* Leave Balance Display */}
         {leaveBalance ? (
@@ -524,16 +546,30 @@ const EmployeeLeaveRequest = () => {
                       {request.half_day && " (½ day)"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          request.manager_name &&
-                          request.manager_name !== "Not Assigned"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {request.manager_name || "Not Assigned"}
-                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {request.manager1_name && (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {request.manager1_name}
+                          </span>
+                        )}
+                        {request.manager2_name && (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            {request.manager2_name}
+                          </span>
+                        )}
+                        {request.manager3_name && (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                            {request.manager3_name}
+                          </span>
+                        )}
+                        {!request.manager1_name &&
+                          !request.manager2_name &&
+                          !request.manager3_name && (
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">
+                              Not Assigned
+                            </span>
+                          )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

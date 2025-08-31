@@ -9,6 +9,8 @@ import {
   FaCalendarCheck,
   FaUserEdit,
   FaCog,
+  FaReceipt,
+  FaChartBar,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -22,6 +24,8 @@ import EmployeeFormManagement from "./EmployeeFormManagement";
 import HRAttendanceDetails from "./HRAttendanceDetails";
 import EmployeeCRUD from "./EmployeeCRUD";
 import HRConfig from "./HRConfig";
+import HRExpenseManagement from "./HRExpenseManagement";
+import HRExpenseAnalytics from "./HRExpenseAnalytics";
 
 const HRDashboard = () => {
   const { logout } = useAuth();
@@ -95,6 +99,8 @@ const HRDashboard = () => {
     { id: "master", label: "Employee Master", icon: FaUsers },
     { id: "attendance", label: "Attendance", icon: FaCalendarAlt },
     { id: "leave", label: "Leave Management", icon: FaCalendarCheck },
+    { id: "expenses", label: "Expense Management", icon: FaReceipt },
+    { id: "expense-analytics", label: "Expense Analytics", icon: FaChartBar },
     { id: "config", label: "HR Config", icon: FaCog },
   ];
 
@@ -232,6 +238,20 @@ const HRDashboard = () => {
         {activeTab === "leave" && (
           <div>
             <HRLeaveApproval />
+          </div>
+        )}
+
+        {/* Expense Management Tab */}
+        {activeTab === "expenses" && (
+          <div>
+            <HRExpenseManagement />
+          </div>
+        )}
+
+        {/* Expense Analytics Tab */}
+        {activeTab === "expense-analytics" && (
+          <div>
+            <HRExpenseAnalytics />
           </div>
         )}
 

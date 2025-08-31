@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   FaSignOutAlt,
   FaCalendarAlt,
   FaClock,
   FaHome,
   FaBed,
+  FaArrowLeft,
 } from "react-icons/fa";
 import { format } from "date-fns";
 import axios from "axios";
@@ -14,6 +16,7 @@ import AttendanceCalendar from "./AttendanceCalendar";
 
 const AttendancePortal = () => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -142,6 +145,13 @@ const AttendancePortal = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 mr-4"
+              >
+                <FaArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </button>
               <h1 className="text-2xl font-bold text-gray-900">
                 Attendance Portal
               </h1>

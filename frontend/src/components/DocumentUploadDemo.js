@@ -29,7 +29,7 @@ const DocumentUploadDemo = () => {
             </h3>
           </div>
           <div className="grid grid-cols-3 gap-4">
-            {["Full-Time", "Contract", "Intern"].map((type) => (
+            {["Full-Time", "Contract", "Intern", "Manager"].map((type) => (
               <button
                 key={type}
                 onClick={() => setEmploymentType(type)}

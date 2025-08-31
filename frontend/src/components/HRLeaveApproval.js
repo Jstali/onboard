@@ -329,7 +329,8 @@ const HRLeaveApproval = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {request.manager_name}
+                              {request.manager_approval_status ||
+                                "No managers assigned"}
                             </div>
                             <div className="text-sm text-gray-500">
                               {request.manager_approved_at &&
@@ -579,8 +580,9 @@ const HRLeaveApproval = () => {
                   <strong>Reason:</strong> {selectedRequest.reason}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  <strong>Manager Approved by:</strong>{" "}
-                  {selectedRequest.manager_name}
+                  <strong>Manager Approval Status:</strong>{" "}
+                  {selectedRequest.manager_approval_status ||
+                    "No managers assigned"}
                 </p>
                 {selectedRequest.manager_approval_notes && (
                   <p className="text-sm text-gray-600 mb-2">

@@ -14,6 +14,30 @@ const router = express.Router();
 // Apply authentication to all HR routes
 router.use(authenticateToken, requireHR);
 
+// Get available managers for assignment
+router.get("/managers", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT employee_name, company_email 
+      FROM employee_master 
+      WHERE status = 'active' 
+      AND employee_name IN ('Pradeep', 'Vinod', 'Vamshi', 'Rakesh')
+      ORDER BY employee_name
+    `);
+
+    res.json({
+      success: true,
+      managers: result.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching managers:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch managers",
+    });
+  }
+});
+
 // Generate temporary password
 function generateTempPassword() {
   const chars =
@@ -32,7 +56,7 @@ router.post(
     body("email").isEmail().withMessage("Valid email is required"),
     body("name").notEmpty().trim().withMessage("Employee name is required"),
     body("type")
-      .isIn(["Intern", "Contract", "Full-Time"])
+      .isIn(["Intern", "Contract", "Full-Time", "Manager"])
       .withMessage("Valid employment type is required"),
     body("doj")
       .isISO8601()
@@ -137,7 +161,12 @@ router.get("/employees", async (req, res) => {
         ef.form_data,
         COALESCE(ef.status, 'no_form') as status,
         em.employee_id as assigned_employee_id,
+        em.manager_id,
         em.manager_name as assigned_manager,
+        em.manager2_id,
+        em.manager2_name,
+        em.manager3_id,
+        em.manager3_name,
         em.department,
         em.designation,
         em.salary_band,
@@ -537,6 +566,9 @@ router.delete("/master/:id", async (req, res) => {
       await client.query("DELETE FROM onboarded_employees WHERE user_id = $1", [
         userId,
       ]);
+      await client.query("DELETE FROM company_emails WHERE user_id = $1", [
+        userId,
+      ]);
     }
 
     // Delete from master
@@ -656,7 +688,9 @@ router.put(
     body("companyEmail")
       .isEmail()
       .withMessage("Valid company email is required"),
-    body("manager").notEmpty().withMessage("Manager is required"),
+    body("manager").notEmpty().withMessage("Manager 1 is required"),
+    body("manager2").optional(),
+    body("manager3").optional(),
   ],
   async (req, res) => {
     try {
@@ -670,7 +704,7 @@ router.put(
       }
 
       const { id } = req.params;
-      const { name, companyEmail, manager } = req.body;
+      const { name, companyEmail, manager, manager2, manager3 } = req.body;
 
       console.log("🔍 Assigning details to onboarded employee:", {
         id,
@@ -761,18 +795,52 @@ router.put(
         ]
       );
 
-      // Add to employee master table
+      // Get manager information for manager2 and manager3 if provided
+      let manager2Info = null;
+      let manager3Info = null;
+
+      if (manager2) {
+        const manager2Result = await pool.query(
+          "SELECT manager_id, manager_name FROM managers WHERE manager_id = $1",
+          [manager2]
+        );
+        if (manager2Result.rows.length > 0) {
+          manager2Info = manager2Result.rows[0];
+        }
+      }
+
+      if (manager3) {
+        const manager3Result = await pool.query(
+          "SELECT manager_id, manager_name FROM managers WHERE manager_id = $1",
+          [manager3]
+        );
+        if (manager3Result.rows.length > 0) {
+          manager3Info = manager3Result.rows[0];
+        }
+      }
+
+      // Add to employee master table with multiple managers
       await pool.query(
         `
-        INSERT INTO employee_master (employee_id, employee_name, company_email, manager_id, manager_name, type, doj)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO employee_master (
+          employee_id, employee_name, company_email, 
+          manager_id, manager_name, 
+          manager2_id, manager2_name, 
+          manager3_id, manager3_name, 
+          type, doj
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       `,
         [
           employeeId,
           name,
           companyEmail,
-          managerInfo.manager_id, // Use proper manager ID
-          managerInfo.manager_name, // Use proper manager name
+          managerInfo.manager_id, // Manager 1 ID
+          managerInfo.manager_name, // Manager 1 name
+          manager2Info?.manager_id || null, // Manager 2 ID
+          manager2Info?.manager_name || null, // Manager 2 name
+          manager3Info?.manager_id || null, // Manager 3 ID
+          manager3Info?.manager_name || null, // Manager 3 name
           onboarded.employee_type,
           formData.doj || new Date(),
         ]
@@ -863,9 +931,11 @@ router.post(
   [
     body("employeeName").notEmpty(),
     body("companyEmail").isEmail(),
-    body("type").isIn(["Intern", "Contract", "Full-Time"]),
+    body("type").isIn(["Intern", "Contract", "Full-Time", "Manager"]),
     body("doj").isISO8601().toDate(),
     body("managerId").optional(),
+    body("manager2Id").optional(),
+    body("manager3Id").optional(),
   ],
   async (req, res) => {
     try {
@@ -874,7 +944,15 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { employeeName, companyEmail, type, doj, managerId } = req.body;
+      const {
+        employeeName,
+        companyEmail,
+        type,
+        doj,
+        managerId,
+        manager2Id,
+        manager3Id,
+      } = req.body;
 
       // Generate unique 6-digit employee ID
       const employeeId = await generateEmployeeId();
@@ -890,14 +968,106 @@ router.post(
         return res.status(400).json({ error: "Employee ID already exists" });
       }
 
-      // Add to master table
+      // Get manager information for manager2 and manager3 if provided
+      let manager2Name = null;
+      let manager3Name = null;
+
+      if (manager2Id) {
+        const manager2Result = await pool.query(
+          "SELECT manager_name FROM managers WHERE manager_id = $1",
+          [manager2Id]
+        );
+        if (manager2Result.rows.length > 0) {
+          manager2Name = manager2Result.rows[0].manager_name;
+        }
+      }
+
+      if (manager3Id) {
+        const manager3Result = await pool.query(
+          "SELECT manager_name FROM managers WHERE manager_id = $1",
+          [manager3Id]
+        );
+        if (manager3Result.rows.length > 0) {
+          manager3Name = manager3Result.rows[0].manager_name;
+        }
+      }
+
+      // Add to master table with multiple managers
       await pool.query(
         `
-      INSERT INTO employee_master (employee_id, employee_name, company_email, manager_id, type, doj)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO employee_master (
+        employee_id, employee_name, company_email, 
+        manager_id, manager2_id, manager2_name, 
+        manager3_id, manager3_name, 
+        type, doj
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `,
-        [employeeId, employeeName, companyEmail, managerId, type, doj]
+        [
+          employeeId,
+          employeeName,
+          companyEmail,
+          managerId,
+          manager2Id,
+          manager2Name,
+          manager3Id,
+          manager3Name,
+          type,
+          doj,
+        ]
       );
+
+      // Synchronize with other database tables
+      console.log("🔄 Synchronizing new employee with database tables...");
+
+      // 1. Create user account if it doesn't exist
+      const userExistsResult = await pool.query(
+        "SELECT id FROM users WHERE email = $1",
+        [companyEmail]
+      );
+
+      if (userExistsResult.rows.length === 0) {
+        // Create new user account
+        const bcrypt = require("bcryptjs");
+        const tempPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+        await pool.query(
+          `INSERT INTO users (email, password, role, first_name, last_name, temp_password, created_at, updated_at) 
+           VALUES ($1, $2, 'employee', $3, 'Employee', $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          [companyEmail, hashedPassword, employeeName, tempPassword]
+        );
+        console.log(
+          `✅ Created new user account: ${companyEmail} with temp password: ${tempPassword}`
+        );
+      } else {
+        console.log(`✅ User account already exists: ${companyEmail}`);
+      }
+
+      // 2. Add to company_emails table if not exists
+      const companyEmailExists = await pool.query(
+        "SELECT id FROM company_emails WHERE company_email = $1",
+        [companyEmail]
+      );
+
+      if (companyEmailExists.rows.length === 0) {
+        const userId =
+          userExistsResult.rows[0]?.id ||
+          (
+            await pool.query("SELECT id FROM users WHERE email = $1", [
+              companyEmail,
+            ])
+          ).rows[0].id;
+        await pool.query(
+          "INSERT INTO company_emails (user_id, company_email, is_primary, is_active) VALUES ($1, $2, $3, $4)",
+          [userId, companyEmail, true, true]
+        );
+        console.log(`✅ Added to company_emails table: ${companyEmail}`);
+      } else {
+        console.log(`✅ Company email already exists: ${companyEmail}`);
+      }
+
+      console.log("✅ Employee Master synchronization completed successfully");
 
       res
         .status(201)
@@ -1447,7 +1617,7 @@ router.put(
   "/employee-forms/:id",
   [
     body("form_data").isObject(),
-    body("employee_type").isIn(["Intern", "Contract", "Full-Time"]),
+    body("employee_type").isIn(["Intern", "Contract", "Full-Time", "Manager"]),
   ],
   async (req, res) => {
     try {
@@ -1457,7 +1627,8 @@ router.put(
       }
 
       const { id } = req.params;
-      const { form_data, employee_type } = req.body;
+      const { form_data, employee_type, manager1, manager2, manager3 } =
+        req.body;
 
       // Check if form exists
       const existingForm = await pool.query(
@@ -1469,14 +1640,14 @@ router.put(
         return res.status(404).json({ error: "Employee form not found" });
       }
 
-      // Update form
+      // Update form with manager assignments
       await pool.query(
         `
         UPDATE employee_forms 
-        SET form_data = $1, type = $2, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $3
+        SET form_data = $1, type = $2, assigned_manager = $3, manager2_name = $4, manager3_name = $5, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $6
       `,
-        [form_data, employee_type, id]
+        [form_data, employee_type, manager1, manager2, manager3, id]
       );
 
       res.json({
@@ -1488,5 +1659,236 @@ router.put(
     }
   }
 );
+
+// Update employee in master table
+router.put("/master/:id", async (req, res) => {
+  try {
+    console.log("🔍 Update employee master request:", req.params, req.body);
+    const { id } = req.params;
+    const {
+      employee_name,
+      company_email,
+      type,
+      doj,
+      status,
+      department,
+      designation,
+      salary_band,
+      location,
+      manager_id,
+      manager2_id,
+      manager3_id,
+    } = req.body;
+
+    // Validate required fields
+    if (!employee_name || !company_email || !type || !status) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Check if employee exists
+    const existingEmployee = await pool.query(
+      "SELECT id FROM employee_master WHERE id = $1",
+      [id]
+    );
+
+    if (existingEmployee.rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    // Get manager names
+    let manager_name = null;
+    let manager2_name = null;
+    let manager3_name = null;
+
+    if (manager_id) {
+      const managerResult = await pool.query(
+        "SELECT manager_name FROM managers WHERE manager_id = $1",
+        [manager_id]
+      );
+      manager_name = managerResult.rows[0]?.manager_name;
+    }
+
+    if (manager2_id) {
+      const manager2Result = await pool.query(
+        "SELECT manager_name FROM managers WHERE manager_id = $1",
+        [manager2_id]
+      );
+      manager2_name = manager2Result.rows[0]?.manager_name;
+    }
+
+    if (manager3_id) {
+      const manager3Result = await pool.query(
+        "SELECT manager_name FROM managers WHERE manager_id = $1",
+        [manager3_id]
+      );
+      manager3_name = manager3Result.rows[0]?.manager_name;
+    }
+
+    // Get the old employee data to check what changed
+    const oldEmployeeResult = await pool.query(
+      "SELECT * FROM employee_master WHERE id = $1",
+      [id]
+    );
+    const oldEmployee = oldEmployeeResult.rows[0];
+    const oldCompanyEmail = oldEmployee?.company_email;
+
+    // Update employee in master table
+    const result = await pool.query(
+      `UPDATE employee_master 
+       SET employee_name = $1, company_email = $2, type = $3, doj = $4, 
+           status = $5, department = $6, designation = $7, salary_band = $8, 
+           location = $9, manager_id = $10, manager_name = $11, 
+           manager2_id = $12, manager2_name = $13, 
+           manager3_id = $14, manager3_name = $15, 
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $16
+       RETURNING *`,
+      [
+        employee_name,
+        company_email,
+        type,
+        doj,
+        status,
+        department || null,
+        designation || null,
+        salary_band || null,
+        location || null,
+        manager_id || null,
+        manager_name,
+        manager2_id || null,
+        manager2_name,
+        manager3_id || null,
+        manager3_name,
+        id,
+      ]
+    );
+
+    // Synchronize changes with users table and other related tables
+    console.log("🔄 Synchronizing Employee Master changes with database...");
+
+    // 1. Handle company email changes
+    if (oldCompanyEmail && oldCompanyEmail !== company_email) {
+      console.log(
+        `🔄 Company email changed from ${oldCompanyEmail} to ${company_email}`
+      );
+
+      // Check if user exists with old email
+      const userExistsResult = await pool.query(
+        "SELECT id FROM users WHERE email = $1",
+        [oldCompanyEmail]
+      );
+
+      if (userExistsResult.rows.length > 0) {
+        // Update existing user's email
+        await pool.query(
+          "UPDATE users SET email = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2",
+          [company_email, oldCompanyEmail]
+        );
+        console.log(
+          `✅ Updated existing user: ${oldCompanyEmail} → ${company_email}`
+        );
+      } else {
+        // Check if user already exists with new email
+        const newUserExistsResult = await pool.query(
+          "SELECT id FROM users WHERE email = $1",
+          [company_email]
+        );
+
+        if (newUserExistsResult.rows.length === 0) {
+          // Create new user account with the new email
+          const bcrypt = require("bcryptjs");
+          const tempPassword = Math.random().toString(36).slice(-8);
+          const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+          await pool.query(
+            `INSERT INTO users (email, password, role, first_name, last_name, temp_password, created_at, updated_at) 
+             VALUES ($1, $2, 'employee', $3, 'Employee', $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            [company_email, hashedPassword, employee_name, tempPassword]
+          );
+          console.log(
+            `✅ Created new user account: ${company_email} with temp password: ${tempPassword}`
+          );
+        }
+      }
+    }
+
+    // 2. Update company_emails table if company email changed
+    if (oldCompanyEmail && oldCompanyEmail !== company_email) {
+      // Update company_emails table
+      await pool.query(
+        "UPDATE company_emails SET company_email = $1, updated_at = CURRENT_TIMESTAMP WHERE company_email = $2",
+        [company_email, oldCompanyEmail]
+      );
+      console.log(
+        `✅ Updated company_emails table: ${oldCompanyEmail} → ${company_email}`
+      );
+    }
+
+    // 3. Update employee_forms table if employee name or email changed
+    if (
+      oldEmployee.employee_name !== employee_name ||
+      oldCompanyEmail !== company_email
+    ) {
+      await pool.query(
+        `UPDATE employee_forms 
+         SET form_data = jsonb_set(
+           jsonb_set(form_data, '{name}', $1::jsonb),
+           '{email}', $2::jsonb
+         ), updated_at = CURRENT_TIMESTAMP
+         WHERE employee_id IN (
+           SELECT id FROM users WHERE email = $3
+         )`,
+        [
+          JSON.stringify(employee_name),
+          JSON.stringify(company_email),
+          company_email,
+        ]
+      );
+      console.log(
+        `✅ Updated employee_forms table for employee: ${employee_name}`
+      );
+    }
+
+    // 4. Update onboarded_employees table if employee name changed
+    if (oldEmployee.employee_name !== employee_name) {
+      await pool.query(
+        `UPDATE onboarded_employees 
+         SET updated_at = CURRENT_TIMESTAMP
+         WHERE user_id IN (
+           SELECT id FROM users WHERE email = $1
+         )`,
+        [company_email]
+      );
+      console.log(
+        `✅ Updated onboarded_employees table for employee: ${employee_name}`
+      );
+    }
+
+    // 5. Update leave_requests table if employee name changed
+    if (oldEmployee.employee_name !== employee_name) {
+      await pool.query(
+        `UPDATE leave_requests 
+         SET employee_name = $1, updated_at = CURRENT_TIMESTAMP
+         WHERE employee_id IN (
+           SELECT id FROM users WHERE email = $2
+         )`,
+        [employee_name, company_email]
+      );
+      console.log(
+        `✅ Updated leave_requests table for employee: ${employee_name}`
+      );
+    }
+
+    console.log("✅ Employee Master synchronization completed successfully");
+
+    res.json({
+      message: "Employee updated successfully",
+      employee: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Update employee master error:", error);
+    res.status(500).json({ error: "Failed to update employee" });
+  }
+});
 
 module.exports = router;

@@ -85,7 +85,7 @@ const initializeTables = async () => {
       )
     `);
 
-    // Employee master table - Enhanced with more employee details
+    // Employee master table - Enhanced with more employee details and multiple managers
     await pool.query(`
       CREATE TABLE IF NOT EXISTS employee_master (
         id SERIAL PRIMARY KEY,
@@ -94,6 +94,10 @@ const initializeTables = async () => {
         company_email VARCHAR(255) UNIQUE NOT NULL,
         manager_id VARCHAR(100),
         manager_name VARCHAR(100),
+        manager2_id VARCHAR(100),
+        manager2_name VARCHAR(100),
+        manager3_id VARCHAR(100),
+        manager3_name VARCHAR(100),
         type VARCHAR(50) NOT NULL,
         role VARCHAR(100),
         doj DATE NOT NULL,
@@ -202,6 +206,151 @@ const initializeTables = async () => {
       END $$;
     `);
 
+    // Add multiple manager columns to existing employee_master table
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'employee_master' AND column_name = 'manager2_id'
+        ) THEN
+          ALTER TABLE employee_master ADD COLUMN manager2_id VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'employee_master' AND column_name = 'manager2_name'
+        ) THEN
+          ALTER TABLE employee_master ADD COLUMN manager2_name VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'employee_master' AND column_name = 'manager3_id'
+        ) THEN
+          ALTER TABLE employee_master ADD COLUMN manager3_id VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'employee_master' AND column_name = 'manager3_name'
+        ) THEN
+          ALTER TABLE employee_master ADD COLUMN manager3_name VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    // Add multiple manager columns to existing leave_requests table
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'manager1_id'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN manager1_id VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'manager1_name'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN manager1_name VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'manager1_status'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN manager1_status VARCHAR(50) DEFAULT 'Pending';
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'manager2_id'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN manager2_id VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'manager2_name'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN manager2_name VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'manager2_status'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN manager2_status VARCHAR(50) DEFAULT 'Pending';
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'manager3_id'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN manager3_id VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'manager3_name'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN manager3_name VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'manager3_status'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN manager3_status VARCHAR(50) DEFAULT 'Pending';
+        END IF;
+      END $$;
+    `);
+
     // Create leave_balances table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS leave_balances (
@@ -291,6 +440,69 @@ const initializeTables = async () => {
       )
     `);
 
+    // Create expenses table for expense management
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS expenses (
+        id SERIAL PRIMARY KEY,
+        series VARCHAR(50) UNIQUE NOT NULL,
+        employee_id INTEGER NOT NULL,
+        employee_name VARCHAR(255) NOT NULL,
+        expense_category VARCHAR(100) NOT NULL,
+        expense_type VARCHAR(100) NOT NULL,
+        other_category VARCHAR(255),
+        amount DECIMAL(10,2) NOT NULL,
+        currency VARCHAR(10) DEFAULT 'INR',
+        description TEXT NOT NULL,
+        attachment_url VARCHAR(500),
+        attachment_name VARCHAR(255),
+        expense_date DATE NOT NULL,
+        project_reference VARCHAR(255),
+        client_code VARCHAR(100),
+        payment_mode VARCHAR(50),
+        tax_included BOOLEAN DEFAULT FALSE,
+        total_reimbursable DECIMAL(10,2),
+        status VARCHAR(50) DEFAULT 'pending_manager_approval',
+        manager1_id VARCHAR(100),
+        manager1_name VARCHAR(100),
+        manager1_status VARCHAR(50) DEFAULT 'Pending',
+        manager1_approved_at TIMESTAMP,
+        manager1_approval_notes TEXT,
+        manager2_id VARCHAR(100),
+        manager2_name VARCHAR(100),
+        manager2_status VARCHAR(50) DEFAULT 'Pending',
+        manager2_approved_at TIMESTAMP,
+        manager2_approval_notes TEXT,
+        manager3_id VARCHAR(100),
+        manager3_name VARCHAR(100),
+        manager3_status VARCHAR(50) DEFAULT 'Pending',
+        manager3_approved_at TIMESTAMP,
+        manager3_approval_notes TEXT,
+        hr_id INTEGER,
+        hr_name VARCHAR(255),
+        hr_approved_at TIMESTAMP,
+        hr_approval_notes TEXT,
+        approval_token VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (hr_id) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Create expense_attachments table for multiple file uploads
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS expense_attachments (
+        id SERIAL PRIMARY KEY,
+        expense_id INTEGER NOT NULL,
+        file_name VARCHAR(255) NOT NULL,
+        file_url VARCHAR(500) NOT NULL,
+        file_size INTEGER,
+        mime_type VARCHAR(100),
+        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (expense_id) REFERENCES expenses(id) ON DELETE CASCADE
+      )
+    `);
+
     // Insert default system settings
     await pool.query(`
       INSERT INTO system_settings (total_annual_leaves, allow_half_day, approval_workflow)
@@ -350,6 +562,15 @@ const initializeTables = async () => {
       CREATE INDEX IF NOT EXISTS idx_employee_documents_employee_id ON employee_documents(employee_id);
       CREATE INDEX IF NOT EXISTS idx_employee_documents_type ON employee_documents(document_type);
       CREATE INDEX IF NOT EXISTS idx_employee_documents_category ON employee_documents(document_category);
+      CREATE INDEX IF NOT EXISTS idx_expenses_employee_id ON expenses(employee_id);
+      CREATE INDEX IF NOT EXISTS idx_expenses_status ON expenses(status);
+      CREATE INDEX IF NOT EXISTS idx_expenses_series ON expenses(series);
+      CREATE INDEX IF NOT EXISTS idx_expenses_expense_date ON expenses(expense_date);
+      CREATE INDEX IF NOT EXISTS idx_expenses_hr_id ON expenses(hr_id);
+      CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(expense_category);
+      CREATE INDEX IF NOT EXISTS idx_expenses_project ON expenses(project_reference);
+      CREATE INDEX IF NOT EXISTS idx_expenses_client ON expenses(client_code);
+      CREATE INDEX IF NOT EXISTS idx_expense_attachments_expense_id ON expense_attachments(expense_id);
     `);
 
     // Insert default HR user if not exists
@@ -412,6 +633,104 @@ const initializeTables = async () => {
         );
         console.log(
           `✅ Default manager created: ${manager.name} (${manager.id})`
+        );
+      }
+    }
+
+    // Company Emails table - To store company email addresses for all users and managers
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS company_emails (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        manager_id VARCHAR(100) REFERENCES managers(manager_id) ON DELETE CASCADE,
+        company_email VARCHAR(255) UNIQUE NOT NULL,
+        is_primary BOOLEAN DEFAULT true,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT check_user_or_manager CHECK (
+          (user_id IS NOT NULL AND manager_id IS NULL) OR 
+          (user_id IS NULL AND manager_id IS NOT NULL)
+        )
+      )
+    `);
+
+    // Create indexes for better performance
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_company_emails_user_id ON company_emails(user_id);
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_company_emails_manager_id ON company_emails(manager_id);
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_company_emails_email ON company_emails(company_email);
+    `);
+
+    // Insert default company emails for existing users and managers
+    console.log(
+      "🔄 Setting up company emails for existing users and managers..."
+    );
+
+    // Insert company emails for users (employees, HR, admin)
+    const usersResult = await pool.query(`
+      SELECT id, email, role FROM users WHERE role IN ('employee', 'hr', 'admin')
+    `);
+
+    for (const user of usersResult.rows) {
+      // Check if company email already exists
+      const emailExists = await pool.query(
+        "SELECT id FROM company_emails WHERE user_id = $1",
+        [user.id]
+      );
+
+      if (emailExists.rows.length === 0) {
+        // Generate company email based on user's current email
+        let companyEmail;
+        if (user.email.includes("@nxzen.com")) {
+          companyEmail = user.email; // Already a company email
+        } else {
+          // Extract username and create company email
+          const username = user.email.split("@")[0];
+          companyEmail = `${username}@nxzen.com`;
+        }
+
+        await pool.query(
+          "INSERT INTO company_emails (user_id, company_email, is_primary, is_active) VALUES ($1, $2, $3, $4)",
+          [user.id, companyEmail, true, true]
+        );
+        console.log(
+          `✅ Company email created for user ${user.id}: ${companyEmail}`
+        );
+      }
+    }
+
+    // Insert company emails for managers
+    const managersResult = await pool.query(`
+      SELECT manager_id, manager_name, email FROM managers WHERE status = 'active'
+    `);
+
+    for (const manager of managersResult.rows) {
+      // Check if company email already exists
+      const emailExists = await pool.query(
+        "SELECT id FROM company_emails WHERE manager_id = $1",
+        [manager.manager_id]
+      );
+
+      if (emailExists.rows.length === 0) {
+        // Generate company email based on manager's name
+        const username = manager.manager_name
+          .toLowerCase()
+          .replace(/\s+/g, ".");
+        const companyEmail = `${username}@nxzen.com`;
+
+        await pool.query(
+          "INSERT INTO company_emails (manager_id, company_email, is_primary, is_active) VALUES ($1, $2, $3, $4)",
+          [manager.manager_id, companyEmail, true, true]
+        );
+        console.log(
+          `✅ Company email created for manager ${manager.manager_id}: ${companyEmail}`
         );
       }
     }

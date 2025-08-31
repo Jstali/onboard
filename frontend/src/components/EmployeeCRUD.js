@@ -20,6 +20,7 @@ const EmployeeCRUD = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [formData, setFormData] = useState({
     first_name: "",
@@ -36,9 +37,7 @@ const EmployeeCRUD = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        "http://localhost:5001/api/hr/employees"
-      );
+      const response = await axios.get("/hr/employees");
       console.log("🔍 Employee data received:", response.data.employees);
       setEmployees(response.data.employees || []);
     } catch (error) {
@@ -153,9 +152,7 @@ const EmployeeCRUD = () => {
     }
 
     try {
-      await axios.delete(
-        `http://localhost:5001/api/hr/employees/${employee.id}`
-      );
+      await axios.delete(`/hr/employees/${employee.id}`);
       toast.success("Employee deleted successfully");
       fetchEmployees();
     } catch (error) {
@@ -283,6 +280,9 @@ const EmployeeCRUD = () => {
                     Role
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Managers
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -337,6 +337,38 @@ const EmployeeCRUD = () => {
                       >
                         {employee.assigned_job_role || "Not Assigned"}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {employee.assigned_manager && (
+                          <div className="mb-1">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {employee.assigned_manager}
+                            </span>
+                          </div>
+                        )}
+                        {employee.manager2_name && (
+                          <div className="mb-1">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {employee.manager2_name}
+                            </span>
+                          </div>
+                        )}
+                        {employee.manager3_name && (
+                          <div>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              {employee.manager3_name}
+                            </span>
+                          </div>
+                        )}
+                        {!employee.assigned_manager &&
+                          !employee.manager2_name &&
+                          !employee.manager3_name && (
+                            <span className="text-gray-500 italic">
+                              No Managers
+                            </span>
+                          )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={getStatusBadge(employee.status)}>
@@ -447,6 +479,7 @@ const EmployeeCRUD = () => {
                     <option value="Full-Time">Full-Time</option>
                     <option value="Contract">Contract</option>
                     <option value="Intern">Intern</option>
+                    <option value="Manager">Manager</option>
                   </select>
                 </div>
               </div>
@@ -537,6 +570,7 @@ const EmployeeCRUD = () => {
                     <option value="Full-Time">Full-Time</option>
                     <option value="Contract">Contract</option>
                     <option value="Intern">Intern</option>
+                    <option value="Manager">Manager</option>
                   </select>
                 </div>
               </div>
