@@ -104,6 +104,29 @@ const DocumentUploadSection = ({
     }
   };
 
+  const handleSaveDocument = async (documentType, documentCategory) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `/documents/save/${employeeId}`,
+        {
+          documentType,
+          documentCategory,
+          status: "saved",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success("Document saved successfully!");
+      fetchUploadedDocuments();
+    } catch (error) {
+      console.error("Error saving document:", error);
+      toast.error("Failed to save document");
+    }
+  };
+
   const handleDeleteDocument = async (documentId) => {
     if (!window.confirm("Are you sure you want to delete this document?")) {
       return;
@@ -186,9 +209,7 @@ const DocumentUploadSection = ({
                   <div className="flex items-center">
                     <span className="font-medium text-gray-900">
                       {requirement.name}
-                      {isRequired && (
-                        <span className="text-red-500 ml-1">*</span>
-                      )}
+                      <span className="text-blue-500 ml-1">(Optional)</span>
                     </span>
                     {validationInfo && (
                       <span className="ml-2">
@@ -200,11 +221,23 @@ const DocumentUploadSection = ({
                       </span>
                     )}
                   </div>
-                  {allowMultiple && (
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      Multiple files allowed
-                    </span>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {allowMultiple && (
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        Multiple files allowed
+                      </span>
+                    )}
+                    {hasDocuments && (
+                      <button
+                        onClick={() =>
+                          handleSaveDocument(documentType, category)
+                        }
+                        className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors"
+                      >
+                        Save
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Upload Area */}
@@ -297,9 +330,10 @@ const DocumentUploadSection = ({
                   </div>
                 )}
 
-                {!hasDocuments && isRequired && (
-                  <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                    This document is required and has not been uploaded yet.
+                {!hasDocuments && (
+                  <div className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                    This document is optional. You can upload it later if
+                    needed.
                   </div>
                 )}
               </div>
@@ -331,11 +365,11 @@ const DocumentUploadSection = ({
     <div className="space-y-6">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h2 className="text-lg font-semibold text-blue-900 mb-2">
-          Document Requirements for {employmentType} Employee
+          Document Upload for {employmentType} Employee
         </h2>
         <p className="text-blue-700 text-sm">
-          Please upload the required documents marked with (*). You can upload
-          multiple files where indicated.
+          All documents are optional. You can upload documents as needed and
+          save them individually.
         </p>
       </div>
 

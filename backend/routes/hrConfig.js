@@ -252,7 +252,7 @@ router.get(
       if (result.rows.length === 0) {
         // Return default settings if none exist
         return res.json({
-          total_annual_leaves: 27,
+          total_annual_leaves: 15,
           allow_half_day: true,
           approval_workflow: "manager_then_hr",
         });

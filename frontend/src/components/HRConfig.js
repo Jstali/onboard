@@ -34,7 +34,7 @@ const HRConfig = () => {
 
   // System Settings State
   const [systemSettings, setSystemSettings] = useState({
-    total_annual_leaves: 27,
+            total_annual_leaves: 15,
     allow_half_day: true,
     approval_workflow: "manager_then_hr",
   });

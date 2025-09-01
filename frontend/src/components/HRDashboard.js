@@ -11,6 +11,7 @@ import {
   FaCog,
   FaReceipt,
   FaChartBar,
+  FaFileAlt,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -26,6 +27,7 @@ import EmployeeCRUD from "./EmployeeCRUD";
 import HRConfig from "./HRConfig";
 import HRExpenseManagement from "./HRExpenseManagement";
 import HRExpenseAnalytics from "./HRExpenseAnalytics";
+import HRDocumentCollection from "./HRDocumentCollection";
 
 const HRDashboard = () => {
   const { logout } = useAuth();
@@ -95,6 +97,11 @@ const HRDashboard = () => {
   const tabs = [
     { id: "employees", label: "Employees", icon: FaUsers },
     { id: "forms", label: "Employee Forms", icon: FaClipboardList },
+    {
+      id: "document-collection",
+      label: "Document Collection",
+      icon: FaFileAlt,
+    },
     { id: "onboarded", label: "Onboarded Employees", icon: FaUsers },
     { id: "master", label: "Employee Master", icon: FaUsers },
     { id: "attendance", label: "Attendance", icon: FaCalendarAlt },
@@ -193,6 +200,13 @@ const HRDashboard = () => {
                 fetchMasterEmployees();
               }}
             />
+          </div>
+        )}
+
+        {/* Document Collection Tab */}
+        {activeTab === "document-collection" && (
+          <div>
+            <HRDocumentCollection />
           </div>
         )}
 

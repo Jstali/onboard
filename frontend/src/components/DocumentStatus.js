@@ -8,6 +8,7 @@ import {
   FaFileAlt,
   FaEdit,
   FaTrash,
+  FaDownload,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -19,6 +20,7 @@ const DocumentStatus = ({
   employmentType,
   isHR = false,
   readOnly = false,
+  onRefresh,
 }) => {
   const [validation, setValidation] = useState({});
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,10 @@ const DocumentStatus = ({
   const [overallStatus, setOverallStatus] = useState({});
   const [editingDocument, setEditingDocument] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAllDocuments, setShowAllDocuments] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState({});
+  const [showFileViewer, setShowFileViewer] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const fetchValidation = useCallback(async () => {
     try {
@@ -78,6 +84,52 @@ const DocumentStatus = ({
     setShowEditModal(true);
   };
 
+  const handleViewAllDocuments = () => {
+    setShowAllDocuments(true);
+  };
+
+  const fetchUploadedFiles = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `http://localhost:5001/api/documents/employee/${employeeId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUploadedFiles(response.data);
+    } catch (error) {
+      console.error("Error fetching uploaded files:", error);
+    }
+  };
+
+  const handleViewFile = async (documentType) => {
+    try {
+      await fetchUploadedFiles();
+      const allDocs = Object.values(uploadedFiles).flat();
+      const fileToView = allDocs.find(
+        (doc) => doc.document_type === documentType
+      );
+
+      if (fileToView) {
+        // Ensure all required properties exist
+        const safeFile = {
+          document_type: fileToView.document_type || documentType,
+          file_name: fileToView.file_name || "Unknown File",
+          file_type: fileToView.file_type || "application/octet-stream",
+          file_url: fileToView.file_url || "",
+          file_size: fileToView.file_size || 0,
+          uploaded_at: fileToView.uploaded_at || new Date().toISOString(),
+        };
+        setSelectedFile(safeFile);
+        setShowFileViewer(true);
+      } else {
+        toast.error("File not found");
+      }
+    } catch (error) {
+      console.error("Error viewing file:", error);
+      toast.error("Failed to load file");
+    }
+  };
+
   const handleDeleteDocument = async (documentType) => {
     if (!window.confirm("Are you sure you want to delete this document?")) {
       return;
@@ -85,25 +137,72 @@ const DocumentStatus = ({
 
     try {
       const token = localStorage.getItem("token");
-      // Find the document ID for this type
+      console.log("🔍 Trying to delete document:", documentType);
+
+      // Create mapping from type to document name
+      const typeToNameMapping = {
+        resume: "Updated Resume",
+        offer_letter: "Offer & Appointment Letter",
+        compensation_letter: "Latest Compensation Letter",
+        experience_letter: "Experience & Relieving Letter",
+        payslip: "Latest 3 Months Pay Slips",
+        form16: "Form 16 / Form 12B / Taxable Income Statement",
+        ssc_certificate: "SSC Certificate (10th)",
+        ssc_marksheet: "SSC Marksheet (10th)",
+        hsc_certificate: "HSC Certificate (12th)",
+        hsc_marksheet: "HSC Marksheet (12th)",
+        graduation_marksheet: "Graduation Consolidated Marksheet",
+        graduation_certificate: "Graduation Original/Provisional Certificate",
+        postgrad_marksheet: "Post-Graduation Marksheet",
+        postgrad_certificate: "Post-Graduation Certificate",
+        aadhaar: "Aadhaar Card",
+        pan: "PAN Card",
+        passport: "Passport",
+      };
+
+      const documentName = typeToNameMapping[documentType];
+      console.log("🔍 Mapped document name:", documentName);
+
+      if (!documentName) {
+        console.log("❌ No mapping found for document type:", documentType);
+        toast.error("Document type not found");
+        return;
+      }
+
+      // Find the document ID for this type from document_collection
       const documents = await axios.get(
-        `http://localhost:5001/api/documents/employee/${employeeId}`,
+        `http://localhost:5001/api/hr/document-collection/employee/${employeeId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const allDocs = Object.values(documents.data).flat();
+      const allDocs = documents.data.documents || [];
+      console.log("🔍 All documents from API:", allDocs);
+      console.log("🔍 Looking for document with name:", documentName);
+
       const docToDelete = allDocs.find(
-        (doc) => doc.document_type === documentType
+        (doc) => doc.document_name === documentName
       );
+
+      console.log("🔍 Found document to delete:", docToDelete);
 
       if (docToDelete) {
         await axios.delete(
-          `http://localhost:5001/api/documents/${docToDelete.id}`,
+          `http://localhost:5001/api/hr/document-collection/${docToDelete.id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
         toast.success("Document deleted successfully!");
         fetchValidation();
+        // Refresh the parent component if it has a refresh function
+        if (onRefresh) {
+          onRefresh();
+        }
+      } else {
+        console.log(
+          "❌ Document not found. Available documents:",
+          allDocs.map((d) => d.document_name)
+        );
+        toast.error("Document not found");
       }
     } catch (error) {
       console.error("Error deleting document:", error);
@@ -383,7 +482,10 @@ const DocumentStatus = ({
                   <FaCheck className="mr-1" />
                   Approve Employee
                 </button>
-                <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <button
+                  onClick={handleViewAllDocuments}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
                   <FaEye className="mr-1" />
                   View All Documents
                 </button>
@@ -469,6 +571,366 @@ const DocumentStatus = ({
                   Delete Document
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View All Documents Modal */}
+      {showAllDocuments && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                All Documents - {employeeName}
+              </h3>
+              <button
+                onClick={() => setShowAllDocuments(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="sr-only">Close</span>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
+              {Object.keys(validation).map((category) => (
+                <div key={category} className="mb-6">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3 border-b pb-2">
+                    {category.replace(/_/g, " ").toUpperCase()}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {validation[category].map((doc) => (
+                      <div
+                        key={doc.type}
+                        className="border rounded-lg p-4 bg-gray-50"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-medium text-gray-900">
+                            {doc.type.replace(/_/g, " ").toUpperCase()}
+                          </h5>
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              doc.uploaded > 0
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {doc.uploaded > 0 ? "Uploaded" : "Missing"}
+                          </span>
+                        </div>
+
+                        {doc.required && (
+                          <span className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded mb-2">
+                            Required
+                          </span>
+                        )}
+
+                        {doc.uploaded > 0 && (
+                          <div className="mt-2">
+                            <p className="text-sm text-gray-600">
+                              Files uploaded: {doc.uploaded}
+                            </p>
+                            {isHR && (
+                              <div className="mt-2 flex space-x-2">
+                                <button
+                                  onClick={() => handleViewFile(doc.type)}
+                                  className="text-green-600 hover:text-green-800 text-sm"
+                                  title="View File"
+                                >
+                                  <FaEye className="inline mr-1" />
+                                  View
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleEditDocument(doc.type, category)
+                                  }
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
+                                >
+                                  <FaEdit className="inline mr-1" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteDocument(doc.type)}
+                                  className="text-red-600 hover:text-red-800 text-sm"
+                                >
+                                  <FaTrash className="inline mr-1" />
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {doc.uploaded === 0 && (
+                          <p className="text-sm text-gray-500">
+                            No documents uploaded yet
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowAllDocuments(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* File Viewer Modal */}
+      {showFileViewer && selectedFile && selectedFile.file_type && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                View Document -{" "}
+                {selectedFile.document_type.replace(/_/g, " ").toUpperCase()}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowFileViewer(false);
+                  setSelectedFile(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="sr-only">Close</span>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      File Name:
+                    </span>
+                    <p className="text-gray-900">
+                      {selectedFile.file_name || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      File Type:
+                    </span>
+                    <p className="text-gray-900">
+                      {selectedFile.file_type || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Upload Date:
+                    </span>
+                    <p className="text-gray-900">
+                      {selectedFile.uploaded_at
+                        ? new Date(
+                            selectedFile.uploaded_at
+                          ).toLocaleDateString()
+                        : "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      File Size:
+                    </span>
+                    <p className="text-gray-900">
+                      {selectedFile.file_size
+                        ? (selectedFile.file_size / 1024 / 1024).toFixed(2) +
+                          " MB"
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border rounded-lg overflow-hidden">
+              {/* Debug info */}
+              {console.log("🔍 Document Debug:", {
+                selectedFile,
+                fileType: selectedFile?.file_type,
+                fileUrl: selectedFile?.file_url,
+                fileName: selectedFile?.file_name,
+              })}
+
+              {selectedFile &&
+              (selectedFile.file_type?.startsWith("image/") ||
+                selectedFile.file_name
+                  ?.toLowerCase()
+                  .match(/\.(jpg|jpeg|png|gif|bmp|webp)$/)) ? (
+                <img
+                  src={`http://localhost:5001${selectedFile.file_url || ""}`}
+                  alt={selectedFile.file_name || "Image"}
+                  className="w-full h-auto max-h-96 object-contain"
+                  onError={(e) => {
+                    console.error("❌ Image load error:", e);
+                    toast.error("Failed to load image preview");
+                  }}
+                />
+              ) : selectedFile &&
+                selectedFile.file_url && // Ensure file_url exists
+                (selectedFile.file_type === "application/pdf" ||
+                  selectedFile.file_type === "application/octet-stream" ||
+                  selectedFile.file_name?.toLowerCase().endsWith(".pdf")) ? (
+                <div className="relative">
+                  {(() => {
+                    // Construct the file URL properly
+                    const fileUrl = selectedFile.file_url;
+                    const fullUrl = fileUrl
+                      ? `http://localhost:5001${fileUrl}`
+                      : "";
+
+                    console.log("🔍 File URL Debug:", {
+                      originalUrl: fileUrl,
+                      fullUrl: fullUrl,
+                      fileName: selectedFile.file_name,
+                      fileType: selectedFile.file_type,
+                    });
+
+                    return (
+                      <iframe
+                        src={fullUrl}
+                        className="w-full h-96"
+                        title={selectedFile.file_name || "PDF"}
+                        onLoad={() => {
+                          console.log("✅ PDF iframe loaded successfully");
+                        }}
+                        onError={(e) => {
+                          console.error("❌ PDF load error:", e);
+                          console.error("❌ Failed URL:", fullUrl);
+                          // Don't show error toast, just log it
+                          console.log(
+                            "⚠️ PDF preview failed, showing download option instead"
+                          );
+                        }}
+                        style={{ border: "1px solid #e5e7eb" }}
+                      />
+                    );
+                  })()}
+                  <div className="absolute top-2 right-2 bg-white bg-opacity-75 px-2 py-1 rounded text-xs text-gray-600">
+                    PDF Preview
+                  </div>
+                  <div className="absolute bottom-2 left-2 bg-white bg-opacity-75 px-2 py-1 rounded text-xs text-gray-600">
+                    {selectedFile?.file_name || "Document"}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-64 bg-gray-100">
+                  <div className="text-center">
+                    <FaFileAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-gray-500 mb-4">
+                      Preview not available for this file type
+                      {selectedFile?.file_name && (
+                        <span className="block text-sm text-gray-400 mt-1">
+                          File: {selectedFile.file_name}
+                        </span>
+                      )}
+                      {selectedFile?.file_type && (
+                        <span className="block text-sm text-gray-400">
+                          Type: {selectedFile.file_type}
+                        </span>
+                      )}
+                    </p>
+                    <a
+                      href={
+                        selectedFile && selectedFile.file_url
+                          ? `http://localhost:5001${selectedFile.file_url}`
+                          : "#"
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                      onClick={(e) => {
+                        if (!selectedFile || !selectedFile.file_url) {
+                          e.preventDefault();
+                          // Don't show error toast, just log it
+                          console.log(
+                            "⚠️ Download not available - missing file_url"
+                          );
+                        } else {
+                          console.log(
+                            "✅ Download initiated:",
+                            selectedFile.file_url
+                          );
+                        }
+                      }}
+                    >
+                      <FaDownload className="mr-2" />
+                      Download File
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end mt-6 space-x-3">
+              <a
+                href={
+                  selectedFile.file_url
+                    ? `http://localhost:5001${selectedFile.file_url}`
+                    : "#"
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                onClick={(e) => {
+                  if (!selectedFile.file_url) {
+                    e.preventDefault();
+                    // Don't show error toast, just log it
+                    console.log("⚠️ Download not available - missing file_url");
+                  } else {
+                    console.log(
+                      "✅ Download initiated:",
+                      selectedFile.file_url
+                    );
+                  }
+                }}
+              >
+                <FaDownload className="mr-2" />
+                Download
+              </a>
+              <button
+                onClick={() => {
+                  setShowFileViewer(false);
+                  setSelectedFile(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

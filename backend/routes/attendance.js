@@ -459,7 +459,7 @@ router.post(
           req.user.userId,
           employee.employee_name,
           leaveType,
-          27, // Default leave balance
+          15, // Default leave balance
           startDate,
           endDate || startDate, // Use startDate if endDate is null
           totalDays,
@@ -615,6 +615,64 @@ router.get("/hr/details", [authenticateToken, requireHR], async (req, res) => {
     res.status(500).json({ error: "Failed to fetch attendance details" });
   }
 });
+
+// HR: Update attendance record (status/reason)
+router.put(
+  "/:id",
+  [
+    authenticateToken,
+    requireHR,
+    body("status").optional().isIn(["Present", "Work From Home", "Leave"]),
+    body("reason").optional().isString(),
+  ],
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { status, reason } = req.body;
+
+      if (typeof status === "undefined" && typeof reason === "undefined") {
+        return res
+          .status(400)
+          .json({ error: "Provide at least one of status or reason" });
+      }
+
+      // Ensure record exists
+      const existing = await pool.query(
+        "SELECT id FROM attendance WHERE id = $1",
+        [id]
+      );
+      if (existing.rows.length === 0) {
+        return res.status(404).json({ error: "Attendance record not found" });
+      }
+
+      // Perform update with COALESCE to keep previous values when not provided
+      const result = await pool.query(
+        `UPDATE attendance
+         SET status = COALESCE($1, status),
+             reason = COALESCE($2, reason)
+         WHERE id = $3
+         RETURNING id, employee_id, date, status, reason, clock_in_time, clock_out_time`,
+        [status ?? null, typeof reason === "undefined" ? null : reason, id]
+      );
+
+      return res.json({
+        message: "Attendance record updated successfully",
+        record: result.rows[0],
+      });
+    } catch (error) {
+      console.error("Update attendance error:", error);
+      return res
+        .status(500)
+        .json({ error: "Failed to update attendance record" });
+    }
+  }
+);
 
 // Delete attendance record (HR only)
 router.delete("/:id", [authenticateToken, requireHR], async (req, res) => {

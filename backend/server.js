@@ -102,6 +102,17 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+  if (req.path.includes('document-collection')) {
+    console.log(`🔍 Document collection request: ${req.method} ${req.path}`);
+    console.log(`🔍 Request body:`, req.body);
+    console.log(`🔍 Request params:`, req.params);
+  }
+  next();
+});
+
 // Static files
 app.use("/uploads", express.static("uploads"));
 
@@ -122,7 +133,11 @@ app.get("/api/health", (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error("❌ Global error handler caught:", err.message);
+  console.error("❌ Error stack:", err.stack);
+  console.error("❌ Request path:", req.path);
+  console.error("❌ Request method:", req.method);
+  console.error("❌ Request headers:", req.headers);
   res.status(500).json({
     error: "Something went wrong!",
     message:

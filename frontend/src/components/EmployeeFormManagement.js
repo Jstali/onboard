@@ -524,12 +524,31 @@ const EmployeeFormManagement = ({ onRefresh }) => {
               <h3 className="text-lg font-medium text-gray-900">
                 Employee Form Details
               </h3>
-              <button
-                onClick={() => setShowFormDetails(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => {
+                    setShowFormDetails(false);
+                    setSelectedEmployeeForDocs({
+                      id: selectedForm.employee_id,
+                      name:
+                        selectedForm.form_data?.name ||
+                        `${selectedForm.first_name} ${selectedForm.last_name}`,
+                      employmentType: selectedForm.employee_type,
+                    });
+                    setShowDocumentStatus(true);
+                  }}
+                  className="inline-flex items-center px-3 py-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <FaFileAlt className="mr-2" />
+                  View Documents
+                </button>
+                <button
+                  onClick={() => setShowFormDetails(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -681,6 +700,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   }
                   employmentType={selectedForm.employee_type}
                   isHR={true}
+                  onRefresh={fetchEmployeeForms}
                 />
               </div>
 
@@ -740,7 +760,24 @@ const EmployeeFormManagement = ({ onRefresh }) => {
               )}
             </div>
 
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-between items-center mt-6">
+              <button
+                onClick={() => {
+                  setShowFormDetails(false);
+                  setSelectedEmployeeForDocs({
+                    id: selectedForm.employee_id,
+                    name:
+                      selectedForm.form_data?.name ||
+                      `${selectedForm.first_name} ${selectedForm.last_name}`,
+                    employmentType: selectedForm.employee_type,
+                  });
+                  setShowDocumentStatus(true);
+                }}
+                className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <FaFileAlt className="mr-2" />
+                View All Documents
+              </button>
               <button
                 onClick={() => setShowFormDetails(false)}
                 className="btn-secondary"
@@ -789,6 +826,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
               employeeName={selectedEmployeeForDocs.name}
               employmentType={selectedEmployeeForDocs.employmentType}
               isHR={true}
+              onRefresh={fetchEmployeeForms}
             />
 
             <div className="flex justify-end mt-6">

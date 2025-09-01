@@ -7,6 +7,10 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  // Add timeout configuration to prevent hanging
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000, // 10 seconds
+  socketTimeout: 10000, // 10 seconds
 });
 
 async function sendOnboardingEmail(to, tempPassword) {
@@ -105,7 +109,7 @@ async function sendLeaveRequestToManager(managerEmail, leaveRequest) {
     from: `"${leaveRequest.employeeName}" <${process.env.EMAIL_USER}>`,
     to: managerEmail,
     replyTo: leaveRequest.employeeEmail, // Set reply-to to employee's email
-    subject: `Leave Request from ${leaveRequest.employeeName} - Action Required`,
+    subject: `Leave Request from ${leaveRequest.employeeName} - Primary Manager Action Required`,
     text: `Leave Request Details:\n\nEmployee: ${
       leaveRequest.employeeName
     }\nEmployee Email: ${leaveRequest.employeeEmail}\nLeave Type: ${
@@ -123,8 +127,8 @@ async function sendLeaveRequestToManager(managerEmail, leaveRequest) {
     }?action=reject&token=${leaveRequest.approvalToken}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Leave Request - Action Required</h2>
-        <p>You have received a leave request that requires your approval.</p>
+        <h2 style="color: #333;">Leave Request - Primary Manager Action Required</h2>
+        <p>As the primary manager, you have received a leave request that requires your approval.</p>
         
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #007bff; margin-top: 0;">Request Details</h3>
@@ -176,6 +180,10 @@ async function sendLeaveRequestToManager(managerEmail, leaveRequest) {
           <p style="margin: 0; color: #0066cc;"><strong>Reply:</strong> You can reply to this email to communicate directly with ${
             leaveRequest.employeeName
           } at ${leaveRequest.employeeEmail}</p>
+        </div>
+        
+        <div style="background-color: #f0f8ff; border: 1px solid #b3d9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #0066cc;"><strong>Primary Manager Role:</strong> As the primary manager, you are responsible for the initial approval/rejection of this leave request. Optional managers will be notified after your decision.</p>
         </div>
         
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
@@ -389,12 +397,12 @@ async function sendExpenseRequestToManager(managerEmail, expenseRequest) {
     from: `"${expenseRequest.employeeName}" <${process.env.EMAIL_USER}>`,
     to: managerEmail,
     replyTo: expenseRequest.employeeEmail, // Set reply-to to employee's email
-    subject: `Expense Request from ${expenseRequest.employeeName} - Action Required`,
+    subject: `Expense Request from ${expenseRequest.employeeName} - Primary Manager Action Required`,
     text: `Expense Request Details:\n\nEmployee: ${expenseRequest.employeeName}\nEmployee Email: ${expenseRequest.employeeEmail}\nCategory: ${expenseRequest.expenseCategory}\nType: ${expenseRequest.expenseType}\nAmount: ${expenseRequest.amount} ${expenseRequest.currency}\nDate: ${expenseRequest.expenseDate}\nDescription: ${expenseRequest.description}\nAttachment: ${expenseRequest.attachmentName}\n\nPlease approve or reject this request by clicking the links below:\n\nApprove: http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=approve&token=${expenseRequest.approvalToken}\nReject: http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=reject&token=${expenseRequest.approvalToken}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Expense Request - Action Required</h2>
-        <p>You have received an expense request that requires your approval.</p>
+        <h2 style="color: #333;">Expense Request - Primary Manager Action Required</h2>
+        <p>As the primary manager, you have received an expense request that requires your approval.</p>
         
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #007bff; margin-top: 0;">Request Details</h3>
@@ -427,6 +435,10 @@ async function sendExpenseRequestToManager(managerEmail, expenseRequest) {
         
         <div style="background-color: #e7f3ff; border: 1px solid #b3d9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <p style="margin: 0; color: #0066cc;"><strong>Reply:</strong> You can reply to this email to communicate directly with ${expenseRequest.employeeName} at ${expenseRequest.employeeEmail}</p>
+        </div>
+        
+        <div style="background-color: #f0f8ff; border: 1px solid #b3d9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #0066cc;"><strong>Primary Manager Role:</strong> As the primary manager, you are responsible for the initial approval/rejection of this expense request. Optional managers will be notified after your decision.</p>
         </div>
         
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
@@ -513,6 +525,11 @@ async function sendExpenseApprovalToEmployee(
   status,
   approverName
 ) {
+  // Add timeout wrapper to prevent hanging
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error("Email timeout after 8 seconds")), 8000);
+  });
+
   const mailOptions = {
     from: `"${approverName} (${
       status === "approved" ? "Approver" : "Reviewer"
@@ -592,7 +609,8 @@ async function sendExpenseApprovalToEmployee(
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    // Race between email sending and timeout
+    await Promise.race([transporter.sendMail(mailOptions), timeoutPromise]);
     console.log(
       "✅ Expense approval notification sent to employee: " + employeeEmail
     );

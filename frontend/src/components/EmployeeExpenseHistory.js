@@ -89,6 +89,35 @@ const EmployeeExpenseHistory = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
+      {/* Back Button */}
+      <div className="mb-4">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.history.back();
+          }}
+          onMouseDown={(e) => e.preventDefault()}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer select-none"
+          type="button"
+        >
+          <svg
+            className="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          Back
+        </button>
+      </div>
+
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">
           My Expense Requests

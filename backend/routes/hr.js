@@ -41,7 +41,24 @@ const upload = multer({
 });
 
 // Apply authentication to all HR routes
+router.use((req, res, next) => {
+  console.log("🔍 HR route middleware hit:", req.method, req.path);
+  next();
+});
 router.use(authenticateToken, requireHR);
+
+// Test route to verify routing is working
+router.get("/test", (req, res) => {
+  console.log("🔍 Test route hit");
+  res.json({ message: "HR routes are working" });
+});
+
+// Test route for document collection
+router.put("/document-collection/test", (req, res) => {
+  console.log("🔍 Document collection test route hit");
+  console.log("🔍 Request body:", req.body);
+  res.json({ message: "Document collection test route working" });
+});
 
 // Get available managers for assignment
 router.get("/managers", async (req, res) => {
@@ -76,6 +93,140 @@ function generateTempPassword() {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+}
+
+// Helper function to create document collection records for an employee
+async function createDocumentCollectionForEmployee(
+  employeeId,
+  userEmail,
+  employmentType
+) {
+  try {
+    // Get employee details
+    const employeeResult = await pool.query(
+      "SELECT first_name, last_name FROM users WHERE id = $1",
+      [employeeId]
+    );
+
+    if (employeeResult.rows.length === 0) {
+      console.error("Employee not found for document collection creation");
+      return;
+    }
+
+    const employee = employeeResult.rows[0];
+    const employeeName = `${employee.first_name} ${employee.last_name}`.trim();
+
+    // Get required documents based on employment type
+    const getRequiredDocumentsForType = (type) => {
+      switch (type) {
+        case "Intern":
+          return [
+            "Updated Resume",
+            "SSC Certificate (10th)",
+            "SSC Marksheet (10th)",
+            "HSC Certificate (12th)",
+            "HSC Marksheet (12th)",
+            "Graduation Consolidated Marksheet",
+            "Graduation Original/Provisional Certificate",
+            "Aadhaar Card",
+            "PAN Card",
+          ];
+        case "Full-Time":
+        case "Manager":
+          return [
+            "Updated Resume",
+            "Offer & Appointment Letter",
+            "Latest Compensation Letter",
+            "Experience & Relieving Letter",
+            "Latest 3 Months Pay Slips",
+            "Form 16 / Form 12B / Taxable Income Statement",
+            "SSC Certificate (10th)",
+            "SSC Marksheet (10th)",
+            "HSC Certificate (12th)",
+            "HSC Marksheet (12th)",
+            "Graduation Consolidated Marksheet",
+            "Graduation Original/Provisional Certificate",
+            "Aadhaar Card",
+            "PAN Card",
+            "Passport",
+          ];
+        case "Contract":
+          return [
+            "Updated Resume",
+            "Offer & Appointment Letter",
+            "Latest Compensation Letter",
+            "Experience & Relieving Letter",
+            "Latest 3 Months Pay Slips",
+            "Form 16 / Form 12B / Taxable Income Statement",
+            "SSC Certificate (10th)",
+            "SSC Marksheet (10th)",
+            "HSC Certificate (12th)",
+            "HSC Marksheet (12th)",
+            "Graduation Consolidated Marksheet",
+            "Graduation Original/Provisional Certificate",
+            "Aadhaar Card",
+            "PAN Card",
+          ];
+        default:
+          return [
+            "Updated Resume",
+            "SSC Certificate (10th)",
+            "SSC Marksheet (10th)",
+            "HSC Certificate (12th)",
+            "HSC Marksheet (12th)",
+            "Graduation Consolidated Marksheet",
+            "Graduation Original/Provisional Certificate",
+            "Aadhaar Card",
+            "PAN Card",
+          ];
+      }
+    };
+
+    const requiredDocuments = getRequiredDocumentsForType(employmentType);
+
+    // Get document templates for required documents only
+    const templatesResult = await pool.query(
+      "SELECT document_name, document_type FROM document_templates WHERE is_active = true AND document_name = ANY($1)",
+      [requiredDocuments]
+    );
+
+    // Calculate due date (30 days from now)
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 30);
+
+    // Create document collection records for required documents only
+    let createdCount = 0;
+    for (const template of templatesResult.rows) {
+      await pool.query(
+        `
+        INSERT INTO document_collection (
+          employee_id, employee_name, emp_id, department, join_date, due_date,
+          document_name, document_type, status, notes
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ON CONFLICT (employee_id, document_name) DO NOTHING
+        `,
+        [
+          employeeId,
+          employeeName,
+          employeeId, // Using user ID as emp_id for now
+          "N/A", // Department will be updated later
+          new Date().toISOString().split("T")[0], // Today's date as join date
+          dueDate.toISOString().split("T")[0],
+          template.document_name,
+          template.document_type,
+          "Pending",
+          "Document required for onboarding",
+        ]
+      );
+      createdCount++;
+    }
+
+    console.log(
+      `✅ Created ${createdCount} document collection records for employee ${employeeId} (${employmentType})`
+    );
+  } catch (error) {
+    console.error("Error creating document collection for employee:", error);
+  }
 }
 
 // Add new employee
@@ -260,6 +411,230 @@ router.get("/employee-forms", async (req, res) => {
   }
 });
 
+// Get approved employee forms for document collection (only employees with approved forms)
+router.get("/approved-employee-forms", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        ef.id,
+        ef.employee_id,
+        ef.type as employee_type,
+        ef.form_data,
+        ef.files,
+        ef.status,
+        ef.submitted_at,
+        ef.updated_at,
+        ef.reviewed_by,
+        ef.reviewed_at,
+        ef.review_notes,
+        u.email as user_email,
+        u.first_name,
+        u.last_name,
+        u.phone,
+        u.address,
+        u.emergency_contact_name,
+        u.emergency_contact_phone,
+        u.emergency_contact_relationship,
+        u.created_at as user_created_at,
+        em.employee_id as assigned_employee_id,
+        em.manager_name as assigned_manager,
+        em.department,
+        em.designation,
+        em.salary_band,
+        em.location
+      FROM employee_forms ef
+      JOIN users u ON ef.employee_id = u.id
+      LEFT JOIN employee_master em ON u.email = em.company_email
+      WHERE ef.status = 'approved'
+      ORDER BY ef.submitted_at DESC
+    `);
+
+    res.json({ forms: result.rows });
+  } catch (error) {
+    console.error("Get approved employee forms error:", error);
+    res.status(500).json({ error: "Failed to get approved employee forms" });
+  }
+});
+
+// Sync missing document collection records for existing employees and update status based on uploaded documents
+router.post("/sync-document-collection", async (req, res) => {
+  try {
+    // Get all employees who have submitted forms but no document collection records
+    const missingDocsResult = await pool.query(`
+      SELECT 
+        ef.employee_id,
+        ef.form_data,
+        u.first_name,
+        u.last_name,
+        u.email
+      FROM employee_forms ef
+      JOIN users u ON ef.employee_id = u.id
+      WHERE ef.employee_id NOT IN (
+        SELECT DISTINCT employee_id FROM document_collection
+      )
+    `);
+
+    let createdCount = 0;
+
+    for (const employee of missingDocsResult.rows) {
+      const employeeName =
+        `${employee.first_name} ${employee.last_name}`.trim();
+
+      // Get employment type from form data
+      const employmentType = employee.form_data.employmentType || "Intern";
+
+      // Get required documents based on employment type
+      const getRequiredDocumentsForType = (type) => {
+        switch (type) {
+          case "Intern":
+            return [
+              "Updated Resume",
+              "SSC Certificate (10th)",
+              "SSC Marksheet (10th)",
+              "HSC Certificate (12th)",
+              "HSC Marksheet (12th)",
+              "Graduation Consolidated Marksheet",
+              "Graduation Original/Provisional Certificate",
+              "Aadhaar Card",
+              "PAN Card",
+            ];
+          case "Full-Time":
+          case "Manager":
+            return [
+              "Updated Resume",
+              "Offer & Appointment Letter",
+              "Latest Compensation Letter",
+              "Experience & Relieving Letter",
+              "Latest 3 Months Pay Slips",
+              "Form 16 / Form 12B / Taxable Income Statement",
+              "SSC Certificate (10th)",
+              "SSC Marksheet (10th)",
+              "HSC Certificate (12th)",
+              "HSC Marksheet (12th)",
+              "Graduation Consolidated Marksheet",
+              "Graduation Original/Provisional Certificate",
+              "Aadhaar Card",
+              "PAN Card",
+              "Passport",
+            ];
+          case "Contract":
+            return [
+              "Updated Resume",
+              "Offer & Appointment Letter",
+              "Latest Compensation Letter",
+              "Experience & Relieving Letter",
+              "Latest 3 Months Pay Slips",
+              "Form 16 / Form 12B / Taxable Income Statement",
+              "SSC Certificate (10th)",
+              "SSC Marksheet (10th)",
+              "HSC Certificate (12th)",
+              "HSC Marksheet (12th)",
+              "Graduation Consolidated Marksheet",
+              "Graduation Original/Provisional Certificate",
+              "Aadhaar Card",
+              "PAN Card",
+            ];
+          default:
+            return [
+              "Updated Resume",
+              "SSC Certificate (10th)",
+              "SSC Marksheet (10th)",
+              "HSC Certificate (12th)",
+              "HSC Marksheet (12th)",
+              "Graduation Consolidated Marksheet",
+              "Graduation Original/Provisional Certificate",
+              "Aadhaar Card",
+              "PAN Card",
+            ];
+        }
+      };
+
+      const requiredDocuments = getRequiredDocumentsForType(employmentType);
+
+      // Get document templates for required documents only
+      const templatesResult = await pool.query(
+        "SELECT document_name, document_type FROM document_templates WHERE is_active = true AND document_name = ANY($1)",
+        [requiredDocuments]
+      );
+
+      // Calculate due date (30 days from join date)
+      const joinDate = new Date(employee.form_data.doj);
+      const dueDate = new Date(joinDate);
+      dueDate.setDate(dueDate.getDate() + 30);
+
+      // Create document collection records for required documents only
+      for (const template of templatesResult.rows) {
+        await pool.query(
+          `
+          INSERT INTO document_collection (
+            employee_id, employee_name, emp_id, department, join_date, due_date,
+            document_name, document_type, status, notes
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          `,
+          [
+            employee.employee_id,
+            employeeName,
+            employee.employee_id, // Using user ID as emp_id for now
+            employee.form_data.department || "N/A",
+            employee.form_data.doj,
+            dueDate.toISOString().split("T")[0],
+            template.document_name,
+            template.document_type,
+            "Pending",
+            "Document required for onboarding",
+          ]
+        );
+        createdCount++;
+      }
+    }
+
+    // Now update existing document collection records based on uploaded documents
+    const updateResult = await pool.query(`
+      UPDATE document_collection dc
+      SET 
+        status = CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM employee_documents ed 
+            WHERE ed.employee_id = dc.employee_id 
+            AND (
+              (ed.document_type = 'resume' AND dc.document_name LIKE '%Resume%')
+              OR (ed.document_type = 'offer_letter' AND dc.document_name LIKE '%Offer%')
+              OR (ed.document_type = 'compensation_letter' AND dc.document_name LIKE '%Compensation%')
+              OR (ed.document_type = 'experience_letter' AND dc.document_name LIKE '%Experience%')
+              OR (ed.document_type = 'payslip' AND dc.document_name LIKE '%Pay%')
+              OR (ed.document_type = 'form16' AND dc.document_name LIKE '%Form 16%')
+              OR (ed.document_type = 'ssc_certificate' AND dc.document_name LIKE '%SSC%Certificate%')
+              OR (ed.document_type = 'ssc_marksheet' AND dc.document_name LIKE '%SSC%Marksheet%')
+              OR (ed.document_type = 'hsc_certificate' AND dc.document_name LIKE '%HSC%Certificate%')
+              OR (ed.document_type = 'hsc_marksheet' AND dc.document_name LIKE '%HSC%Marksheet%')
+              OR (ed.document_type = 'graduation_marksheet' AND dc.document_name LIKE '%Graduation%Marksheet%')
+              OR (ed.document_type = 'graduation_certificate' AND dc.document_name LIKE '%Graduation%Certificate%')
+              OR (ed.document_type = 'postgrad_marksheet' AND dc.document_name LIKE '%Post-Graduation%Marksheet%')
+              OR (ed.document_type = 'postgrad_certificate' AND dc.document_name LIKE '%Post-Graduation%Certificate%')
+              OR (ed.document_type = 'aadhaar' AND dc.document_name LIKE '%Aadhaar%')
+              OR (ed.document_type = 'pan' AND dc.document_name LIKE '%PAN%')
+              OR (ed.document_type = 'passport' AND dc.document_name LIKE '%Passport%')
+            )
+          ) THEN 'Received'
+          ELSE dc.status
+        END,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE dc.status = 'Pending'
+      RETURNING id
+    `);
+
+    res.json({
+      message: `Created ${createdCount} document collection records for ${missingDocsResult.rows.length} employees and updated ${updateResult.rows.length} existing records`,
+      createdCount,
+      employeeCount: missingDocsResult.rows.length,
+      updatedCount: updateResult.rows.length,
+    });
+  } catch (error) {
+    console.error("Sync document collection error:", error);
+    res.status(500).json({ error: "Failed to sync document collection" });
+  }
+});
+
 // Delete employee form
 router.delete("/employee-forms/:id", async (req, res) => {
   try {
@@ -335,9 +710,16 @@ router.put("/employee-forms/:id/approve", async (req, res) => {
         [form.employee_id, form.user_email]
       );
 
+      // Create document collection records for the approved employee
+      await createDocumentCollectionForEmployee(
+        form.employee_id,
+        form.user_email,
+        form.employee_type
+      );
+
       res.json({
         message:
-          "Employee form approved successfully. Employee moved to onboarded list.",
+          "Employee form approved successfully. Employee moved to onboarded list and document collection created.",
         status: "approved",
       });
     } else if (action === "reject") {
@@ -658,18 +1040,84 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
       return res.status(400).json({ error: "File is empty or has no data" });
     }
 
-    // Validate required columns
+    // Validate required columns with flexible mapping
     const requiredColumns = ["employee_name", "company_email", "type", "doj"];
     const firstRow = jsonData[0];
-    const missingColumns = requiredColumns.filter((col) => !(col in firstRow));
+    const foundColumns = Object.keys(firstRow);
+
+    console.log("🔍 Found columns in Excel:", foundColumns);
+    console.log("🔍 First row data:", firstRow);
+
+    // Create column mapping for common variations
+    const columnMapping = {
+      employee_name: [
+        "employee_name",
+        "employee_",
+        "name",
+        "employee_name",
+        "employee",
+      ],
+      company_email: [
+        "company_email",
+        "company_type",
+        "email",
+        "company_email",
+        "email_address",
+      ],
+      type: [
+        "type",
+        "employment_type",
+        "employee_type",
+        "emp_type",
+        "category",
+        "emp_type",
+      ],
+      doj: [
+        "doj",
+        "date_of_joining",
+        "joining_date",
+        "start_date",
+        "hire_date",
+      ],
+    };
+
+    // Check if we can map the found columns to required columns
+    const mappedColumns = {};
+    const missingColumns = [];
+
+    for (const requiredCol of requiredColumns) {
+      const possibleNames = columnMapping[requiredCol];
+      const foundCol = foundColumns.find((col) =>
+        possibleNames.some(
+          (name) =>
+            col.toLowerCase().replace(/[^a-z0-9]/g, "") ===
+            name.toLowerCase().replace(/[^a-z0-9]/g, "")
+        )
+      );
+
+      if (foundCol) {
+        mappedColumns[requiredCol] = foundCol;
+      } else {
+        missingColumns.push(requiredCol);
+      }
+    }
 
     if (missingColumns.length > 0) {
       return res.status(400).json({
         error: `Missing required columns: ${missingColumns.join(", ")}`,
         requiredColumns: requiredColumns,
-        foundColumns: Object.keys(firstRow),
+        foundColumns: foundColumns,
+        suggestions: {
+          employee_name: "Look for: employee_name, employee_, name, employee",
+          company_email:
+            "Look for: company_email, company_type, email, email_address",
+          type: "Look for: type, employment_type, employee_type, emp_type, category",
+          doj: "Look for: doj, date_of_joining, joining_date, start_date, hire_date",
+        },
       });
     }
+
+    console.log("✅ Column mapping successful:", mappedColumns);
 
     const results = {
       total: jsonData.length,
@@ -686,66 +1134,184 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
       const rowNumber = i + 2; // Excel row number (accounting for header)
 
       try {
+        // Map the data using the column mapping
+        const mappedData = {
+          employee_name: row[mappedColumns.employee_name],
+          company_email: row[mappedColumns.company_email],
+          type: row[mappedColumns.type],
+          doj: row[mappedColumns.doj],
+          employee_id:
+            row.employee_id ||
+            row.employee_id ||
+            row.employeeid ||
+            row.employee_id,
+          manager_name: row.manager_name || row.managers || row.manager,
+          status: row.status || "active",
+          department: row.department || null,
+          designation: row.designation || null,
+          salary_band: row.salary_band || row.salaryband || null,
+          location: row.location || null,
+        };
+
         // Validate required fields
-        if (!row.employee_name || !row.company_email || !row.type || !row.doj) {
+        if (
+          !mappedData.employee_name ||
+          !mappedData.company_email ||
+          !mappedData.type ||
+          !mappedData.doj
+        ) {
           results.errors.push({
             row: rowNumber,
             error: "Missing required fields",
-            data: row,
+            data: mappedData,
+            originalData: row,
           });
           continue;
         }
 
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(row.company_email)) {
+        if (!emailRegex.test(mappedData.company_email)) {
           results.errors.push({
             row: rowNumber,
             error: "Invalid email format",
-            data: row,
+            data: mappedData,
+            originalData: row,
           });
           continue;
         }
 
-        // Validate employment type
+        // Validate employment type (case-insensitive) - matching SQL procedure logic
         const validTypes = ["Intern", "Contract", "Full-Time", "Manager"];
-        if (!validTypes.includes(row.type)) {
+        const normalizedType = mappedData.type.trim();
+
+        // Type normalization matching your SQL procedure
+        const typeNormalization = {
+          "full time": "Full-Time",
+          intern: "Intern",
+          contract: "Contract",
+          manager: "Manager",
+        };
+
+        let matchedType = typeNormalization[normalizedType.toLowerCase()];
+
+        if (!matchedType) {
+          // Fallback to original logic for other variations
+          matchedType = validTypes.find(
+            (type) =>
+              type.toLowerCase() === normalizedType.toLowerCase() ||
+              type.toLowerCase().replace(/\s+/g, "") ===
+                normalizedType.toLowerCase().replace(/\s+/g, "")
+          );
+        }
+
+        if (!matchedType) {
           results.errors.push({
             row: rowNumber,
-            error: `Invalid type. Must be one of: ${validTypes.join(", ")}`,
-            data: row,
+            error: `Invalid type "${
+              mappedData.type
+            }". Must be one of: ${validTypes.join(", ")}`,
+            data: mappedData,
+            originalData: row,
           });
           continue;
         }
 
-        // Validate date
-        const dojDate = new Date(row.doj);
+        // Use the matched type (properly formatted)
+        mappedData.type = matchedType;
+
+        // Validate and parse date with enhanced format support
+        let dojDate;
+        const dateValue = mappedData.doj;
+
+        // Enhanced date parsing for various formats
+        if (typeof dateValue === "string") {
+          // Handle MM/DD/YY format (like "1/6/25")
+          if (/^\d{1,2}\/\d{1,2}\/\d{2}$/.test(dateValue)) {
+            const [month, day, year] = dateValue.split("/");
+            // Convert 2-digit year to 4-digit (assuming 20xx for years < 50, 19xx for years >= 50)
+            const fullYear =
+              parseInt(year) < 50
+                ? 2000 + parseInt(year)
+                : 1900 + parseInt(year);
+            // Create date in local timezone to avoid timezone issues
+            dojDate = new Date(
+              fullYear,
+              parseInt(month) - 1,
+              parseInt(day),
+              12,
+              0,
+              0
+            );
+          }
+          // Handle YYYY-MM-DD format
+          else if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(dateValue)) {
+            const [year, month, day] = dateValue.split("-");
+            // Create date in local timezone to avoid timezone issues
+            dojDate = new Date(
+              parseInt(year),
+              parseInt(month) - 1,
+              parseInt(day),
+              12,
+              0,
+              0
+            );
+          }
+          // Handle other formats
+          else {
+            dojDate = new Date(dateValue);
+          }
+        } else if (dateValue instanceof Date) {
+          dojDate = dateValue;
+        } else {
+          dojDate = new Date(dateValue);
+        }
+
         if (isNaN(dojDate.getTime())) {
           results.errors.push({
             row: rowNumber,
-            error: "Invalid date format for DOJ",
-            data: row,
+            error: `Invalid date format for DOJ: "${dateValue}". Expected formats: MM/DD/YY, YYYY-MM-DD, or standard date format`,
+            data: mappedData,
+            originalData: row,
           });
           continue;
         }
+
+        // Format the date for display (avoiding timezone issues)
+        const year = dojDate.getFullYear();
+        const month = String(dojDate.getMonth() + 1).padStart(2, "0");
+        const day = String(dojDate.getDate()).padStart(2, "0");
+        const formattedDate = `${year}-${month}-${day}`;
+
+        console.log(
+          `🔍 Date parsing: "${dateValue}" -> ${formattedDate} (${dojDate.toLocaleDateString(
+            "en-US",
+            {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            }
+          )})`
+        );
 
         // Check if employee already exists
         const existingEmployee = await client.query(
           "SELECT id FROM employee_master WHERE company_email = $1 OR employee_id = $2",
-          [row.company_email, row.employee_id || ""]
+          [mappedData.company_email, mappedData.employee_id || ""]
         );
 
         if (existingEmployee.rows.length > 0) {
           results.skipped.push({
             row: rowNumber,
             reason: "Employee already exists",
-            data: row,
+            data: mappedData,
+            originalData: row,
           });
           continue;
         }
 
         // Generate employee ID if not provided
-        let employeeId = row.employee_id;
+        let employeeId = mappedData.employee_id;
         if (!employeeId) {
           employeeId = await generateEmployeeId();
         }
@@ -753,10 +1319,10 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
         // Get manager information if provided
         let managerId = null;
         let managerName = null;
-        if (row.manager_name) {
+        if (mappedData.manager_name) {
           const managerResult = await client.query(
             "SELECT manager_id, manager_name FROM managers WHERE manager_name ILIKE $1 AND status = 'active'",
-            [row.manager_name]
+            [mappedData.manager_name]
           );
           if (managerResult.rows.length > 0) {
             managerId = managerResult.rows[0].manager_id;
@@ -773,15 +1339,15 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
           [
             employeeId,
-            row.employee_name,
-            row.company_email,
-            row.type,
+            mappedData.employee_name,
+            mappedData.company_email,
+            mappedData.type,
             dojDate,
-            row.status || "active",
-            row.department || null,
-            row.designation || null,
-            row.salary_band || null,
-            row.location || null,
+            mappedData.status || "active",
+            mappedData.department || null,
+            mappedData.designation || null,
+            mappedData.salary_band || null,
+            mappedData.location || null,
             managerId,
             managerName,
           ]
@@ -790,7 +1356,7 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
         // Create user account if it doesn't exist
         const userExists = await client.query(
           "SELECT id FROM users WHERE email = $1",
-          [row.company_email]
+          [mappedData.company_email]
         );
 
         if (userExists.rows.length === 0) {
@@ -800,14 +1366,19 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
           await client.query(
             `INSERT INTO users (email, password, role, first_name, last_name, temp_password, created_at, updated_at) 
              VALUES ($1, $2, 'employee', $3, 'Employee', $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-            [row.company_email, hashedPassword, row.employee_name, tempPassword]
+            [
+              mappedData.company_email,
+              hashedPassword,
+              mappedData.employee_name,
+              tempPassword,
+            ]
           );
 
           // Initialize leave balance
           const currentYear = new Date().getFullYear();
           const userId = (
             await client.query("SELECT id FROM users WHERE email = $1", [
-              row.company_email,
+              mappedData.company_email,
             ])
           ).rows[0].id;
 
@@ -822,15 +1393,18 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
         results.created.push({
           row: rowNumber,
           employee_id: employeeId,
-          employee_name: row.employee_name,
-          company_email: row.company_email,
+          employee_name: mappedData.employee_name,
+          company_email: mappedData.company_email,
+          type: mappedData.type,
+          originalData: row,
         });
       } catch (error) {
         console.error(`Error processing row ${rowNumber}:`, error);
         results.errors.push({
           row: rowNumber,
           error: error.message,
-          data: row,
+          data: mappedData,
+          originalData: row,
         });
       }
     }
@@ -2301,6 +2875,403 @@ router.put("/master/:id", async (req, res) => {
   } catch (error) {
     console.error("Update employee master error:", error);
     res.status(500).json({ error: "Failed to update employee" });
+  }
+});
+
+// ==================== DOCUMENT COLLECTION ROUTES ====================
+
+// Get all document collection records with uploaded document status
+router.get("/document-collection", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        dc.*,
+        u.email as employee_email,
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM employee_documents ed 
+            WHERE ed.employee_id = dc.employee_id 
+            AND (
+              (ed.document_type = 'resume' AND dc.document_name LIKE '%Resume%')
+              OR (ed.document_type = 'offer_letter' AND dc.document_name LIKE '%Offer%')
+              OR (ed.document_type = 'compensation_letter' AND dc.document_name LIKE '%Compensation%')
+              OR (ed.document_type = 'experience_letter' AND dc.document_name LIKE '%Experience%')
+              OR (ed.document_type = 'payslip' AND dc.document_name LIKE '%Pay%')
+              OR (ed.document_type = 'form16' AND dc.document_name LIKE '%Form 16%')
+              OR (ed.document_type = 'ssc_certificate' AND dc.document_name LIKE '%SSC%Certificate%')
+              OR (ed.document_type = 'ssc_marksheet' AND dc.document_name LIKE '%SSC%Marksheet%')
+              OR (ed.document_type = 'hsc_certificate' AND dc.document_name LIKE '%HSC%Certificate%')
+              OR (ed.document_type = 'hsc_marksheet' AND dc.document_name LIKE '%HSC%Marksheet%')
+              OR (ed.document_type = 'graduation_marksheet' AND dc.document_name LIKE '%Graduation%Marksheet%')
+              OR (ed.document_type = 'graduation_certificate' AND dc.document_name LIKE '%Graduation%Certificate%')
+              OR (ed.document_type = 'postgrad_marksheet' AND dc.document_name LIKE '%Post-Graduation%Marksheet%')
+              OR (ed.document_type = 'postgrad_certificate' AND dc.document_name LIKE '%Post-Graduation%Certificate%')
+              OR (ed.document_type = 'aadhaar' AND dc.document_name LIKE '%Aadhaar%')
+              OR (ed.document_type = 'pan' AND dc.document_name LIKE '%PAN%')
+              OR (ed.document_type = 'passport' AND dc.document_name LIKE '%Passport%')
+            )
+          ) THEN 'Received'
+          ELSE dc.status
+        END as effective_status
+      FROM document_collection dc
+      LEFT JOIN users u ON dc.employee_id = u.id
+      ORDER BY dc.created_at DESC
+    `);
+
+    res.json({ documents: result.rows });
+  } catch (error) {
+    console.error("Get document collection error:", error);
+    res.status(500).json({ error: "Failed to get document collection data" });
+  }
+});
+
+// Get document collection by employee with uploaded document status
+router.get("/document-collection/employee/:employeeId", async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT 
+        dc.*,
+        u.email as employee_email,
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM employee_documents ed 
+            WHERE ed.employee_id = dc.employee_id 
+            AND (
+              (ed.document_type = 'resume' AND dc.document_name LIKE '%Resume%')
+              OR (ed.document_type = 'offer_letter' AND dc.document_name LIKE '%Offer%')
+              OR (ed.document_type = 'compensation_letter' AND dc.document_name LIKE '%Compensation%')
+              OR (ed.document_type = 'experience_letter' AND dc.document_name LIKE '%Experience%')
+              OR (ed.document_type = 'payslip' AND dc.document_name LIKE '%Pay%')
+              OR (ed.document_type = 'form16' AND dc.document_name LIKE '%Form 16%')
+              OR (ed.document_type = 'ssc_certificate' AND dc.document_name LIKE '%SSC%Certificate%')
+              OR (ed.document_type = 'ssc_marksheet' AND dc.document_name LIKE '%SSC%Marksheet%')
+              OR (ed.document_type = 'hsc_certificate' AND dc.document_name LIKE '%HSC%Certificate%')
+              OR (ed.document_type = 'hsc_marksheet' AND dc.document_name LIKE '%HSC%Marksheet%')
+              OR (ed.document_type = 'graduation_marksheet' AND dc.document_name LIKE '%Graduation%Marksheet%')
+              OR (ed.document_type = 'graduation_certificate' AND dc.document_name LIKE '%Graduation%Certificate%')
+              OR (ed.document_type = 'postgrad_marksheet' AND dc.document_name LIKE '%Post-Graduation%Marksheet%')
+              OR (ed.document_type = 'postgrad_certificate' AND dc.document_name LIKE '%Post-Graduation%Certificate%')
+              OR (ed.document_type = 'aadhaar' AND dc.document_name LIKE '%Aadhaar%')
+              OR (ed.document_type = 'pan' AND dc.document_name LIKE '%PAN%')
+              OR (ed.document_type = 'passport' AND dc.document_name LIKE '%Passport%')
+            )
+          ) THEN 'Received'
+          ELSE dc.status
+        END as effective_status
+      FROM document_collection dc
+      LEFT JOIN users u ON dc.employee_id = u.id
+      WHERE dc.employee_id = $1
+      ORDER BY dc.due_date ASC, dc.document_type DESC
+    `,
+      [employeeId]
+    );
+
+    res.json({ documents: result.rows });
+  } catch (error) {
+    console.error("Get employee document collection error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to get employee document collection" });
+  }
+});
+
+// Create document collection record
+router.post("/document-collection", async (req, res) => {
+  try {
+    const {
+      employee_id,
+      employee_name,
+      emp_id,
+      department,
+      join_date,
+      due_date,
+      document_name,
+      document_type,
+      notes,
+    } = req.body;
+
+    const result = await pool.query(
+      `
+      INSERT INTO document_collection (
+        employee_id, employee_name, emp_id, department, join_date, due_date,
+        document_name, document_type, notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING *
+    `,
+      [
+        employee_id,
+        employee_name,
+        emp_id,
+        department,
+        join_date,
+        due_date,
+        document_name,
+        document_type,
+        notes,
+      ]
+    );
+
+    res.status(201).json({
+      message: "Document collection record created successfully",
+      document: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Create document collection error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to create document collection record" });
+  }
+});
+
+// Update document collection status
+router.put("/document-collection/:id", async (req, res) => {
+  try {
+    console.log("🔍 Document status update route hit");
+    console.log("🔍 Request params:", req.params);
+    console.log("🔍 Request body:", req.body);
+    console.log("🔍 Request user:", req.user);
+
+    const { id } = req.params;
+    const { status, notes, uploaded_file_url, uploaded_file_name } = req.body;
+
+    console.log("🔍 Document status update request:", {
+      id,
+      status,
+      notes,
+      uploaded_file_url,
+      uploaded_file_name,
+    });
+
+    const result = await pool.query(
+      `
+      UPDATE document_collection 
+      SET status = $1, 
+          notes = COALESCE($2, notes), 
+          uploaded_file_url = COALESCE($3, uploaded_file_url), 
+          uploaded_file_name = COALESCE($4, uploaded_file_name), 
+          uploaded_at = CASE WHEN $1 = 'Received' THEN CURRENT_TIMESTAMP ELSE uploaded_at END,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $5
+      RETURNING *
+    `,
+      [
+        status,
+        notes || null,
+        uploaded_file_url || null,
+        uploaded_file_name || null,
+        id,
+      ]
+    );
+
+    console.log("🔍 Database update result:", {
+      rowsAffected: result.rows.length,
+      updatedRecord: result.rows[0],
+    });
+
+    if (result.rows.length === 0) {
+      console.log("❌ Document not found with ID:", id);
+      return res
+        .status(404)
+        .json({ error: "Document collection record not found" });
+    }
+
+    res.json({
+      message: "Document collection record updated successfully",
+      document: result.rows[0],
+    });
+  } catch (error) {
+    console.error("❌ Update document collection error:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+    });
+    res.status(500).json({
+      error: "Failed to update document collection record",
+      details: error.message,
+    });
+  }
+});
+
+// Delete document collection record
+router.delete("/document-collection/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM document_collection WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Document collection record not found" });
+    }
+
+    res.json({ message: "Document collection record deleted successfully" });
+  } catch (error) {
+    console.error("Delete document collection error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to delete document collection record" });
+  }
+});
+
+// Bulk create document collection records for an employee
+router.post("/document-collection/bulk", async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const {
+      employee_id,
+      employee_name,
+      emp_id,
+      department,
+      join_date,
+      due_date,
+      documents,
+    } = req.body;
+
+    await client.query("BEGIN");
+
+    const createdDocuments = [];
+
+    for (const doc of documents) {
+      const result = await client.query(
+        `
+        INSERT INTO document_collection (
+          employee_id, employee_name, emp_id, department, join_date, due_date,
+          document_name, document_type, notes
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING *
+      `,
+        [
+          employee_id,
+          employee_name,
+          emp_id,
+          department,
+          join_date,
+          due_date,
+          doc.document_name,
+          doc.document_type,
+          doc.notes || null,
+        ]
+      );
+
+      createdDocuments.push(result.rows[0]);
+    }
+
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      message: "Document collection records created successfully",
+      documents: createdDocuments,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Bulk create document collection error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to create document collection records" });
+  } finally {
+    client.release();
+  }
+});
+
+// Get document templates
+router.get("/document-templates", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM document_templates 
+      WHERE is_active = TRUE 
+      ORDER BY document_type DESC, document_name ASC
+    `);
+
+    res.json({ templates: result.rows });
+  } catch (error) {
+    console.error("Get document templates error:", error);
+    res.status(500).json({ error: "Failed to get document templates" });
+  }
+});
+
+// Create document template
+router.post("/document-templates", async (req, res) => {
+  try {
+    const { document_name, document_type, description } = req.body;
+
+    const result = await pool.query(
+      `
+      INSERT INTO document_templates (document_name, document_type, description)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `,
+      [document_name, document_type, description]
+    );
+
+    res.status(201).json({
+      message: "Document template created successfully",
+      template: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Create document template error:", error);
+    res.status(500).json({ error: "Failed to create document template" });
+  }
+});
+
+// Update document template
+router.put("/document-templates/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { document_name, document_type, description, is_active } = req.body;
+
+    const result = await pool.query(
+      `
+      UPDATE document_templates 
+      SET document_name = $1, document_type = $2, description = $3, 
+          is_active = $4, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $5
+      RETURNING *
+    `,
+      [document_name, document_type, description, is_active, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Document template not found" });
+    }
+
+    res.json({
+      message: "Document template updated successfully",
+      template: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Update document template error:", error);
+    res.status(500).json({ error: "Failed to update document template" });
+  }
+});
+
+// Delete document template
+router.delete("/document-templates/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM document_templates WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Document template not found" });
+    }
+
+    res.json({ message: "Document template deleted successfully" });
+  } catch (error) {
+    console.error("Delete document template error:", error);
+    res.status(500).json({ error: "Failed to delete document template" });
   }
 });
 

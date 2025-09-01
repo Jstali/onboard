@@ -109,8 +109,7 @@ router.get("/onboarding-status", async (req, res) => {
       return res.json({
         hasForm: true,
         status: "approved",
-        message:
-          "Onboarding completed. You can now access the attendance portal.",
+        message: "Employee access granted.",
       });
     }
 
@@ -144,28 +143,101 @@ router.post(
 
       // Check if form already exists
       const existingForm = await pool.query(
-        "SELECT id FROM employee_forms WHERE employee_id = $1",
+        "SELECT id, status FROM employee_forms WHERE employee_id = $1",
         [req.user.userId]
       );
 
       if (existingForm.rows.length > 0) {
-        return res
-          .status(400)
-          .json({ error: "Onboarding form already submitted" });
+        const form = existingForm.rows[0];
+
+        // If form is already submitted, don't allow updates
+        if (
+          form.status === "submitted" ||
+          form.status === "approved" ||
+          form.status === "rejected"
+        ) {
+          return res
+            .status(400)
+            .json({ error: "Onboarding form already submitted" });
+        }
+
+        // If form is in draft status, update it instead of creating new
+        if (form.status === "draft") {
+          await pool.query(
+            `
+            UPDATE employee_forms 
+            SET type = $2, form_data = $3, files = $4, updated_at = CURRENT_TIMESTAMP
+            WHERE employee_id = $1
+          `,
+            [req.user.userId, type, formData, files]
+          );
+
+          res.json({
+            message: "Onboarding form updated successfully",
+            status: "draft",
+            userId: req.user.userId,
+          });
+          return;
+        }
       }
 
-      // Insert form
+      // Insert form with draft status initially
       await pool.query(
         `
       INSERT INTO employee_forms (employee_id, type, form_data, files, status)
-      VALUES ($1, $2, $3, $4, 'submitted')
+      VALUES ($1, $2, $3, $4, 'draft')
     `,
         [req.user.userId, type, formData, files]
       );
 
+      // Get user details for document collection
+      const userResult = await pool.query(
+        "SELECT first_name, last_name, email FROM users WHERE id = $1",
+        [req.user.userId]
+      );
+
+      if (userResult.rows.length > 0) {
+        const user = userResult.rows[0];
+        const employeeName = `${user.first_name} ${user.last_name}`.trim();
+
+        // Get document templates
+        const templatesResult = await pool.query(
+          "SELECT document_name, document_type FROM document_templates WHERE is_active = true"
+        );
+
+        // Calculate due date (30 days from join date)
+        const joinDate = new Date(formData.doj);
+        const dueDate = new Date(joinDate);
+        dueDate.setDate(dueDate.getDate() + 30);
+
+        // Create document collection records for each template
+        for (const template of templatesResult.rows) {
+          await pool.query(
+            `
+            INSERT INTO document_collection (
+              employee_id, employee_name, emp_id, department, join_date, due_date,
+              document_name, document_type, status, notes
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            `,
+            [
+              req.user.userId,
+              employeeName,
+              req.user.userId, // Using user ID as emp_id for now
+              formData.department || "N/A",
+              formData.doj,
+              dueDate.toISOString().split("T")[0],
+              template.document_name,
+              template.document_type,
+              "Pending",
+              "Document required for onboarding",
+            ]
+          );
+        }
+      }
+
       res.status(201).json({
-        message: "Onboarding form submitted successfully",
-        status: "submitted",
+        message: "Onboarding form created successfully",
+        status: "draft",
         userId: req.user.userId,
       });
     } catch (error) {
@@ -174,6 +246,52 @@ router.post(
     }
   }
 );
+
+// Submit onboarding form (change status from draft to submitted)
+router.post("/onboarding-form/submit", async (req, res) => {
+  try {
+    // Check if form exists and is in draft status
+    const existingForm = await pool.query(
+      `
+      SELECT id, status FROM employee_forms WHERE employee_id = $1
+    `,
+      [req.user.userId]
+    );
+
+    if (existingForm.rows.length === 0) {
+      return res.status(404).json({ error: "Onboarding form not found" });
+    }
+
+    const form = existingForm.rows[0];
+
+    if (form.status === "submitted") {
+      return res.status(400).json({ error: "Form has already been submitted" });
+    }
+
+    if (form.status !== "draft") {
+      return res.status(400).json({ error: "Form is not in draft status" });
+    }
+
+    // Update form status to submitted
+    await pool.query(
+      `
+      UPDATE employee_forms 
+      SET status = 'submitted', submitted_at = CURRENT_TIMESTAMP
+      WHERE employee_id = $1
+    `,
+      [req.user.userId]
+    );
+
+    res.json({
+      message: "Onboarding form submitted successfully",
+      status: "submitted",
+      userId: req.user.userId,
+    });
+  } catch (error) {
+    console.error("Submit form error:", error);
+    res.status(500).json({ error: "Failed to submit form" });
+  }
+});
 
 // Get onboarding form
 router.get("/onboarding-form", async (req, res) => {

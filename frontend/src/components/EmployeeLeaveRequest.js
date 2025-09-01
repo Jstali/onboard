@@ -11,6 +11,7 @@ const EmployeeLeaveRequest = () => {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [systemSettings, setSystemSettings] = useState(null);
   const [leaveBalance, setLeaveBalance] = useState(null);
+  const [leaveTypeBalances, setLeaveTypeBalances] = useState([]);
   const [compOffBalance, setCompOffBalance] = useState(null);
   const [myRequests, setMyRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,7 @@ const EmployeeLeaveRequest = () => {
     fetchSystemSettings();
     if (token) {
       fetchLeaveBalance();
+      fetchLeaveTypeBalances();
       fetchMyRequests();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,7 +56,7 @@ const EmployeeLeaveRequest = () => {
       // Set default values if API fails
       setSystemSettings({
         allow_half_day: true,
-        total_annual_leaves: 27,
+        total_annual_leaves: 15,
       });
     }
   };
@@ -76,11 +78,50 @@ const EmployeeLeaveRequest = () => {
       console.error("Error fetching leave balance:", error);
       // Set default values if fetch fails
       setLeaveBalance({
-        total_allocated: 27,
+        total_allocated: 15,
         leaves_taken: 0,
-        leaves_remaining: 27,
+        leaves_remaining: 15,
         year: new Date().getFullYear(),
       });
+    }
+  };
+
+  const fetchLeaveTypeBalances = async () => {
+    try {
+      if (!token) {
+        console.error("No token available");
+        return;
+      }
+
+      const response = await axios.get("/leave/my-leave-type-balances", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setLeaveTypeBalances(response.data.leaveTypeBalances || []);
+    } catch (error) {
+      console.error("Error fetching leave type balances:", error);
+      // Set default values if fetch fails
+      setLeaveTypeBalances([
+        {
+          leave_type: "Earned/Annual Leave",
+          total_allocated: 15,
+          leaves_taken: 0,
+          leaves_remaining: 15,
+        },
+        {
+          leave_type: "Sick Leave",
+          total_allocated: 6,
+          leaves_taken: 0,
+          leaves_remaining: 6,
+        },
+        {
+          leave_type: "Casual Leave",
+          total_allocated: 6,
+          leaves_taken: 0,
+          leaves_remaining: 6,
+        },
+      ]);
     }
   };
 
@@ -267,31 +308,42 @@ const EmployeeLeaveRequest = () => {
               </div>
             </div>
 
-            {/* Leave Type Information */}
+            {/* Detailed Leave Type Balances */}
             <div className="mt-4 pt-4 border-t border-blue-200">
-              <h4 className="text-sm font-semibold text-blue-700 mb-2">
-                Leave Type Information:
+              <h4 className="text-sm font-semibold text-blue-700 mb-3">
+                Leave Type Breakdown:
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-blue-600">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                  <span>
-                    <strong>Paid Leave:</strong> Deducted from annual allocation
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                  <span>
-                    <strong>Unpaid Leave:</strong> No deduction from annual
-                    allocation
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                  <span>
-                    <strong>Comp Off:</strong> Deducted from Comp Off balance
-                  </span>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {leaveTypeBalances.map((balance, index) => (
+                  <div
+                    key={index}
+                    className="bg-white rounded-lg p-3 border border-blue-100"
+                  >
+                    <h5 className="text-sm font-semibold text-blue-800 mb-2">
+                      {balance.leave_type}
+                    </h5>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Allocated:</span>
+                        <span className="font-semibold text-blue-600">
+                          {balance.total_allocated}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Taken:</span>
+                        <span className="font-semibold text-orange-600">
+                          {balance.leaves_taken}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Remaining:</span>
+                        <span className="font-semibold text-green-600">
+                          {balance.leaves_remaining}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

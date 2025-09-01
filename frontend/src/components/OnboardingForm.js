@@ -32,28 +32,120 @@ const OnboardingForm = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
   const [submittedUserId, setSubmittedUserId] = useState(null);
+  const [errors, setErrors] = useState({});
+
+  // Validation functions
+  const validateName = (name) => {
+    const nameRegex = /^[a-zA-Z]+$/;
+    if (!name.trim()) return "Name is required";
+    if (!nameRegex.test(name))
+      return "Name should contain only letters (no spaces)";
+    if (name.trim().length < 2) return "Name should be at least 2 characters";
+    return "";
+  };
+
+  const validateEmail = (email) => {
+    if (!email.trim()) return "Email is required";
+    if (!email.endsWith("@gmail.com")) return "Email must end with @gmail.com";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+  };
+
+  const validatePhone = (phone) => {
+    const phoneRegex = /^\d{10}$/;
+    if (!phone.trim()) return "Phone number is required";
+    if (!phoneRegex.test(phone))
+      return "Phone number must be exactly 10 digits";
+    return "";
+  };
+
+  const validateRelationship = (relationship) => {
+    const relationshipRegex = /^[a-zA-Z]+$/;
+    if (!relationship.trim()) return "Relationship is required";
+    if (!relationshipRegex.test(relationship))
+      return "Relationship should contain only letters (no spaces)";
+    return "";
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Clear error for this field when user starts typing
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+
+    // Filter out numbers for name, contact name, and relationship fields
+    let filteredValue = value;
+    if (
+      name === "name" ||
+      name === "emergencyContact.name" ||
+      name === "emergencyContact.relationship"
+    ) {
+      // Remove any numbers and special characters, keep only letters
+      filteredValue = value.replace(/[^a-zA-Z]/g, "");
+    }
+
     if (name.includes(".")) {
       const [parent, child] = name.split(".");
       setFormData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value,
+          [child]: filteredValue,
         },
       }));
     } else {
       setFormData((prev) => ({
         ...prev,
-        [name]: value,
+        [name]: filteredValue,
       }));
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validate name
+    const nameError = validateName(formData.name);
+    if (nameError) newErrors.name = nameError;
+
+    // Validate email
+    const emailError = validateEmail(formData.email);
+    if (emailError) newErrors.email = emailError;
+
+    // Validate phone
+    const phoneError = validatePhone(formData.phone);
+    if (phoneError) newErrors.phone = phoneError;
+
+    // Validate emergency contact name
+    const contactNameError = validateName(formData.emergencyContact.name);
+    if (contactNameError) newErrors["emergencyContact.name"] = contactNameError;
+
+    // Validate emergency contact phone
+    const contactPhoneError = validatePhone(formData.emergencyContact.phone);
+    if (contactPhoneError)
+      newErrors["emergencyContact.phone"] = contactPhoneError;
+
+    // Validate relationship
+    const relationshipError = validateRelationship(
+      formData.emergencyContact.relationship
+    );
+    if (relationshipError)
+      newErrors["emergencyContact.relationship"] = relationshipError;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate form before submission
+    if (!validateForm()) {
+      toast.error("Please fix the validation errors before submitting");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -74,7 +166,7 @@ const OnboardingForm = ({ onSuccess }) => {
       setSubmittedUserId(response.data.userId);
 
       toast.success(
-        "Basic form submitted successfully! Please upload required documents."
+        response.data.message + "! Please upload required documents."
       );
       setShowDocuments(true);
     } catch (error) {
@@ -83,9 +175,21 @@ const OnboardingForm = ({ onSuccess }) => {
     }
   };
 
-  const handleDocumentsComplete = () => {
-    toast.success("Onboarding completed successfully!");
-    onSuccess();
+  const handleDocumentsComplete = async () => {
+    try {
+      // Submit the form to change status from draft to submitted
+      await axios.post(
+        "http://localhost:5001/api/employee/onboarding-form/submit"
+      );
+
+      toast.success("Onboarding completed successfully!");
+      onSuccess();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error(
+        error.response?.data?.error || "Failed to complete onboarding"
+      );
+    }
   };
 
   if (showDocuments) {
@@ -105,25 +209,17 @@ const OnboardingForm = ({ onSuccess }) => {
           onDocumentsChange={() => {}}
         />
 
-        <div className="mt-8 flex justify-between items-center">
-          <div className="text-sm text-gray-600">
+        <div className="mt-8 flex justify-end">
+          <div className="text-sm text-gray-600 mr-4">
             <p>📋 Document uploads are optional.</p>
             <p>You can upload missing documents later from your profile.</p>
           </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={handleDocumentsComplete}
-              className="btn-secondary px-6 py-3"
-            >
-              Skip Documents & Complete
-            </button>
-            <button
-              onClick={handleDocumentsComplete}
-              className="btn-primary px-6 py-3"
-            >
-              Complete Onboarding
-            </button>
-          </div>
+          <button
+            onClick={handleDocumentsComplete}
+            className="btn-primary px-6 py-3"
+          >
+            Complete Onboarding
+          </button>
         </div>
       </div>
     );
@@ -167,10 +263,16 @@ const OnboardingForm = ({ onSuccess }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="input-field pl-10"
+                className={`input-field pl-10 ${
+                  errors.name ? "border-red-500" : ""
+                }`}
+                placeholder="Enter name (letters only)"
                 required
               />
             </div>
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+            )}
           </div>
 
           <div>
@@ -184,10 +286,15 @@ const OnboardingForm = ({ onSuccess }) => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="input-field pl-10"
+                className={`input-field pl-10 ${
+                  errors.email ? "border-red-500" : ""
+                }`}
                 required
               />
             </div>
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
 
           <div>
@@ -201,10 +308,17 @@ const OnboardingForm = ({ onSuccess }) => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="input-field pl-10"
+                className={`input-field pl-10 ${
+                  errors.phone ? "border-red-500" : ""
+                }`}
+                placeholder="Enter 10 digit number"
+                maxLength="10"
                 required
               />
             </div>
+            {errors.phone && (
+              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+            )}
           </div>
 
           <div>
@@ -296,9 +410,17 @@ const OnboardingForm = ({ onSuccess }) => {
                 name="emergencyContact.name"
                 value={formData.emergencyContact.name}
                 onChange={handleInputChange}
-                className="input-field"
+                className={`input-field ${
+                  errors["emergencyContact.name"] ? "border-red-500" : ""
+                }`}
+                placeholder="Enter contact name (letters only)"
                 required
               />
+              {errors["emergencyContact.name"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors["emergencyContact.name"]}
+                </p>
+              )}
             </div>
 
             <div>
@@ -310,9 +432,18 @@ const OnboardingForm = ({ onSuccess }) => {
                 name="emergencyContact.phone"
                 value={formData.emergencyContact.phone}
                 onChange={handleInputChange}
-                className="input-field"
+                className={`input-field ${
+                  errors["emergencyContact.phone"] ? "border-red-500" : ""
+                }`}
+                placeholder="Enter 10 digit number"
+                maxLength="10"
                 required
               />
+              {errors["emergencyContact.phone"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors["emergencyContact.phone"]}
+                </p>
+              )}
             </div>
 
             <div>
@@ -324,10 +455,19 @@ const OnboardingForm = ({ onSuccess }) => {
                 name="emergencyContact.relationship"
                 value={formData.emergencyContact.relationship}
                 onChange={handleInputChange}
-                className="input-field"
-                placeholder="e.g., Spouse, Parent"
+                className={`input-field ${
+                  errors["emergencyContact.relationship"]
+                    ? "border-red-500"
+                    : ""
+                }`}
+                placeholder="e.g., Spouse, Parent (letters only)"
                 required
               />
+              {errors["emergencyContact.relationship"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors["emergencyContact.relationship"]}
+                </p>
+              )}
             </div>
           </div>
         </div>

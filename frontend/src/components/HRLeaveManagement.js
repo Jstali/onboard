@@ -87,6 +87,9 @@ const HRLeaveManagement = () => {
 
   // Calculate total days between two dates
   const calculateTotalDays = (startDate, endDate) => {
+    if (!endDate || endDate === startDate) {
+      return 1; // Single day leave
+    }
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffTime = Math.abs(end - start);
@@ -299,8 +302,11 @@ const HRLeaveManagement = () => {
                         {request.leave_type || "N/A"}
                       </div>
                       <div className="text-gray-600">
-                        {formatDate(request.start_date)} -{" "}
-                        {formatDate(request.end_date)}
+                        {formatDate(request.start_date)}
+                        {request.end_date &&
+                        request.end_date !== request.start_date
+                          ? ` - ${formatDate(request.end_date)}`
+                          : ""}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         {calculateTotalDays(

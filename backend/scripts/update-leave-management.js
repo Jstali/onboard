@@ -28,9 +28,9 @@ async function updateLeaveManagementStructure() {
         id SERIAL PRIMARY KEY,
         employee_id INTEGER NOT NULL,
         year INTEGER NOT NULL,
-        total_allocated INTEGER DEFAULT 27,
-        leaves_taken INTEGER DEFAULT 0,
-        leaves_remaining INTEGER DEFAULT 27,
+              total_allocated INTEGER DEFAULT 15,
+      leaves_taken INTEGER DEFAULT 0,
+      leaves_remaining INTEGER DEFAULT 15,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(employee_id, year),
@@ -102,9 +102,9 @@ async function updateLeaveManagementStructure() {
       SELECT 
         u.id, 
         $1, 
-        27, 
-        0, 
-        27
+                15,
+        0,
+        15
       FROM users u
       WHERE u.role = 'employee'
       ON CONFLICT (employee_id, year) DO NOTHING

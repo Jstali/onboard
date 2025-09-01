@@ -231,7 +231,7 @@ router.get("/system-info", async (req, res) => {
       // Return default settings if none exist
       return res.json({
         allow_half_day: true,
-        total_annual_leaves: 27,
+        total_annual_leaves: 15,
       });
     }
 
@@ -240,7 +240,7 @@ router.get("/system-info", async (req, res) => {
     console.error("Error fetching system settings:", error);
     res.json({
       allow_half_day: true,
-      total_annual_leaves: 27,
+      total_annual_leaves: 15,
     });
   }
 });
@@ -266,15 +266,15 @@ router.get("/balance", authenticateToken, async (req, res) => {
       await pool.query(
         `
         INSERT INTO leave_balances (employee_id, year, total_allocated, leaves_taken, leaves_remaining)
-        VALUES ($1, $2, 27, 0, 27)
+        VALUES ($1, $2, 15, 0, 15)
       `,
         [req.user.userId, currentYear]
       );
 
       res.json({
-        total_allocated: 27,
+        total_allocated: 15,
         leaves_taken: 0,
-        leaves_remaining: 27,
+        leaves_remaining: 15,
         year: currentYear,
       });
     } else {
@@ -471,9 +471,16 @@ router.post(
 
       const leaveRequest = insertResult.rows[0];
 
-      // Send email notification to all managers
+      // Send email notification to PRIMARY MANAGER ONLY (manager1)
       console.log("🔍 Managers found:", managers);
       if (managers && managers.length > 0) {
+        // Only send email to the primary manager (first manager in the array)
+        const primaryManager = managers[0];
+        console.log(
+          "📧 Sending email to PRIMARY manager only:",
+          primaryManager.email
+        );
+
         const emailData = {
           id: leaveRequest.id,
           employeeName,
@@ -485,22 +492,24 @@ router.post(
           reason,
           approvalToken,
           totalManagers: managers.length,
+          primaryManagerOnly: true, // Flag to indicate this is primary manager only
         };
 
-        // Send email to each manager asynchronously (non-blocking)
-        managers.forEach((manager) => {
-          console.log("📧 Sending email to manager:", manager.email);
-          console.log("📧 Email data:", emailData);
+        // Send email ONLY to primary manager
+        sendLeaveRequestToManager(primaryManager.email, emailData)
+          .then((emailResult) => {
+            console.log("📧 Email sent to primary manager:", emailResult);
+          })
+          .catch((emailError) => {
+            console.error(
+              "❌ Email sending to primary manager failed:",
+              emailError
+            );
+          });
 
-          // Send email asynchronously without waiting
-          sendLeaveRequestToManager(manager.email, emailData)
-            .then((emailResult) => {
-              console.log("📧 Email send result:", emailResult);
-            })
-            .catch((emailError) => {
-              console.error("❌ Email sending failed:", emailError);
-            });
-        });
+        console.log(
+          "📧 Note: Email sent only to primary manager. Optional managers (manager2, manager3) will not receive emails."
+        );
       } else {
         console.log("❌ No manager found for employee:", employeeId);
       }
@@ -1254,6 +1263,7 @@ router.put(
             // Paid Leave, Privilege Leave, Sick Leave, Casual Leave, etc.: Deduct from annual allocation
             console.log("🔍 Paid Leave - Deducting from annual allocation");
 
+            // Update overall leave balance
             await pool.query(
               `UPDATE leave_balances 
                SET 
@@ -1263,6 +1273,38 @@ router.put(
                WHERE employee_id = $2 AND year = $3`,
               [totalDays, leaveRequest.employee_id, currentYear]
             );
+
+            // Update specific leave type balance
+            try {
+              console.log(
+                "🔍 Updating leave type balance for:",
+                leaveRequest.leave_type
+              );
+              await pool.query(
+                `UPDATE leave_type_balances 
+                 SET 
+                   leaves_taken = leaves_taken + $1,
+                   leaves_remaining = leaves_remaining - $1,
+                   updated_at = CURRENT_TIMESTAMP
+                 WHERE employee_id = $2 AND year = $3 AND leave_type = $4`,
+                [
+                  totalDays,
+                  leaveRequest.employee_id,
+                  currentYear,
+                  leaveRequest.leave_type,
+                ]
+              );
+              console.log(
+                "✅ Leave type balance updated successfully for:",
+                leaveRequest.leave_type
+              );
+            } catch (leaveTypeError) {
+              console.error(
+                "❌ Error updating leave type balance:",
+                leaveTypeError
+              );
+              // Continue even if leave type balance update fails
+            }
           }
 
           console.log("✅ Leave balance updated successfully");
@@ -1469,7 +1511,7 @@ router.delete("/:id", authenticateToken, async (req, res) => {
   }
 });
 
-// Get comprehensive leave balances including Comp Off
+// Get comprehensive leave balances including Comp Off (for HR/Managers)
 router.get("/balances/:employeeId", authenticateToken, async (req, res) => {
   try {
     const { employeeId } = req.params;
@@ -1478,6 +1520,12 @@ router.get("/balances/:employeeId", authenticateToken, async (req, res) => {
     // Get annual leave balance
     const leaveBalanceResult = await pool.query(
       `SELECT * FROM leave_balances WHERE employee_id = $1 AND year = $2`,
+      [employeeId, currentYear]
+    );
+
+    // Get leave type balances
+    const leaveTypeBalancesResult = await pool.query(
+      `SELECT * FROM leave_type_balances WHERE employee_id = $1 AND year = $2 ORDER BY leave_type`,
       [employeeId, currentYear]
     );
 
@@ -1492,16 +1540,54 @@ router.get("/balances/:employeeId", authenticateToken, async (req, res) => {
     if (!leaveBalance) {
       await pool.query(
         `INSERT INTO leave_balances (employee_id, year, total_allocated, leaves_taken, leaves_remaining) 
-         VALUES ($1, $2, 27, 0, 27)`,
+         VALUES ($1, $2, 15, 0, 15)`,
         [employeeId, currentYear]
       );
       leaveBalance = {
         employee_id: employeeId,
         year: currentYear,
-        total_allocated: 27,
+        total_allocated: 15,
         leaves_taken: 0,
-        leaves_remaining: 27,
+        leaves_remaining: 15,
       };
+    }
+
+    // Create default leave type balances if they don't exist
+    let leaveTypeBalances = leaveTypeBalancesResult.rows;
+    if (leaveTypeBalances.length === 0) {
+      const currentMonth = new Date().getMonth() + 1;
+      let monthsOfService = 0;
+      if (currentMonth >= 4) {
+        // April onwards
+        monthsOfService = currentMonth - 3; // April = month 1
+      } else {
+        monthsOfService = currentMonth + 9; // Jan-Mar = months 10-12 of previous year
+      }
+
+      await pool.query(
+        `
+        INSERT INTO leave_type_balances (employee_id, year, leave_type, total_allocated, leaves_taken, leaves_remaining)
+        VALUES 
+          ($1, $2, 'Earned/Annual Leave', $3, 0, $3),
+          ($1, $2, 'Sick Leave', $4, 0, $4),
+          ($1, $2, 'Casual Leave', $5, 0, $5)
+        ON CONFLICT (employee_id, year, leave_type) DO NOTHING
+      `,
+        [
+          employeeId,
+          currentYear,
+          Math.min(monthsOfService * 1.25, 15), // Earned Leave: 1.25/month, max 15
+          Math.min(monthsOfService * 0.5, 6), // Sick Leave: 0.5/month, max 6
+          Math.min(monthsOfService * 0.5, 6), // Casual Leave: 0.5/month, max 6
+        ]
+      );
+
+      // Fetch the newly created balances
+      const newBalancesResult = await pool.query(
+        `SELECT * FROM leave_type_balances WHERE employee_id = $1 AND year = $2 ORDER BY leave_type`,
+        [employeeId, currentYear]
+      );
+      leaveTypeBalances = newBalancesResult.rows;
     }
 
     let compOffBalance = compOffBalanceResult.rows[0];
@@ -1526,6 +1612,7 @@ router.get("/balances/:employeeId", authenticateToken, async (req, res) => {
         leavesTaken: leaveBalance.leaves_taken,
         leavesRemaining: leaveBalance.leaves_remaining,
       },
+      leaveTypeBalances: leaveTypeBalances,
       compOff: {
         totalEarned: compOffBalance.total_earned,
         compOffTaken: compOffBalance.comp_off_taken,
@@ -1535,6 +1622,66 @@ router.get("/balances/:employeeId", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Error fetching leave balances:", error);
     res.status(500).json({ error: "Failed to fetch leave balances" });
+  }
+});
+
+// Get employee's own leave type balances
+router.get("/my-leave-type-balances", authenticateToken, async (req, res) => {
+  try {
+    const employeeId = req.user.userId;
+    const currentYear = new Date().getFullYear();
+
+    // Get leave type balances
+    const leaveTypeBalancesResult = await pool.query(
+      `SELECT * FROM leave_type_balances WHERE employee_id = $1 AND year = $2 ORDER BY leave_type`,
+      [employeeId, currentYear]
+    );
+
+    // Create default leave type balances if they don't exist
+    let leaveTypeBalances = leaveTypeBalancesResult.rows;
+    if (leaveTypeBalances.length === 0) {
+      const currentMonth = new Date().getMonth() + 1;
+      let monthsOfService = 0;
+      if (currentMonth >= 4) {
+        // April onwards
+        monthsOfService = currentMonth - 3; // April = month 1
+      } else {
+        monthsOfService = currentMonth + 9; // Jan-Mar = months 10-12 of previous year
+      }
+
+      await pool.query(
+        `
+        INSERT INTO leave_type_balances (employee_id, year, leave_type, total_allocated, leaves_taken, leaves_remaining)
+        VALUES 
+          ($1, $2, 'Earned/Annual Leave', $3, 0, $3),
+          ($1, $2, 'Sick Leave', $4, 0, $4),
+          ($1, $2, 'Casual Leave', $5, 0, $5)
+        ON CONFLICT (employee_id, year, leave_type) DO NOTHING
+      `,
+        [
+          employeeId,
+          currentYear,
+          Math.min(monthsOfService * 1.25, 15), // Earned Leave: 1.25/month, max 15
+          Math.min(monthsOfService * 0.5, 6), // Sick Leave: 0.5/month, max 6
+          Math.min(monthsOfService * 0.5, 6), // Casual Leave: 0.5/month, max 6
+        ]
+      );
+
+      // Fetch the newly created balances
+      const newBalancesResult = await pool.query(
+        `SELECT * FROM leave_type_balances WHERE employee_id = $1 AND year = $2 ORDER BY leave_type`,
+        [employeeId, currentYear]
+      );
+      leaveTypeBalances = newBalancesResult.rows;
+    }
+
+    res.json({
+      leaveTypeBalances: leaveTypeBalances,
+      year: currentYear,
+    });
+  } catch (error) {
+    console.error("Error fetching leave type balances:", error);
+    res.status(500).json({ error: "Failed to fetch leave type balances" });
   }
 });
 

@@ -3,8 +3,8 @@ import {
   FaCalendarAlt,
   FaUsers,
   FaDownload,
-  FaTrash,
   FaSync,
+  FaEdit,
 } from "react-icons/fa";
 import { format } from "date-fns";
 import axios from "axios";
@@ -13,7 +13,9 @@ import toast from "react-hot-toast";
 const HRAttendanceDetails = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState(null);
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [editStatus, setEditStatus] = useState("");
+  const [editReason, setEditReason] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -63,29 +65,31 @@ const HRAttendanceDetails = () => {
     return format(new Date(timeString), "hh:mm a");
   };
 
-  const handleDeleteAttendance = async (id, employeeName, date) => {
-    const confirmMessage = `Are you sure you want to delete the attendance record for ${employeeName} on ${formatDate(
-      date
-    )}?\n\nThis action cannot be undone.`;
+  const openEditModal = (record) => {
+    setEditingRecord(record);
+    setEditStatus(record.status || "");
+    setEditReason(record.reason || "");
+  };
 
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
+  const closeEditModal = () => {
+    setEditingRecord(null);
+    setEditStatus("");
+    setEditReason("");
+  };
 
+  const handleSaveEdit = async () => {
+    if (!editingRecord) return;
     try {
-      setDeletingId(id);
-      await axios.delete(`/attendance/${id}`);
-      toast.success("Attendance record deleted successfully");
-
-      // Refresh the attendance data
+      await axios.put(`/attendance/${editingRecord.id}`, {
+        status: editStatus,
+        reason: editReason,
+      });
+      toast.success("Attendance updated");
+      closeEditModal();
       fetchAttendanceDetails();
     } catch (error) {
-      console.error("Error deleting attendance record:", error);
-      toast.error(
-        error.response?.data?.error || "Failed to delete attendance record"
-      );
-    } finally {
-      setDeletingId(null);
+      console.error("Error updating attendance:", error);
+      toast.error(error.response?.data?.error || "Failed to update attendance");
     }
   };
 
@@ -365,29 +369,12 @@ const HRAttendanceDetails = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button
-                        onClick={() =>
-                          handleDeleteAttendance(
-                            record.id,
-                            record.employee_name,
-                            record.date
-                          )
-                        }
-                        disabled={deletingId === record.id}
-                        className={`font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded px-3 py-2 transition-colors duration-200 ${
-                          deletingId === record.id
-                            ? "text-gray-400 cursor-not-allowed bg-gray-100"
-                            : "text-red-600 hover:text-red-800 hover:bg-red-50 border border-red-200 hover:border-red-300"
-                        }`}
-                        title="Delete attendance record"
+                        onClick={() => openEditModal(record)}
+                        className="font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-3 py-2 transition-colors duration-200 text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 hover:border-blue-300"
+                        title="Edit attendance record"
                       >
-                        {deletingId === record.id ? (
-                          "Deleting..."
-                        ) : (
-                          <>
-                            <FaTrash className="inline mr-1" />
-                            Delete
-                          </>
-                        )}
+                        <FaEdit className="inline mr-1" />
+                        Edit
                       </button>
                     </td>
                   </tr>
@@ -397,6 +384,59 @@ const HRAttendanceDetails = () => {
           </div>
         )}
       </div>
+      {editingRecord && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Edit Attendance - {editingRecord.employee_name || "Employee"}
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Present">Present</option>
+                    <option value="Work From Home">Work From Home</option>
+                    <option value="Leave">Leave</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Reason
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editReason}
+                    onChange={(e) => setEditReason(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Optional reason"
+                  />
+                </div>
+                <div className="flex justify-end space-x-2 pt-2">
+                  <button
+                    onClick={closeEditModal}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

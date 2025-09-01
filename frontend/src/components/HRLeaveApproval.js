@@ -320,7 +320,7 @@ const HRLeaveApproval = () => {
                           {formatDate(request.from_date)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDate(request.to_date)}
+                          {request.to_date ? formatDate(request.to_date) : "-"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {request.total_leave_days}
@@ -461,7 +461,7 @@ const HRLeaveApproval = () => {
                           {formatDate(request.from_date)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDate(request.to_date)}
+                          {request.to_date ? formatDate(request.to_date) : "-"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {request.total_leave_days}
@@ -480,49 +480,15 @@ const HRLeaveApproval = () => {
                           {formatDate(request.created_at)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => {
-                                setSelectedRequest(request);
-                                setShowModal(true);
-                              }}
-                              className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                              View
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (
-                                  !window.confirm("Delete this leave request?")
-                                )
-                                  return;
-                                try {
-                                  await axios.delete(
-                                    `http://localhost:5001/api/leave/${request.id}`,
-                                    {
-                                      headers: {
-                                        Authorization: `Bearer ${token}`,
-                                      },
-                                    }
-                                  );
-                                  fetchAllRequests();
-                                  fetchPendingRequests();
-                                } catch (err) {
-                                  console.error(
-                                    "Delete leave request error:",
-                                    err
-                                  );
-                                  setMessage(
-                                    err.response?.data?.error ||
-                                      "Failed to delete request"
-                                  );
-                                }
-                              }}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                            >
-                              Delete
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedRequest(request);
+                              setShowModal(true);
+                            }}
+                            className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                          >
+                            View
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -570,7 +536,10 @@ const HRLeaveApproval = () => {
                   <strong>From:</strong> {formatDate(selectedRequest.from_date)}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  <strong>To:</strong> {formatDate(selectedRequest.to_date)}
+                  <strong>To:</strong>{" "}
+                  {selectedRequest.to_date
+                    ? formatDate(selectedRequest.to_date)
+                    : "-"}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
                   <strong>Total Days:</strong>{" "}

@@ -517,10 +517,85 @@ router.get(
         [employeeId]
       );
 
+      // Get manually entered documents from document_collection
+      const manualDocs = await pool.query(
+        `
+      SELECT document_name, status, uploaded_file_url
+      FROM document_collection 
+      WHERE employee_id = $1
+    `,
+        [employeeId]
+      );
+
       const uploadedMap = uploadedDocs.rows.reduce((acc, doc) => {
-        acc[doc.document_type] = doc.count;
+        acc[doc.document_type] = parseInt(doc.count) || 0;
         return acc;
       }, {});
+
+      // Create a map of manually entered documents
+      const manualMap = {};
+      manualDocs.rows.forEach((doc) => {
+        // Map document names to document types (approximate mapping)
+        const docName = doc.document_name.toLowerCase();
+        let docType = null;
+
+        if (docName.includes("resume")) docType = "resume";
+        else if (docName.includes("offer") || docName.includes("appointment"))
+          docType = "offer_letter";
+        else if (docName.includes("compensation"))
+          docType = "compensation_letter";
+        else if (
+          docName.includes("experience") ||
+          docName.includes("relieving")
+        )
+          docType = "experience_letter";
+        else if (docName.includes("payslip") || docName.includes("pay slip"))
+          docType = "payslip";
+        else if (docName.includes("form 16") || docName.includes("form 12b"))
+          docType = "form16";
+        else if (docName.includes("ssc") && docName.includes("certificate"))
+          docType = "ssc_certificate";
+        else if (docName.includes("ssc") && docName.includes("marksheet"))
+          docType = "ssc_marksheet";
+        else if (docName.includes("hsc") && docName.includes("certificate"))
+          docType = "hsc_certificate";
+        else if (docName.includes("hsc") && docName.includes("marksheet"))
+          docType = "hsc_marksheet";
+        else if (
+          docName.includes("graduation") &&
+          docName.includes("certificate")
+        )
+          docType = "graduation_certificate";
+        else if (
+          docName.includes("graduation") &&
+          docName.includes("marksheet")
+        )
+          docType = "graduation_marksheet";
+        else if (docName.includes("aadhaar")) docType = "aadhaar_card";
+        else if (docName.includes("pan")) docType = "pan_card";
+        else if (docName.includes("passport")) docType = "passport_size_photos";
+        else if (docName.includes("address")) docType = "address_proof";
+        else if (
+          docName.includes("professional") ||
+          docName.includes("certification")
+        )
+          docType = "professional_certifications";
+        else if (
+          docName.includes("educational") ||
+          docName.includes("certificate")
+        )
+          docType = "educational_certificates";
+
+        if (docType) {
+          // Consider documents as uploaded if status is not 'Pending' or 'N/A'
+          const isSubmitted =
+            doc.status &&
+            !["pending", "n/a"].includes(doc.status.toLowerCase());
+          if (isSubmitted) {
+            manualMap[docType] = (manualMap[docType] || 0) + 1;
+          }
+        }
+      });
 
       // Check validation status
       const validation = {};
@@ -529,15 +604,19 @@ router.get(
       Object.keys(requirements).forEach((category) => {
         validation[category] = requirements[category].map((req) => {
           const uploaded = uploadedMap[req.type] || 0;
-          const isValid = req.required ? uploaded > 0 : true;
+          const manual = manualMap[req.type] || 0;
+          const totalUploaded = uploaded + manual;
+          const isValid = req.required ? totalUploaded > 0 : true;
 
-          if (req.required && uploaded === 0) {
+          if (req.required && totalUploaded === 0) {
             allRequired = false;
           }
 
           return {
             ...req,
-            uploaded: uploaded,
+            uploaded: totalUploaded,
+            uploadedFiles: uploaded,
+            manualEntries: manual,
             isValid: isValid,
           };
         });
@@ -550,6 +629,93 @@ router.get(
     } catch (error) {
       console.error("Error validating documents:", error);
       res.status(500).json({ error: "Failed to validate documents" });
+    }
+  }
+);
+
+// Update document status for manually entered documents
+router.put(
+  "/update-status/:employeeId",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      const { documentName, status, notes } = req.body;
+
+      // Verify user is HR or admin
+      if (req.user.role !== "hr" && req.user.role !== "admin") {
+        return res
+          .status(403)
+          .json({ error: "Access denied. HR role required." });
+      }
+
+      // Update document status in document_collection table
+      const result = await pool.query(
+        `
+        UPDATE document_collection 
+        SET status = $1, notes = $2, updated_at = CURRENT_TIMESTAMP
+        WHERE employee_id = $3 AND document_name = $4
+        RETURNING *
+      `,
+        [status, notes, employeeId, documentName]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      res.json({
+        message: "Document status updated successfully",
+        document: result.rows[0],
+      });
+    } catch (error) {
+      console.error("Error updating document status:", error);
+      res.status(500).json({ error: "Failed to update document status" });
+    }
+  }
+);
+
+// Bulk update document status for multiple documents
+router.put(
+  "/bulk-update-status/:employeeId",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      const { documents } = req.body; // Array of { documentName, status, notes }
+
+      // Verify user is HR or admin
+      if (req.user.role !== "hr" && req.user.role !== "admin") {
+        return res
+          .status(403)
+          .json({ error: "Access denied. HR role required." });
+      }
+
+      const results = [];
+
+      for (const doc of documents) {
+        const result = await pool.query(
+          `
+          UPDATE document_collection 
+          SET status = $1, notes = $2, updated_at = CURRENT_TIMESTAMP
+          WHERE employee_id = $3 AND document_name = $4
+          RETURNING *
+        `,
+          [doc.status, doc.notes || null, employeeId, doc.documentName]
+        );
+
+        if (result.rows.length > 0) {
+          results.push(result.rows[0]);
+        }
+      }
+
+      res.json({
+        message: `${results.length} documents updated successfully`,
+        documents: results,
+      });
+    } catch (error) {
+      console.error("Error bulk updating document status:", error);
+      res.status(500).json({ error: "Failed to update document status" });
     }
   }
 );

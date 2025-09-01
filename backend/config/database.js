@@ -357,9 +357,9 @@ const initializeTables = async () => {
         id SERIAL PRIMARY KEY,
         employee_id INTEGER NOT NULL,
         year INTEGER NOT NULL,
-        total_allocated INTEGER DEFAULT 27,
-        leaves_taken INTEGER DEFAULT 0,
-        leaves_remaining INTEGER DEFAULT 27,
+              total_allocated INTEGER DEFAULT 15,
+      leaves_taken INTEGER DEFAULT 0,
+      leaves_remaining INTEGER DEFAULT 15,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(employee_id, year),
@@ -387,7 +387,7 @@ const initializeTables = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS system_settings (
         id SERIAL PRIMARY KEY,
-        total_annual_leaves INTEGER DEFAULT 27,
+        total_annual_leaves INTEGER DEFAULT 15,
         allow_half_day BOOLEAN DEFAULT TRUE,
         approval_workflow VARCHAR(50) DEFAULT 'manager_then_hr',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -503,10 +503,46 @@ const initializeTables = async () => {
       )
     `);
 
+    // Create document_collection table for HR document tracking
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS document_collection (
+        id SERIAL PRIMARY KEY,
+        employee_id INTEGER NOT NULL,
+        employee_name VARCHAR(255) NOT NULL,
+        emp_id VARCHAR(100) NOT NULL,
+        department VARCHAR(100),
+        join_date DATE NOT NULL,
+        due_date DATE NOT NULL,
+        document_name VARCHAR(255) NOT NULL,
+        document_type VARCHAR(50) NOT NULL DEFAULT 'Required',
+        status VARCHAR(50) DEFAULT 'Pending',
+        notes TEXT,
+        uploaded_file_url VARCHAR(500),
+        uploaded_file_name VARCHAR(255),
+        uploaded_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create document_templates table for predefined document types
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS document_templates (
+        id SERIAL PRIMARY KEY,
+        document_name VARCHAR(255) NOT NULL UNIQUE,
+        document_type VARCHAR(50) NOT NULL DEFAULT 'Required',
+        description TEXT,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Insert default system settings
     await pool.query(`
       INSERT INTO system_settings (total_annual_leaves, allow_half_day, approval_workflow)
-      SELECT 27, TRUE, 'manager_then_hr'
+      SELECT 15, TRUE, 'manager_then_hr'
       WHERE NOT EXISTS (SELECT 1 FROM system_settings)
     `);
 
@@ -524,15 +560,39 @@ const initializeTables = async () => {
     // Insert default leave types
     await pool.query(`
       INSERT INTO leave_types (type_name, description, max_days, color) VALUES
-      ('Privilege Leave', 'Annual leave for personal reasons', NULL, '#3B82F6'),
-      ('Sick Leave', 'Medical leave for health reasons', 12, '#EF4444'),
-      ('Casual Leave', 'Short-term leave for urgent matters', 12, '#10B981'),
+      ('Earned/Annual Leave', 'Annual leave earned monthly (1.25 days/month)', 15, '#3B82F6'),
+      ('Sick Leave', 'Medical leave earned monthly (0.5 days/month)', 6, '#EF4444'),
+      ('Casual Leave', 'Short-term leave earned monthly (0.5 days/month)', 6, '#10B981'),
       ('Maternity Leave', 'Leave for expecting mothers', 180, '#8B5CF6'),
       ('Paternity Leave', 'Leave for new fathers', 15, '#F59E0B'),
-      ('Paid Leave', 'Paid leave deducted from annual allocation', NULL, '#06B6D4'),
-      ('Unpaid Leave', 'Unpaid leave not affecting annual allocation', NULL, '#F97316'),
       ('Comp Off', 'Compensatory off for overtime work', NULL, '#84CC16')
       ON CONFLICT (type_name) DO NOTHING
+    `);
+
+    // Insert default document templates
+    await pool.query(`
+      INSERT INTO document_templates (document_name, document_type, description) VALUES
+      ('Updated Resume', 'Required', 'Current resume with latest experience and skills'),
+      ('Offer & Appointment Letter', 'Optional', 'Official offer letter and appointment confirmation'),
+      ('Latest Compensation Letter', 'Optional', 'Most recent salary and compensation details'),
+      ('Experience & Relieving Letter', 'Optional', 'Previous employment experience and relieving letter'),
+      ('Latest 3 Months Pay Slips', 'Required', 'Pay slips from the last 3 months of previous employment'),
+      ('Form 16 / Form 12B / Taxable Income Statement', 'Optional', 'Tax-related documents for income verification'),
+      ('SSC Certificate (10th)', 'Required', 'Secondary School Certificate for 10th standard'),
+      ('SSC Marksheet (10th)', 'Required', 'Secondary School Certificate marksheet for 10th standard'),
+      ('HSC Certificate (12th)', 'Required', 'Higher Secondary Certificate for 12th standard'),
+      ('HSC Marksheet (12th)', 'Required', 'Higher Secondary Certificate marksheet for 12th standard'),
+      ('Graduation Consolidated Marksheet', 'Required', 'Graduation consolidated marksheet'),
+      ('Graduation Original/Provisional Certificate', 'Required', 'Graduation original or provisional certificate'),
+      ('Post-Graduation Marksheet', 'Optional', 'Post-graduation marksheet if applicable'),
+      ('Post-Graduation Certificate', 'Optional', 'Post-graduation certificate if applicable'),
+      ('PAN Card', 'Required', 'Permanent Account Number card for tax purposes'),
+      ('Aadhaar Card', 'Required', 'Aadhaar card for identity verification'),
+      ('Passport', 'Required', 'Passport for identity verification'),
+      ('Address Proof', 'Required', 'Valid address proof document'),
+      ('Educational Certificates', 'Optional', 'Relevant educational qualification certificates'),
+      ('Professional Certifications', 'Optional', 'Professional certifications and training documents')
+      ON CONFLICT (document_name) DO NOTHING
     `);
 
     // Create indexes for better performance
@@ -571,6 +631,11 @@ const initializeTables = async () => {
       CREATE INDEX IF NOT EXISTS idx_expenses_project ON expenses(project_reference);
       CREATE INDEX IF NOT EXISTS idx_expenses_client ON expenses(client_code);
       CREATE INDEX IF NOT EXISTS idx_expense_attachments_expense_id ON expense_attachments(expense_id);
+      CREATE INDEX IF NOT EXISTS idx_document_collection_employee_id ON document_collection(employee_id);
+      CREATE INDEX IF NOT EXISTS idx_document_collection_status ON document_collection(status);
+      CREATE INDEX IF NOT EXISTS idx_document_collection_document_type ON document_collection(document_type);
+      CREATE INDEX IF NOT EXISTS idx_document_collection_due_date ON document_collection(due_date);
+      CREATE INDEX IF NOT EXISTS idx_document_templates_active ON document_templates(is_active);
     `);
 
     // Insert default HR user if not exists
@@ -734,6 +799,51 @@ const initializeTables = async () => {
         );
       }
     }
+
+    // Create function to update document collection status when documents are uploaded
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION update_document_collection_status()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        -- Update document_collection status when employee_documents are inserted/updated
+        UPDATE document_collection 
+        SET 
+          status = 'Received',
+          updated_at = CURRENT_TIMESTAMP
+        WHERE employee_id = NEW.employee_id
+        AND (
+          (NEW.document_type = 'resume' AND document_name LIKE '%Resume%')
+          OR (NEW.document_type = 'offer_letter' AND document_name LIKE '%Offer%')
+          OR (NEW.document_type = 'compensation_letter' AND document_name LIKE '%Compensation%')
+          OR (NEW.document_type = 'experience_letter' AND document_name LIKE '%Experience%')
+          OR (NEW.document_type = 'payslip' AND document_name LIKE '%Pay%')
+          OR (NEW.document_type = 'form16' AND document_name LIKE '%Form 16%')
+          OR (NEW.document_type = 'ssc_certificate' AND document_name LIKE '%SSC%Certificate%')
+          OR (NEW.document_type = 'ssc_marksheet' AND document_name LIKE '%SSC%Marksheet%')
+          OR (NEW.document_type = 'hsc_certificate' AND document_name LIKE '%HSC%Certificate%')
+          OR (NEW.document_type = 'hsc_marksheet' AND document_name LIKE '%HSC%Marksheet%')
+          OR (NEW.document_type = 'graduation_marksheet' AND document_name LIKE '%Graduation%Marksheet%')
+          OR (NEW.document_type = 'graduation_certificate' AND document_name LIKE '%Graduation%Certificate%')
+          OR (NEW.document_type = 'postgrad_marksheet' AND document_name LIKE '%Post-Graduation%Marksheet%')
+          OR (NEW.document_type = 'postgrad_certificate' AND document_name LIKE '%Post-Graduation%Certificate%')
+          OR (NEW.document_type = 'aadhaar' AND document_name LIKE '%Aadhaar%')
+          OR (NEW.document_type = 'pan' AND document_name LIKE '%PAN%')
+          OR (NEW.document_type = 'passport' AND document_name LIKE '%Passport%')
+        );
+        
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+    `);
+
+    // Create trigger to automatically update document collection status
+    await pool.query(`
+      DROP TRIGGER IF EXISTS trigger_update_document_collection ON employee_documents;
+      CREATE TRIGGER trigger_update_document_collection
+      AFTER INSERT OR UPDATE ON employee_documents
+      FOR EACH ROW
+      EXECUTE FUNCTION update_document_collection_status();
+    `);
 
     console.log("✅ Database tables initialized successfully");
   } catch (error) {

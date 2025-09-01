@@ -533,7 +533,7 @@ const ManualEmployeeAdd = ({ onEmployeeAdded }) => {
         <ul className="text-sm text-blue-700 space-y-1">
           <li>• Employee account is created with temporary password</li>
           <li>• Employee is added directly to the master employee table</li>
-          <li>• Leave balance is initialized (27 days per year)</li>
+          <li>• Leave balance is initialized (15 days per year)</li>
           <li>• Onboarding email is sent with login credentials</li>
           <li>
             • Employee can immediately access attendance and leave systems

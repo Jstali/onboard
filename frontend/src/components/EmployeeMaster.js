@@ -25,6 +25,8 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingEmployee, setViewingEmployee] = useState(null);
 
   const handleEmployeeAdded = () => {
     setShowAddForm(false);
@@ -45,6 +47,11 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
   useEffect(() => {
     fetchManagers();
   }, []);
+
+  const handleViewEmployee = (employee) => {
+    setViewingEmployee(employee);
+    setShowViewModal(true);
+  };
 
   const handleEditEmployee = (employee) => {
     setEditingEmployee(employee);
@@ -414,19 +421,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
-                    onClick={() => {
-                      alert(
-                        `Employee: ${employee.employee_name}\nID: ${
-                          employee.employee_id
-                        }\nEmail: ${employee.company_email}\nType: ${
-                          employee.type
-                        }\nDOJ: ${new Date(
-                          employee.doj
-                        ).toLocaleDateString()}\nManager: ${
-                          employee.display_manager_name || "Not Assigned"
-                        }\nStatus: ${employee.status}`
-                      );
-                    }}
+                    onClick={() => handleViewEmployee(employee)}
                     className="text-blue-600 hover:text-blue-900 mr-3"
                     title="View"
                   >
@@ -702,6 +697,95 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Employee Modal */}
+      {showViewModal && viewingEmployee && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Employee Details
+              </h3>
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Employee
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {viewingEmployee.employee_name}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    ID
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {viewingEmployee.employee_id}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {viewingEmployee.company_email}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Type
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {viewingEmployee.type}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    DOJ
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {new Date(viewingEmployee.doj).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Manager
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {viewingEmployee.display_manager_name || "Not Assigned"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Status
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {viewingEmployee.status}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
+                >
+                  OK
+                </button>
+              </div>
             </div>
           </div>
         </div>

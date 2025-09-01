@@ -427,9 +427,16 @@ router.post(
         }
       }
 
-      // Send email notification to all managers
+      // Send email notification to PRIMARY MANAGER ONLY (manager1)
       console.log("🔍 Managers found:", managers);
       if (managers && managers.length > 0) {
+        // Only send email to the primary manager (first manager in the array)
+        const primaryManager = managers[0];
+        console.log(
+          "📧 Sending email to PRIMARY manager only:",
+          primaryManager.email
+        );
+
         const emailData = {
           id: expenseRequest.id,
           employeeName,
@@ -444,22 +451,24 @@ router.post(
           attachmentName: expenseRequest.attachment_name,
           approvalToken,
           totalManagers: managers.length,
+          primaryManagerOnly: true, // Flag to indicate this is primary manager only
         };
 
-        // Send email to each manager asynchronously (non-blocking)
-        managers.forEach((manager) => {
-          console.log("📧 Sending email to manager:", manager.email);
-          console.log("📧 Email data:", emailData);
+        // Send email ONLY to primary manager
+        sendExpenseRequestToManager(primaryManager.email, emailData)
+          .then((emailResult) => {
+            console.log("📧 Email sent to primary manager:", emailResult);
+          })
+          .catch((emailError) => {
+            console.error(
+              "❌ Email sending to primary manager failed:",
+              emailError
+            );
+          });
 
-          // Send email asynchronously without waiting
-          sendExpenseRequestToManager(manager.email, emailData)
-            .then((emailResult) => {
-              console.log("📧 Email send result:", emailResult);
-            })
-            .catch((emailError) => {
-              console.error("❌ Email sending failed:", emailError);
-            });
-        });
+        console.log(
+          "📧 Note: Email sent only to primary manager. Optional managers (manager2, manager3) will not receive emails."
+        );
       } else {
         console.log("❌ No manager found for employee:", employeeId);
       }
@@ -860,23 +869,35 @@ router.put(
       );
       const hrName = `${hrResult.rows[0].first_name} ${hrResult.rows[0].last_name}`;
 
-      // Update expense request
+      // Update expense request with timeout
       const status = action === "approve" ? "approved" : "rejected";
-      const updateResult = await pool.query(
-        `
-        UPDATE expenses 
-        SET 
-          status = $1,
-          hr_id = $2,
-          hr_name = $3,
-          hr_approved_at = CURRENT_TIMESTAMP,
-          hr_approval_notes = $4,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = $5
-        RETURNING *
-      `,
-        [status, hrId, hrName, notes, id]
-      );
+
+      // Add timeout wrapper for database operations
+      const dbTimeoutPromise = new Promise((_, reject) => {
+        setTimeout(
+          () => reject(new Error("Database operation timeout after 5 seconds")),
+          5000
+        );
+      });
+
+      const updateResult = await Promise.race([
+        pool.query(
+          `
+          UPDATE expenses 
+          SET 
+            status = $1,
+            hr_id = $2,
+            hr_name = $3,
+            hr_approved_at = CURRENT_TIMESTAMP,
+            hr_approval_notes = $4,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = $5
+          RETURNING *
+        `,
+          [status, hrId, hrName, notes, id]
+        ),
+        dbTimeoutPromise,
+      ]);
 
       if (updateResult.rows.length === 0) {
         return res.status(404).json({ error: "Expense request not found" });
@@ -884,21 +905,27 @@ router.put(
 
       const expenseRequest = updateResult.rows[0];
 
-      // Notify employee
-      const employeeResult = await pool.query(
-        `
-        SELECT email FROM users WHERE id = $1
-      `,
-        [expenseRequest.employee_id]
-      );
+      // Notify employee (non-blocking)
+      const employeeResult = await Promise.race([
+        pool.query(
+          `
+          SELECT email FROM users WHERE id = $1
+        `,
+          [expenseRequest.employee_id]
+        ),
+        dbTimeoutPromise,
+      ]);
 
       if (employeeResult.rows.length > 0) {
-        await sendExpenseApprovalToEmployee(
+        // Send email notification asynchronously to avoid blocking the response
+        sendExpenseApprovalToEmployee(
           employeeResult.rows[0].email,
           expenseRequest,
           status,
           hrName
-        );
+        ).catch((err) => {
+          console.error("❌ Email notification failed (non-critical):", err);
+        });
       }
 
       res.json({
@@ -907,8 +934,24 @@ router.put(
       });
     } catch (error) {
       console.error("❌ Error processing HR approval:", error);
-      res.status(500).json({
-        error: "Failed to process approval",
+
+      // Provide more specific error messages
+      let errorMessage = "Failed to process approval";
+      let statusCode = 500;
+
+      if (error.message.includes("timeout")) {
+        errorMessage = "Operation timed out. Please try again.";
+        statusCode = 408;
+      } else if (error.message.includes("connection")) {
+        errorMessage = "Database connection error. Please try again.";
+        statusCode = 503;
+      } else if (error.message.includes("email")) {
+        errorMessage = "Approval processed but email notification failed.";
+        statusCode = 200; // Still return success since the main operation worked
+      }
+
+      res.status(statusCode).json({
+        error: errorMessage,
         details: error.message,
       });
     }
@@ -1180,7 +1223,7 @@ router.get("/approve/:id", async (req, res) => {
           <style>
               @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
               body { font-family: 'Inter', sans-serif; }
-              .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+              .gradient-bg { background: #ffffff; }
               .success-animation { animation: successPulse 2s ease-in-out infinite; }
               @keyframes successPulse {
                   0%, 100% { transform: scale(1); }
@@ -1280,17 +1323,7 @@ router.get("/approve/:id", async (req, res) => {
                       </div>
                   </div>
 
-                  <!-- Action Buttons -->
-                  <div class="space-y-3">
-                      <button onclick="goToDashboard()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 flex items-center justify-center">
-                          <i class="fas fa-tachometer-alt mr-2"></i>
-                          Go to Dashboard
-                      </button>
-                      <button onclick="viewExpenseHistory()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl transition duration-200 flex items-center justify-center">
-                          <i class="fas fa-history mr-2"></i>
-                          View Expense History
-                      </button>
-                  </div>
+
 
                   <!-- Footer -->
                   <div class="mt-6 pt-4 border-t border-gray-200">
@@ -1301,23 +1334,10 @@ router.get("/approve/:id", async (req, res) => {
                   </div>
               </div>
 
-              <!-- Company Logo/Branding -->
-              <div class="text-center mt-6">
-                  <p class="text-white text-sm opacity-80">
-                      Powered by <span class="font-semibold">Onboard HR System</span>
-                  </p>
-              </div>
+
           </div>
 
-          <script>
-              function goToDashboard() {
-                  window.location.href = 'http://localhost:3001/manager-dashboard';
-              }
 
-              function viewExpenseHistory() {
-                  window.location.href = 'http://localhost:3001/manager-dashboard?tab=expenses';
-              }
-          </script>
       </body>
       </html>
     `);

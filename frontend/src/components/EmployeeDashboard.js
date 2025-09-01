@@ -193,48 +193,10 @@ const EmployeeDashboard = () => {
               </div>
             </div>
 
-            {/* Onboarding Status */}
-            {onboardingStatus && (
-              <OnboardingStatus
-                status={onboardingStatus}
-                onRefresh={checkOnboardingStatus}
-              />
-            )}
-
             {/* Onboarding Form or Success Message */}
             {onboardingStatus?.hasForm ? (
-              onboardingStatus.status === "approved" ? (
-                <div className="bg-success-50 border border-success-200 rounded-lg p-6">
-                  <div className="flex items-center">
-                    <FaCheckCircle className="w-8 h-8 text-success-600 mr-4" />
-                    <div>
-                      <h3 className="text-lg font-medium text-success-800">
-                        Onboarding Completed Successfully!
-                      </h3>
-                      <p className="text-success-700 mt-1">
-                        You can now access the attendance portal and other
-                        employee features.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex space-x-3">
-                    <a
-                      href="/attendance"
-                      className="btn-success inline-flex items-center"
-                    >
-                      <FaCalendarAlt className="mr-2" />
-                      Go to Attendance Portal
-                    </a>
-                    <button
-                      onClick={() => (window.location.href = "#documents")}
-                      className="btn-secondary inline-flex items-center"
-                    >
-                      <FaFileAlt className="mr-2" />
-                      Manage Documents
-                    </button>
-                  </div>
-                </div>
-              ) : onboardingStatus.status === "submitted" ? (
+              onboardingStatus.status ===
+              "approved" ? null : onboardingStatus.status === "submitted" ? (
                 <div className="bg-warning-50 border border-warning-200 rounded-lg p-6">
                   <div className="flex items-center">
                     <div className="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center mr-4">
@@ -258,79 +220,89 @@ const EmployeeDashboard = () => {
               <OnboardingForm onSuccess={checkOnboardingStatus} />
             )}
 
-            {/* Document Status Section - Show for approved employees */}
-            {onboardingStatus?.status === "approved" && employeeData && (
-              <div className="mt-6">
-                <DocumentStatus
-                  employeeId={user?.id}
-                  employeeName={
-                    `${user?.first_name} ${user?.last_name}`.trim() ||
-                    employeeData.form_data?.name
-                  }
-                  employmentType={employeeData.employee_type}
-                  isHR={false}
-                />
+            {/* Quick Actions - Only show when onboarding is approved */}
+            {onboardingStatus?.status === "approved" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <Link
+                  to="/attendance"
+                  className="bg-blue-600 text-white p-6 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <FaCalendarAlt className="text-3xl mr-4" />
+                    <div>
+                      <h3 className="text-xl font-semibold">Mark Attendance</h3>
+                      <p className="text-blue-100">
+                        Record your daily attendance
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+
+                <Link
+                  to="/leave-request"
+                  className="bg-green-600 text-white p-6 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <FaCalendarPlus className="text-3xl mr-4" />
+                    <div>
+                      <h3 className="text-xl font-semibold">Leave Request</h3>
+                      <p className="text-green-100">
+                        Submit leave applications
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+
+                <button
+                  onClick={() => setActiveTab("expenses")}
+                  className="bg-orange-600 text-white p-6 rounded-lg shadow-lg hover:bg-orange-700 transition-colors text-left"
+                >
+                  <div className="flex items-center">
+                    <FaReceipt className="text-3xl mr-4" />
+                    <div>
+                      <h3 className="text-xl font-semibold">Expense Request</h3>
+                      <p className="text-orange-100">Submit expense claims</p>
+                    </div>
+                  </div>
+                </button>
+
+                <Link
+                  to="/profile"
+                  className="bg-purple-600 text-white p-6 rounded-lg shadow-lg hover:bg-purple-700 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <FaUserEdit className="text-3xl mr-4" />
+                    <div>
+                      <h3 className="text-xl font-semibold">
+                        Profile Settings
+                      </h3>
+                      <p className="text-purple-100">
+                        Manage your account settings
+                      </p>
+                    </div>
+                  </div>
+                </Link>
               </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Link
-                to="/attendance"
-                className="bg-blue-600 text-white p-6 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
-              >
+            ) : onboardingStatus?.hasForm &&
+              onboardingStatus?.status !== "approved" ? (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
                 <div className="flex items-center">
-                  <FaCalendarAlt className="text-3xl mr-4" />
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-4">
+                    <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
+                  </div>
                   <div>
-                    <h3 className="text-xl font-semibold">Mark Attendance</h3>
-                    <p className="text-blue-100">
-                      Record your daily attendance
+                    <h3 className="text-lg font-medium text-gray-800">
+                      Employee Features Pending Approval
+                    </h3>
+                    <p className="text-gray-600 mt-1">
+                      Your onboarding form is being reviewed. Once approved by
+                      HR, you'll have access to attendance, leave requests, and
+                      expense management features.
                     </p>
                   </div>
                 </div>
-              </Link>
-
-              <Link
-                to="/leave-request"
-                className="bg-green-600 text-white p-6 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
-              >
-                <div className="flex items-center">
-                  <FaCalendarPlus className="text-3xl mr-4" />
-                  <div>
-                    <h3 className="text-xl font-semibold">Leave Request</h3>
-                    <p className="text-green-100">Submit leave applications</p>
-                  </div>
-                </div>
-              </Link>
-
-              <button
-                onClick={() => setActiveTab("expenses")}
-                className="bg-orange-600 text-white p-6 rounded-lg shadow-lg hover:bg-orange-700 transition-colors text-left"
-              >
-                <div className="flex items-center">
-                  <FaReceipt className="text-3xl mr-4" />
-                  <div>
-                    <h3 className="text-xl font-semibold">Expense Request</h3>
-                    <p className="text-orange-100">Submit expense claims</p>
-                  </div>
-                </div>
-              </button>
-
-              <Link
-                to="/profile"
-                className="bg-purple-600 text-white p-6 rounded-lg shadow-lg hover:bg-purple-700 transition-colors"
-              >
-                <div className="flex items-center">
-                  <FaUserEdit className="text-3xl mr-4" />
-                  <div>
-                    <h3 className="text-xl font-semibold">Profile Settings</h3>
-                    <p className="text-purple-100">
-                      Manage your account settings
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </div>
+              </div>
+            ) : null}
           </>
         )}
       </main>
