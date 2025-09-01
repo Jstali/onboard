@@ -109,7 +109,7 @@ const DocumentStatus = ({
         (doc) => doc.document_type === documentType
       );
 
-      if (fileToView) {
+      if (fileToView && fileToView.file_url) {
         // Ensure all required properties exist
         const safeFile = {
           document_type: fileToView.document_type || documentType,
@@ -119,14 +119,22 @@ const DocumentStatus = ({
           file_size: fileToView.file_size || 0,
           uploaded_at: fileToView.uploaded_at || new Date().toISOString(),
         };
+
+        console.log("✅ File found, opening viewer:", {
+          fileName: safeFile.file_name,
+          fileUrl: safeFile.file_url,
+          fileType: safeFile.file_type,
+        });
+
         setSelectedFile(safeFile);
         setShowFileViewer(true);
       } else {
-        toast.error("File not found");
+        console.log("⚠️ File not found for document type:", documentType);
+        // Don't show error toast, just log it
       }
     } catch (error) {
       console.error("Error viewing file:", error);
-      toast.error("Failed to load file");
+      // Don't show error toast, just log it
     }
   };
 
@@ -821,23 +829,42 @@ const DocumentStatus = ({
                     });
 
                     return (
-                      <iframe
-                        src={fullUrl}
-                        className="w-full h-96"
-                        title={selectedFile.file_name || "PDF"}
-                        onLoad={() => {
-                          console.log("✅ PDF iframe loaded successfully");
-                        }}
-                        onError={(e) => {
-                          console.error("❌ PDF load error:", e);
-                          console.error("❌ Failed URL:", fullUrl);
-                          // Don't show error toast, just log it
-                          console.log(
-                            "⚠️ PDF preview failed, showing download option instead"
-                          );
-                        }}
-                        style={{ border: "1px solid #e5e7eb" }}
-                      />
+                      <div className="relative">
+                        <iframe
+                          src={fullUrl}
+                          className="w-full h-96"
+                          title={selectedFile.file_name || "PDF"}
+                          onLoad={() => {
+                            console.log("✅ PDF iframe loaded successfully");
+                          }}
+                          onError={(e) => {
+                            console.error("❌ PDF load error:", e);
+                            console.error("❌ Failed URL:", fullUrl);
+                            // Don't show error toast, just log it
+                            console.log(
+                              "⚠️ PDF preview failed, showing download option instead"
+                            );
+                          }}
+                          style={{ border: "1px solid #e5e7eb" }}
+                        />
+                        {/* Fallback button for iframe issues */}
+                        <div className="absolute top-2 left-2">
+                          <a
+                            href={fullUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                            onClick={() => {
+                              console.log(
+                                "✅ Opening PDF in new tab:",
+                                fullUrl
+                              );
+                            }}
+                          >
+                            Open in New Tab
+                          </a>
+                        </div>
+                      </div>
                     );
                   })()}
                   <div className="absolute top-2 right-2 bg-white bg-opacity-75 px-2 py-1 rounded text-xs text-gray-600">
