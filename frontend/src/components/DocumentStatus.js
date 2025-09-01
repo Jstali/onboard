@@ -6,7 +6,6 @@ import {
   FaUpload,
   FaEye,
   FaFileAlt,
-  FaEdit,
   FaTrash,
   FaDownload,
 } from "react-icons/fa";
@@ -26,8 +25,7 @@ const DocumentStatus = ({
   const [loading, setLoading] = useState(true);
   const [showUploadSection, setShowUploadSection] = useState(false);
   const [overallStatus, setOverallStatus] = useState({});
-  const [editingDocument, setEditingDocument] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
+
   const [showAllDocuments, setShowAllDocuments] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState({});
   const [showFileViewer, setShowFileViewer] = useState(false);
@@ -77,11 +75,6 @@ const DocumentStatus = ({
       });
     });
     return uploaded;
-  };
-
-  const handleEditDocument = (documentType, documentCategory) => {
-    setEditingDocument({ type: documentType, category: documentCategory });
-    setShowEditModal(true);
   };
 
   const handleViewAllDocuments = () => {
@@ -252,8 +245,6 @@ const DocumentStatus = ({
       );
 
       toast.success("Document replaced successfully!");
-      setShowEditModal(false);
-      setEditingDocument(null);
       fetchValidation();
     } catch (error) {
       console.error("Error replacing document:", error);
@@ -419,15 +410,6 @@ const DocumentStatus = ({
                             <div className="flex items-center space-x-1">
                               <button
                                 onClick={() =>
-                                  handleEditDocument(requirement.type, category)
-                                }
-                                className="text-blue-600 hover:text-blue-800 p-1"
-                                title="Replace document"
-                              >
-                                <FaEdit className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={() =>
                                   handleDeleteDocument(requirement.type)
                                 }
                                 className="text-red-600 hover:text-red-800 p-1"
@@ -524,66 +506,6 @@ const DocumentStatus = ({
         )}
       </div>
 
-      {/* Edit Document Modal */}
-      {showEditModal && editingDocument && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Replace Document
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Upload a new file to replace the existing document for:{" "}
-                <strong>
-                  {editingDocument.type.replace(/_/g, " ").toUpperCase()}
-                </strong>
-              </p>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select New File
-                </label>
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      handleReplaceDocument(
-                        editingDocument.type,
-                        editingDocument.category,
-                        e.target.files
-                      );
-                    }
-                  }}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)
-                </p>
-              </div>
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setEditingDocument(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleDeleteDocument(editingDocument.type)}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-                >
-                  Delete Document
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* View All Documents Modal */}
       {showAllDocuments && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
@@ -661,15 +583,7 @@ const DocumentStatus = ({
                                   <FaEye className="inline mr-1" />
                                   View
                                 </button>
-                                <button
-                                  onClick={() =>
-                                    handleEditDocument(doc.type, category)
-                                  }
-                                  className="text-blue-600 hover:text-blue-800 text-sm"
-                                >
-                                  <FaEdit className="inline mr-1" />
-                                  Edit
-                                </button>
+
                                 <button
                                   onClick={() => handleDeleteDocument(doc.type)}
                                   className="text-red-600 hover:text-red-800 text-sm"

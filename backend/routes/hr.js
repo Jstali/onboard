@@ -1013,6 +1013,17 @@ router.get("/master/export", async (req, res) => {
 router.post("/master/import", upload.single("excelFile"), async (req, res) => {
   const client = await pool.connect();
   try {
+    // Debug function for date parsing
+    const debugDate = (value, context) => {
+      console.log(`🔍 ${context}:`, {
+        value: value,
+        type: typeof value,
+        isDate: value instanceof Date,
+        isNaN: isNaN(value),
+        stringValue: String(value),
+        dateValue: value instanceof Date ? value.toISOString() : null,
+      });
+    };
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
@@ -1029,11 +1040,19 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
       const worksheet = workbook.Sheets[sheetName];
       jsonData = XLSX.utils.sheet_to_json(worksheet);
     } else {
-      // Parse Excel file
-      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+      // Parse Excel file with proper date handling
+      const workbook = XLSX.read(req.file.buffer, {
+        type: "buffer",
+        cellDates: true, // This is crucial for proper date parsing
+        cellNF: false,
+        cellText: false,
+      });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      jsonData = XLSX.utils.sheet_to_json(worksheet);
+      jsonData = XLSX.utils.sheet_to_json(worksheet, {
+        raw: false, // This ensures dates are converted to Date objects
+        dateNF: "yyyy-mm-dd", // Format for date output
+      });
     }
 
     if (jsonData.length === 0) {
@@ -1224,8 +1243,14 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
         let dojDate;
         const dateValue = mappedData.doj;
 
+        debugDate(dateValue, `Row ${rowNumber} - Original date value`);
+
         // Enhanced date parsing for various formats
-        if (typeof dateValue === "string") {
+        if (dateValue instanceof Date) {
+          // Excel date was properly parsed as Date object
+          dojDate = dateValue;
+          console.log(`✅ Date object detected: ${dojDate.toISOString()}`);
+        } else if (typeof dateValue === "string") {
           // Handle MM/DD/YY format (like "1/6/25")
           if (/^\d{1,2}\/\d{1,2}\/\d{2}$/.test(dateValue)) {
             const [month, day, year] = dateValue.split("/");
@@ -1257,12 +1282,21 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
               0
             );
           }
-          // Handle other formats
+          // Handle other string formats
           else {
             dojDate = new Date(dateValue);
           }
-        } else if (dateValue instanceof Date) {
-          dojDate = dateValue;
+        } else if (typeof dateValue === "number") {
+          // Handle Excel serial number (days since 1900-01-01)
+          // Excel uses 1900-01-01 as day 1, but incorrectly treats 1900 as a leap year
+          const excelEpoch = new Date(1900, 0, 1);
+          const daysSinceEpoch = dateValue - 2; // Subtract 2 to account for Excel's leap year bug
+          dojDate = new Date(
+            excelEpoch.getTime() + daysSinceEpoch * 24 * 60 * 60 * 1000
+          );
+          console.log(
+            `✅ Excel serial number converted: ${dateValue} -> ${dojDate.toISOString()}`
+          );
         } else {
           dojDate = new Date(dateValue);
         }
