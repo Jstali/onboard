@@ -117,22 +117,36 @@ const HRDashboard = () => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">HR Dashboard</h1>
+            <div className="flex items-center space-x-4">
+              {/* Logo */}
+              <div className="flex items-center space-x-3 cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105">
+                <img
+                  src={require("../assets/nxzen.png")}
+                  alt="nxzen Logo"
+                  className="w-10 h-10 object-contain transition-transform duration-300 hover:rotate-12"
+                />
+                <div className="text-black font-semibold text-lg transition-colors duration-300 hover:text-primary-600">
+                  nxzen
+                </div>
+              </div>
+              <div className="border-l border-gray-300 h-8"></div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                HR Employee Onboarding & Attendance Management
+              </h1>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 to="/profile"
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-md"
               >
-                <FaUserEdit className="mr-2" />
+                <FaUserEdit className="mr-2 transition-transform duration-300 hover:scale-110" />
                 Profile
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-red-100 hover:text-red-700 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-md"
               >
-                <FaSignOutAlt className="mr-2" />
+                <FaSignOutAlt className="mr-2 transition-transform duration-300 hover:scale-110" />
                 Logout
               </button>
             </div>
@@ -143,20 +157,24 @@ const HRDashboard = () => {
       {/* Navigation Tabs */}
       <nav className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+          <div className="flex space-x-6 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`flex items-center py-4 px-3 border-b-2 font-medium text-sm transition-all duration-300 ease-in-out transform hover:scale-105 whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
-                      ? "border-primary-500 text-primary-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      ? "border-primary-500 text-primary-600 bg-primary-50"
+                      : "border-transparent text-gray-500 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50"
                   }`}
                 >
-                  <Icon className="mr-2" />
+                  <Icon
+                    className={`mr-2 transition-transform duration-300 ${
+                      activeTab === tab.id ? "scale-110" : "hover:scale-110"
+                    }`}
+                  />
                   {tab.label}
                 </button>
               );

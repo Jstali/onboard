@@ -17,28 +17,59 @@ async function sendOnboardingEmail(to, tempPassword) {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to,
-    subject: "Employee Onboarding Login Details",
-    text: `Welcome to the company! \n\nLogin here: http://localhost:3000/login \nEmail: ${to} \nTemporary Password: ${tempPassword}\n\nPlease reset your password after logging in.`,
+    subject: "Welcome to nxzen - Employee Onboarding Login Details",
+    text: `Welcome to nxzen! \n\nLogin here: http://localhost:3000/login \nEmail: ${to} \nTemporary Password: ${tempPassword}\n\nPlease reset your password after logging in.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Welcome to the Company!</h2>
-        <p>Your employee onboarding account has been created successfully.</p>
-        
-        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #007bff; margin-top: 0;">Login Details</h3>
-          <p><strong>Login URL:</strong> <a href="http://localhost:3000/login">http://localhost:3000/login</a></p>
-          <p><strong>Email:</strong> ${to}</p>
-          <p><strong>Temporary Password:</strong> <span style="background-color: #fff; padding: 5px 10px; border-radius: 4px; font-family: monospace;">${tempPassword}</span></p>
+        <!-- Logo Section -->
+        <div style="text-align: center; margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border-radius: 12px;">
+          <div style="display: inline-block; text-align: center;">
+            <!-- Green Symbol -->
+            <div style="width: 60px; height: 60px; margin: 0 auto 15px; position: relative;">
+              <svg width="60" height="60" viewBox="0 0 60 60" style="display: block;">
+                <!-- Infinity-like symbol in green -->
+                <path d="M15 30 Q15 15 30 15 Q45 15 45 30 Q45 45 30 45 Q15 45 15 30" 
+                      stroke="#00ff88" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <path d="M15 30 Q15 45 30 45 Q45 45 45 30 Q45 15 30 15 Q15 15 15 30" 
+                      stroke="#00ff88" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <!-- X lines -->
+                <line x1="20" y1="20" x2="40" y2="40" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
+                <line x1="40" y1="20" x2="20" y2="40" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <!-- nxzen text -->
+            <div style="color: white; font-size: 24px; font-weight: 300; letter-spacing: 2px; margin-top: 10px;">
+              nxzen
+            </div>
+          </div>
         </div>
         
-        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 0; color: #856404;"><strong>Important:</strong> Please reset your password after your first login for security purposes.</p>
+        <h2 style="color: #333; text-align: center; margin: 30px 0 20px;">Welcome to nxzen!</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">Your employee onboarding account has been created successfully.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #00ff88;">
+          <h3 style="color: #333; margin-top: 0; margin-bottom: 20px;">🔐 Login Details</h3>
+          <div style="background-color: white; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef;">
+            <p style="margin: 10px 0;"><strong>🌐 Login URL:</strong> <a href="http://localhost:3000/login" style="color: #007bff; text-decoration: none;">http://localhost:3000/login</a></p>
+            <p style="margin: 10px 0;"><strong>📧 Email:</strong> <span style="color: #495057;">${to}</span></p>
+            <p style="margin: 10px 0;"><strong>🔑 Temporary Password:</strong> <span style="background-color: #f8f9fa; padding: 8px 12px; border-radius: 6px; font-family: 'Courier New', monospace; border: 1px solid #dee2e6; color: #495057;">${tempPassword}</span></p>
+          </div>
         </div>
         
-        <p>If you have any questions, please contact the HR department.</p>
+        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #ffc107;">
+          <p style="margin: 0; color: #856404; font-weight: 500;">
+            <strong>⚠️ Important:</strong> Please reset your password after your first login for security purposes.
+          </p>
+        </div>
+        
+        <div style="background-color: #e7f3ff; border: 1px solid #b3d9ff; padding: 20px; border-radius: 12px; margin: 25px 0;">
+          <p style="margin: 0; color: #0066cc;">
+            <strong>💬 Need Help?</strong> If you have any questions, please contact the HR department.
+          </p>
+        </div>
         
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-        <p style="color: #666; font-size: 12px;">This is an automated message. Please do not reply to this email.</p>
+        <p style="color: #666; font-size: 12px; text-align: center;">This is an automated message from nxzen. Please do not reply to this email.</p>
       </div>
     `,
   };

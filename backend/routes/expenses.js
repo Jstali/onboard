@@ -1221,123 +1221,208 @@ router.get("/approve/:id", async (req, res) => {
           <script src="https://cdn.tailwindcss.com"></script>
           <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
           <style>
-              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-              body { font-family: 'Inter', sans-serif; }
-              .gradient-bg { background: #ffffff; }
-              .success-animation { animation: successPulse 2s ease-in-out infinite; }
-              @keyframes successPulse {
-                  0%, 100% { transform: scale(1); }
-                  50% { transform: scale(1.05); }
+              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+              body { 
+                  font-family: 'Inter', sans-serif; 
+                  background: #f8fafc;
+                  margin: 0;
+                  padding: 0;
               }
-              .fade-in { animation: fadeIn 0.8s ease-in-out; }
+              .header-bg {
+                  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+              }
+              .success-icon {
+                  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+              }
+              .reject-icon {
+                  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+              }
+              .card-shadow {
+                  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+              }
+              .status-approved {
+                  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+                  border: 1px solid #10b981;
+                  color: #065f46;
+              }
+              .status-rejected {
+                  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+                  border: 1px solid #ef4444;
+                  color: #991b1b;
+              }
+              .status-pending {
+                  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                  border: 1px solid #f59e0b;
+                  color: #92400e;
+              }
+              .fade-in {
+                  animation: fadeIn 0.6s ease-out;
+              }
               @keyframes fadeIn {
                   from { opacity: 0; transform: translateY(20px); }
                   to { opacity: 1; transform: translateY(0); }
               }
+              .slide-up {
+                  animation: slideUp 0.8s ease-out 0.2s both;
+              }
+              @keyframes slideUp {
+                  from { opacity: 0; transform: translateY(30px); }
+                  to { opacity: 1; transform: translateY(0); }
+              }
+              .bounce-in {
+                  animation: bounceIn 0.8s ease-out 0.4s both;
+              }
+              @keyframes bounceIn {
+                  0% { opacity: 0; transform: scale(0.3); }
+                  50% { opacity: 1; transform: scale(1.05); }
+                  70% { transform: scale(0.9); }
+                  100% { opacity: 1; transform: scale(1); }
+              }
+              .professional-border {
+                  border: 1px solid #e2e8f0;
+              }
+              .hover-effect {
+                  transition: all 0.3s ease;
+              }
+              .hover-effect:hover {
+                  transform: translateY(-2px);
+                  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+              }
           </style>
       </head>
-      <body class="gradient-bg min-h-screen flex items-center justify-center p-4">
-          <div class="max-w-md w-full">
+      <body class="min-h-screen">
+          <!-- Professional Header -->
+          <header class="header-bg text-white py-6 fade-in">
+              <div class="max-w-4xl mx-auto px-6">
+                  <div class="flex items-center justify-between">
+                      <div class="flex items-center space-x-4">
+                          <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                              <svg width="24" height="24" viewBox="0 0 32 32" style="display: block;">
+                                  <path d="M6 12 Q6 8 10 8 Q14 8 14 12 Q14 16 10 16 Q6 16 6 12" stroke="#00ff88" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                  <path d="M18 12 Q18 8 22 8 Q26 8 26 12 Q26 16 22 16 Q18 16 18 12" stroke="#00ff88" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                  <path d="M6 20 Q6 16 10 16 Q14 16 14 20 Q14 24 10 24 Q6 24 6 20" stroke="#00ff88" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                  <path d="M18 20 Q18 16 22 16 Q26 16 26 20 Q26 24 22 24 Q18 24 18 20" stroke="#00ff88" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                  <line x1="14" y1="12" x2="18" y2="12" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
+                                  <line x1="14" y1="20" x2="18" y2="20" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
+                              </svg>
+                          </div>
+                          <div>
+                              <h1 class="text-2xl font-bold">nxzen</h1>
+                              <p class="text-gray-300 text-sm">HR Management System</p>
+                          </div>
+                      </div>
+                      <div class="text-right">
+                          <p class="text-sm text-gray-300">Expense Approval</p>
+                          <p class="text-xs text-gray-400">${new Date().toLocaleDateString()}</p>
+                      </div>
+                  </div>
+              </div>
+          </header>
+
+          <!-- Main Content -->
+          <main class="max-w-2xl mx-auto px-6 py-12">
               <!-- Success Card -->
-              <div class="bg-white rounded-2xl shadow-2xl p-8 text-center fade-in">
+              <div class="bg-white rounded-xl card-shadow professional-border fade-in">
+                  <!-- Card Header -->
+                  <div class="border-b border-gray-200 px-8 py-6">
+                      <div class="text-center">
+                          <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                              Expense Request ${
+                                action === "approve" ? "Approved" : "Rejected"
+                              }
+                          </h2>
+                          <p class="text-gray-600">
+                              ${
+                                action === "approve"
+                                  ? finalStatus === "manager_approved"
+                                    ? "The expense request has been successfully approved and forwarded to HR for final review."
+                                    : "The expense request has been approved. Waiting for other managers to approve."
+                                  : "The expense request has been rejected and the employee will be notified."
+                              }
+                          </p>
+                      </div>
+                  </div>
+
                   <!-- Success Icon -->
-                  <div class="mb-6">
+                  <div class="text-center py-8 bounce-in">
                       <div class="w-20 h-20 ${
-                        action === "approve" ? "bg-green-100" : "bg-red-100"
-                      } rounded-full flex items-center justify-center mx-auto success-animation">
+                        action === "approve" ? "success-icon" : "reject-icon"
+                      } rounded-full flex items-center justify-center mx-auto">
                           <i class="fas ${
                             action === "approve"
-                              ? "fa-check text-4xl text-green-600"
-                              : "fa-times text-4xl text-red-600"
+                              ? "fa-check text-3xl text-white"
+                              : "fa-times text-3xl text-white"
                           }"></i>
                       </div>
                   </div>
 
-                  <!-- Success Message -->
-                  <div class="mb-6">
-                      <h1 class="text-2xl font-bold text-gray-800 mb-2">
-                          Expense Request ${
-                            action === "approve" ? "Approved!" : "Rejected"
-                          }
-                      </h1>
-                      <p class="text-gray-600">
-                          ${
-                            action === "approve"
-                              ? finalStatus === "manager_approved"
-                                ? "The expense request has been successfully approved and forwarded to HR for final review."
-                                : "The expense request has been approved. Waiting for other managers to approve."
-                              : "The expense request has been rejected and the employee will be notified."
-                          }
-                      </p>
-                  </div>
-
                   <!-- Status Badge -->
-                  <div class="mb-6">
-                      <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
+                  <div class="text-center pb-6 slide-up">
+                      <span class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold ${
                         finalStatus === "manager_approved"
-                          ? "bg-green-100 text-green-800"
+                          ? "status-approved"
                           : finalStatus === "rejected"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          ? "status-rejected"
+                          : "status-pending"
                       }">
                           <i class="fas fa-clock mr-2"></i>
-                          <span>${
+                          ${
                             finalStatus === "manager_approved"
                               ? "Approved - Sent to HR"
                               : finalStatus === "rejected"
                               ? "Rejected"
                               : "Pending Other Managers"
-                          }</span>
+                          }
                       </span>
                   </div>
 
-                  <!-- Details Card -->
-                  <div class="bg-gray-50 rounded-xl p-4 mb-6 text-left">
-                      <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
-                          <i class="fas fa-receipt mr-2 text-blue-600"></i>
-                          Request Details
-                      </h3>
-                      <div class="space-y-2 text-sm">
-                          <div class="flex justify-between">
-                              <span class="text-gray-600">Employee:</span>
-                              <span class="font-medium">${
-                                expenseData.employee_name
-                              }</span>
-                          </div>
-                          <div class="flex justify-between">
-                              <span class="text-gray-600">Category:</span>
-                              <span class="font-medium">${
-                                expenseData.expense_category
-                              }</span>
-                          </div>
-                          <div class="flex justify-between">
-                              <span class="text-gray-600">Amount:</span>
-                              <span class="font-medium">${
-                                expenseData.currency
-                              } ${expenseData.amount}</span>
-                          </div>
-                          <div class="flex justify-between">
-                              <span class="text-gray-600">Manager:</span>
-                              <span class="font-medium">${managerName}</span>
+                  <!-- Details Section -->
+                  <div class="px-8 pb-8">
+                      <div class="bg-gray-50 rounded-lg p-6 hover-effect">
+                          <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
+                              <i class="fas fa-receipt mr-3 text-blue-600"></i>
+                              Request Details
+                          </h3>
+                          <div class="grid grid-cols-1 gap-4">
+                              <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                                  <span class="text-gray-600 font-medium">Employee</span>
+                                  <span class="font-semibold text-gray-900">${
+                                    expenseData.employee_name
+                                  }</span>
+                              </div>
+                              <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                                  <span class="text-gray-600 font-medium">Category</span>
+                                  <span class="font-semibold text-gray-900">${
+                                    expenseData.expense_category
+                                  }</span>
+                              </div>
+                              <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                                  <span class="text-gray-600 font-medium">Amount</span>
+                                  <span class="font-bold text-green-600 text-lg">${
+                                    expenseData.currency
+                                  } ${expenseData.amount}</span>
+                              </div>
+                              <div class="flex justify-between items-center py-3">
+                                  <span class="text-gray-600 font-medium">Manager</span>
+                                  <span class="font-semibold text-gray-900">${managerName}</span>
+                              </div>
                           </div>
                       </div>
                   </div>
 
-
-
                   <!-- Footer -->
-                  <div class="mt-6 pt-4 border-t border-gray-200">
-                      <p class="text-xs text-gray-500">
-                          <i class="fas fa-shield-alt mr-1"></i>
-                          This action has been logged and recorded for audit purposes.
-                      </p>
+                  <div class="border-t border-gray-200 px-8 py-6 slide-up">
+                      <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                          <p class="text-sm text-blue-800 font-medium text-center">
+                              <i class="fas fa-shield-alt mr-2"></i>
+                              This action has been logged and recorded for audit purposes.
+                          </p>
+                      </div>
                   </div>
               </div>
-
-
-          </div>
-
-
+          </main>
       </body>
       </html>
     `);

@@ -22,7 +22,19 @@ const ManagerDashboard = () => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              {/* Logo */}
+              <div className="flex items-center space-x-3 cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105">
+                <img
+                  src={require("../assets/nxzen.png")}
+                  alt="nxzen Logo"
+                  className="w-10 h-10 object-contain transition-transform duration-300 hover:rotate-12"
+                />
+                <div className="text-black font-semibold text-lg transition-colors duration-300 hover:text-primary-600">
+                  nxzen
+                </div>
+              </div>
+              <div className="border-l border-gray-300 h-8"></div>
               <h1 className="text-2xl font-bold text-gray-900">
                 Manager Dashboard
               </h1>
