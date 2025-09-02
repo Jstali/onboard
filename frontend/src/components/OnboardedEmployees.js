@@ -38,6 +38,10 @@ const OnboardedEmployees = ({ onRefresh }) => {
     try {
       setLoading(true);
       const response = await axios.get("/hr/onboarded");
+      console.log(
+        "🔍 Onboarded employees data:",
+        response.data.onboardedEmployees
+      );
       setOnboardedEmployees(response.data.onboardedEmployees);
     } catch (error) {
       console.error("Error fetching onboarded employees:", error);
@@ -186,7 +190,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                      {employee.employee_type}
+                      {employee.employee_type || "Not Specified"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

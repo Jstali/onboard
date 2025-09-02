@@ -5,7 +5,96 @@ const { authenticateToken, requireEmployee } = require("../middleware/auth");
 
 const router = express.Router();
 
-// Apply authentication to all employee routes
+// Public onboarding endpoint (no authentication required)
+router.post(
+  "/public/onboarding-form",
+  [body("formData").isObject(), body("files").optional().isArray()],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { formData, files = [] } = req.body;
+
+      // Check if user exists by email
+      const userResult = await pool.query(
+        "SELECT id FROM users WHERE email = $1",
+        [formData.email]
+      );
+
+      if (userResult.rows.length === 0) {
+        return res.status(400).json({
+          error:
+            "User not found. Please contact HR to create your account first.",
+        });
+      }
+
+      const userId = userResult.rows[0].id;
+
+      // Check if form already exists
+      const existingForm = await pool.query(
+        "SELECT id, status FROM employee_forms WHERE employee_id = $1",
+        [userId]
+      );
+
+      if (existingForm.rows.length > 0) {
+        const form = existingForm.rows[0];
+
+        // If form is already submitted, don't allow updates
+        if (
+          form.status === "submitted" ||
+          form.status === "approved" ||
+          form.status === "rejected"
+        ) {
+          return res
+            .status(400)
+            .json({ error: "Onboarding form already submitted" });
+        }
+
+        // If form is in draft status, update it instead of creating new
+        if (form.status === "draft") {
+          await pool.query(
+            `
+            UPDATE employee_forms 
+            SET form_data = $2, files = $3, updated_at = CURRENT_TIMESTAMP
+            WHERE employee_id = $1
+          `,
+            [userId, formData, files]
+          );
+
+          res.json({
+            message: "Onboarding form updated successfully",
+            status: "draft",
+            userId: userId,
+          });
+          return;
+        }
+      }
+
+      // Insert form with draft status initially
+      await pool.query(
+        `
+      INSERT INTO employee_forms (employee_id, form_data, files, status)
+      VALUES ($1, $2, $3, 'draft')
+    `,
+        [userId, formData, files]
+      );
+
+      res.json({
+        message: "Onboarding form submitted successfully",
+        status: "draft",
+        userId: userId,
+      });
+    } catch (error) {
+      console.error("Public onboarding form error:", error);
+      res.status(500).json({ error: "Failed to submit form" });
+    }
+  }
+);
+
+// Apply authentication to all employee routes except public onboarding
 router.use(authenticateToken, requireEmployee);
 
 // Get employee onboarding status

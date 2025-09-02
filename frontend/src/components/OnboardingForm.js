@@ -27,7 +27,6 @@ const OnboardingForm = ({ onSuccess }) => {
       relationship: "",
     },
   });
-  const [employmentType, setEmploymentType] = useState("Full-Time");
 
   const [loading, setLoading] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
@@ -36,10 +35,10 @@ const OnboardingForm = ({ onSuccess }) => {
 
   // Validation functions
   const validateName = (name) => {
-    const nameRegex = /^[a-zA-Z]+$/;
+    const nameRegex = /^[a-zA-Z\s]+$/;
     if (!name.trim()) return "Name is required";
     if (!nameRegex.test(name))
-      return "Name should contain only letters (no spaces)";
+      return "Name should contain only letters and spaces";
     if (name.trim().length < 2) return "Name should be at least 2 characters";
     return "";
   };
@@ -74,15 +73,18 @@ const OnboardingForm = ({ onSuccess }) => {
     // Clear error for this field when user starts typing
     setErrors((prev) => ({ ...prev, [name]: "" }));
 
-    // Filter out numbers for name, contact name, and relationship fields
+    // Filter input based on field type
     let filteredValue = value;
     if (
       name === "name" ||
       name === "emergencyContact.name" ||
       name === "emergencyContact.relationship"
     ) {
-      // Remove any numbers and special characters, keep only letters
-      filteredValue = value.replace(/[^a-zA-Z]/g, "");
+      // Remove any numbers and special characters, keep only letters and spaces
+      filteredValue = value.replace(/[^a-zA-Z\s]/g, "");
+    } else if (name === "phone" || name === "emergencyContact.phone") {
+      // Remove any non-digit characters, keep only numbers
+      filteredValue = value.replace(/[^0-9]/g, "");
     }
 
     if (name.includes(".")) {
@@ -150,12 +152,10 @@ const OnboardingForm = ({ onSuccess }) => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5001/api/employee/onboarding-form",
+        "http://localhost:5001/api/employee/public/onboarding-form",
         {
-          type: employmentType,
           formData: {
             ...formData,
-            employmentType,
             submittedAt: new Date().toISOString(),
           },
           files: [], // No files in basic form - handled separately in document upload
@@ -198,13 +198,11 @@ const OnboardingForm = ({ onSuccess }) => {
         <div className="mb-6">
           <h3 className="text-lg font-medium text-gray-900">Document Upload</h3>
           <p className="text-sm text-gray-600 mt-1">
-            Please upload the required documents for your {employmentType}{" "}
-            position.
+            Please upload the required documents for your position.
           </p>
         </div>
 
         <DocumentUploadSection
-          employmentType={employmentType}
           employeeId={submittedUserId}
           onDocumentsChange={() => {}}
         />
@@ -232,24 +230,6 @@ const OnboardingForm = ({ onSuccess }) => {
       </h3>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Employment Type */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Employment Type *
-          </label>
-          <select
-            value={employmentType}
-            onChange={(e) => setEmploymentType(e.target.value)}
-            className="input-field"
-            required
-          >
-            <option value="Full-Time">Full-Time</option>
-            <option value="Contract">Contract</option>
-            <option value="Intern">Intern</option>
-            <option value="Manager">Manager</option>
-          </select>
-        </div>
-
         {/* Personal Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -266,7 +246,7 @@ const OnboardingForm = ({ onSuccess }) => {
                 className={`input-field pl-10 ${
                   errors.name ? "border-red-500" : ""
                 }`}
-                placeholder="Enter name (letters only)"
+                placeholder="Enter full name"
                 required
               />
             </div>
@@ -413,7 +393,7 @@ const OnboardingForm = ({ onSuccess }) => {
                 className={`input-field ${
                   errors["emergencyContact.name"] ? "border-red-500" : ""
                 }`}
-                placeholder="Enter contact name (letters only)"
+                placeholder="Enter contact name"
                 required
               />
               {errors["emergencyContact.name"] && (
@@ -479,7 +459,7 @@ const OnboardingForm = ({ onSuccess }) => {
           </h4>
           <p className="text-sm text-blue-700">
             After submitting this form, you'll be able to upload required
-            documents based on your employment type ({employmentType}).
+            documents for your position.
           </p>
         </div>
 

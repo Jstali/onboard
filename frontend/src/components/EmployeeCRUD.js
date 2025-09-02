@@ -72,6 +72,13 @@ const EmployeeCRUD = () => {
         return;
       }
 
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+
       const employeeData = {
         name: `${formData.first_name} ${formData.last_name}`,
         email: formData.email, // Personal email
@@ -90,7 +97,19 @@ const EmployeeCRUD = () => {
     } catch (error) {
       console.error("Error creating employee:", error);
       console.error("Error response:", error.response?.data);
-      toast.error(error.response?.data?.error || "Failed to create employee");
+
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        const errorMessage = error.response?.data?.error;
+        if (errorMessage) {
+          toast.error(errorMessage);
+        } else {
+          toast.error("Something went wrong, please try again.");
+        }
+      } else {
+        // Handle other errors with generic message
+        toast.error("Something went wrong, please try again.");
+      }
     }
   };
 

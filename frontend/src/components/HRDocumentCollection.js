@@ -65,6 +65,14 @@ const HRDocumentCollection = () => {
           axios.get("/hr/approved-employee-forms"), // Use approved employee forms only
         ]);
 
+      console.log("🔍 Document Collection Data:", {
+        documents: documentsRes.data.documents?.length || 0,
+        employees: employeesRes.data.employees?.length || 0,
+        templates: templatesRes.data.templates?.length || 0,
+        forms: formsRes.data.forms?.length || 0,
+        formsData: formsRes.data.forms,
+      });
+
       setDocuments(documentsRes.data.documents || []);
       setEmployees(employeesRes.data.employees || []);
       setTemplates(templatesRes.data.templates || []);
@@ -286,6 +294,11 @@ const HRDocumentCollection = () => {
 
   // Group employees by form submission status
   // Show only approved employees (who have been moved to onboarded_employees) with their document collection status
+  console.log(
+    "🔍 Processing employee forms for grouping:",
+    employeeForms.length
+  );
+
   const groupedEmployees = employeeForms.reduce((acc, form) => {
     const key = `${form.employee_id}-${form.first_name} ${form.last_name}`;
 
@@ -496,6 +509,12 @@ const HRDocumentCollection = () => {
 
     return acc;
   }, {});
+
+  console.log("🔍 Grouped employees result:", {
+    totalGrouped: Object.keys(groupedEmployees).length,
+    groupedKeys: Object.keys(groupedEmployees),
+    sampleGroup: Object.values(groupedEmployees)[0],
+  });
 
   const filteredGroupedEmployees = Object.values(groupedEmployees).filter(
     (group) => {

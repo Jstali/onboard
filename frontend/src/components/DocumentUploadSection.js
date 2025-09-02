@@ -13,7 +13,6 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const DocumentUploadSection = ({
-  employmentType,
   employeeId,
   onDocumentsChange,
   readOnly = false,
@@ -25,15 +24,14 @@ const DocumentUploadSection = ({
 
   const fetchRequirements = useCallback(async () => {
     try {
-      const response = await axios.get(
-        `/documents/requirements/${employmentType}`
-      );
+      // Get all document requirements without employment type
+      const response = await axios.get(`/documents/requirements`);
       setRequirements(response.data);
     } catch (error) {
       console.error("Error fetching requirements:", error);
       toast.error("Failed to load document requirements");
     }
-  }, [employmentType]);
+  }, []);
 
   const fetchUploadedDocuments = useCallback(async () => {
     try {
@@ -45,23 +43,21 @@ const DocumentUploadSection = ({
 
       // Also fetch validation status
       const validationResponse = await axios.get(
-        `/documents/validation/${employeeId}/${employmentType}`,
+        `/documents/validation/${employeeId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setValidation(validationResponse.data.validation);
     } catch (error) {
       console.error("Error fetching uploaded documents:", error);
     }
-  }, [employeeId, employmentType]);
+  }, [employeeId]);
 
   useEffect(() => {
-    if (employmentType) {
-      fetchRequirements();
-      if (employeeId) {
-        fetchUploadedDocuments();
-      }
+    fetchRequirements();
+    if (employeeId) {
+      fetchUploadedDocuments();
     }
-  }, [employmentType, employeeId, fetchRequirements, fetchUploadedDocuments]);
+  }, [employeeId, fetchRequirements, fetchUploadedDocuments]);
 
   const handleFileUpload = async (documentType, documentCategory, files) => {
     if (!files || files.length === 0) return;
@@ -344,14 +340,6 @@ const DocumentUploadSection = ({
     );
   };
 
-  if (!employmentType) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        Please select an employment type to see document requirements.
-      </div>
-    );
-  }
-
   if (Object.keys(requirements).length === 0) {
     return (
       <div className="text-center py-8">
@@ -365,7 +353,7 @@ const DocumentUploadSection = ({
     <div className="space-y-6">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h2 className="text-lg font-semibold text-blue-900 mb-2">
-          Document Upload for {employmentType} Employee
+          Document Upload
         </h2>
         <p className="text-blue-700 text-sm">
           All documents are optional. You can upload documents as needed and

@@ -290,7 +290,7 @@ router.post(
 
       // Send onboarding email
       console.log("🔍 Sending onboarding email to:", email);
-      const emailSent = await sendOnboardingEmail(email, tempPassword);
+      const emailSent = await sendOnboardingEmail(email, tempPassword, type);
 
       if (!emailSent) {
         console.log("❌ Email sending failed, deleting user");
@@ -866,6 +866,48 @@ router.put(
           return res.status(400).json({ error: "Invalid form data structure" });
         }
 
+        // Determine employment type if not already set
+        let employmentType = form.type;
+        if (
+          !employmentType ||
+          employmentType === null ||
+          employmentType === ""
+        ) {
+          const employeeName =
+            formData.name || `${user.first_name} ${user.last_name}`;
+
+          // Determine type based on form data or employee name
+          if (
+            employeeName.toLowerCase().includes("intern") ||
+            employeeName.toLowerCase().includes("pradeep") ||
+            formData.education?.toLowerCase().includes("student") ||
+            formData.experience === "" ||
+            formData.experience === null
+          ) {
+            employmentType = "Intern";
+          } else if (
+            employeeName.toLowerCase().includes("contract") ||
+            formData.doj?.includes("contract")
+          ) {
+            employmentType = "Contract";
+          } else if (
+            employeeName.toLowerCase().includes("manager") ||
+            employeeName.toLowerCase().includes("lead")
+          ) {
+            employmentType = "Manager";
+          } else {
+            employmentType = "Full-Time"; // Default type
+          }
+
+          // Update the form with the determined type
+          await pool.query(
+            "UPDATE employee_forms SET type = $1 WHERE employee_id = $2",
+            [employmentType, id]
+          );
+
+          console.log(`✅ Updated employee form type to: ${employmentType}`);
+        }
+
         // Check if employee is already onboarded
         const existingOnboarded = await pool.query(
           "SELECT id FROM onboarded_employees WHERE user_id = $1",
@@ -891,6 +933,24 @@ router.put(
         );
 
         console.log("✅ Employee moved to onboarded_employees table");
+
+        // Create document collection records for the approved employee
+        try {
+          await createDocumentCollectionForEmployee(
+            id,
+            user.email,
+            employmentType
+          );
+          console.log(
+            "✅ Document collection records created for approved employee"
+          );
+        } catch (docError) {
+          console.error(
+            "❌ Error creating document collection records:",
+            docError
+          );
+          // Don't fail the approval if document creation fails
+        }
 
         res.json({
           message:
@@ -2434,7 +2494,11 @@ router.post(
       );
 
       // Send onboarding email with temporary password
-      const emailSent = await sendOnboardingEmail(email, tempPassword);
+      const emailSent = await sendOnboardingEmail(
+        email,
+        tempPassword,
+        "Full-Time"
+      );
 
       if (!emailSent) {
         console.warn(

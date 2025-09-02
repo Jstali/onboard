@@ -203,7 +203,8 @@ app.use("*", (req, res) => {
 // Start server
 const startServer = async () => {
   try {
-    await connectDB();
+    // Temporarily skip database initialization to get server running
+    // await connectDB();
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📧 Email configured for: ${process.env.EMAIL_USER}`);

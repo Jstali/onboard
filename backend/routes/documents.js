@@ -241,6 +241,83 @@ const DOCUMENT_REQUIREMENTS = {
   },
 };
 
+// Get all document requirements (without employment type)
+router.get("/requirements", (req, res) => {
+  // Return all document requirements combined
+  const allRequirements = {
+    employment: [
+      { type: "resume", name: "Updated Resume", required: true },
+      {
+        type: "offer_letter",
+        name: "Offer & Appointment Letter",
+        required: false,
+      },
+      {
+        type: "compensation_letter",
+        name: "Latest Compensation Letter",
+        required: false,
+      },
+      {
+        type: "experience_letter",
+        name: "Experience & Relieving Letter",
+        required: false,
+      },
+      {
+        type: "payslip",
+        name: "Latest 3 Months Pay Slips",
+        required: true,
+        multiple: true,
+      },
+      {
+        type: "form16",
+        name: "Form 16 / Form 12B / Taxable Income Statement",
+        required: false,
+      },
+    ],
+    education: [
+      {
+        type: "ssc_certificate",
+        name: "SSC Certificate (10th)",
+        required: true,
+      },
+      { type: "ssc_marksheet", name: "SSC Marksheet (10th)", required: true },
+      {
+        type: "hsc_certificate",
+        name: "HSC Certificate (12th)",
+        required: true,
+      },
+      { type: "hsc_marksheet", name: "HSC Marksheet (12th)", required: true },
+      {
+        type: "graduation_marksheet",
+        name: "Graduation Marksheet",
+        required: true,
+      },
+      {
+        type: "graduation_certificate",
+        name: "Graduation Certificate",
+        required: true,
+      },
+      {
+        type: "postgrad_marksheet",
+        name: "Post-Graduation Marksheet",
+        required: false,
+      },
+      {
+        type: "postgrad_certificate",
+        name: "Post-Graduation Certificate",
+        required: false,
+      },
+    ],
+    identity: [
+      { type: "aadhaar", name: "Aadhaar Card", required: true },
+      { type: "pan", name: "PAN Card", required: true },
+      { type: "passport", name: "Passport", required: false },
+    ],
+  };
+
+  res.json(allRequirements);
+});
+
 // Get document requirements based on employment type
 router.get("/requirements/:employmentType", (req, res) => {
   const { employmentType } = req.params;
@@ -485,6 +562,205 @@ router.delete("/:documentId", authenticateToken, async (req, res) => {
 });
 
 // Get document validation status for an employee
+// Get document validation without employment type
+router.get("/validation/:employeeId", authenticateToken, async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    // Verify user can view this validation (own documents or HR)
+    if (
+      req.user.role !== "hr" &&
+      req.user.role !== "admin" &&
+      req.user.userId !== parseInt(employeeId)
+    ) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Get uploaded documents
+    const uploadedDocs = await pool.query(
+      `
+      SELECT document_type, document_category, COUNT(*) as count
+      FROM employee_documents 
+      WHERE employee_id = $1 
+      GROUP BY document_type, document_category
+    `,
+      [employeeId]
+    );
+
+    // Get manually entered documents from document_collection
+    const manualDocs = await pool.query(
+      `
+      SELECT document_name, status, uploaded_file_url
+      FROM document_collection 
+      WHERE employee_id = $1
+    `,
+      [employeeId]
+    );
+
+    const uploadedMap = uploadedDocs.rows.reduce((acc, doc) => {
+      acc[doc.document_type] = parseInt(doc.count) || 0;
+      return acc;
+    }, {});
+
+    // Create a map of manually entered documents
+    const manualMap = {};
+    manualDocs.rows.forEach((doc) => {
+      // Map document names to document types (approximate mapping)
+      const docName = doc.document_name.toLowerCase();
+      let docType = null;
+
+      if (docName.includes("resume")) docType = "resume";
+      else if (docName.includes("offer") || docName.includes("appointment"))
+        docType = "offer_letter";
+      else if (docName.includes("compensation"))
+        docType = "compensation_letter";
+      else if (docName.includes("experience") || docName.includes("relieving"))
+        docType = "experience_letter";
+      else if (docName.includes("payslip") || docName.includes("pay slip"))
+        docType = "payslip";
+      else if (docName.includes("form 16") || docName.includes("form 12b"))
+        docType = "form16";
+      else if (docName.includes("ssc") && docName.includes("certificate"))
+        docType = "ssc_certificate";
+      else if (docName.includes("ssc") && docName.includes("marksheet"))
+        docType = "ssc_marksheet";
+      else if (docName.includes("hsc") && docName.includes("certificate"))
+        docType = "hsc_certificate";
+      else if (docName.includes("hsc") && docName.includes("marksheet"))
+        docType = "hsc_marksheet";
+      else if (
+        docName.includes("graduation") &&
+        docName.includes("certificate")
+      )
+        docType = "graduation_certificate";
+      else if (docName.includes("graduation") && docName.includes("marksheet"))
+        docType = "graduation_marksheet";
+      else if (docName.includes("aadhaar")) docType = "aadhaar_card";
+      else if (docName.includes("pan")) docType = "pan_card";
+      else if (docName.includes("passport")) docType = "passport_size_photos";
+      else if (docName.includes("address")) docType = "address_proof";
+      else if (
+        docName.includes("professional") ||
+        docName.includes("certification")
+      )
+        docType = "professional_certifications";
+      else if (
+        docName.includes("educational") ||
+        docName.includes("certificate")
+      )
+        docType = "educational_certificates";
+
+      if (docType) {
+        manualMap[docType] = (manualMap[docType] || 0) + 1;
+      }
+    });
+
+    // Combine uploaded and manual documents
+    const combinedMap = { ...uploadedMap };
+    Object.keys(manualMap).forEach((docType) => {
+      combinedMap[docType] = (combinedMap[docType] || 0) + manualMap[docType];
+    });
+
+    // Get document requirements to create proper validation structure
+    const allRequirements = {
+      employment: [
+        { type: "resume", name: "Updated Resume", required: true },
+        {
+          type: "offer_letter",
+          name: "Offer & Appointment Letter",
+          required: false,
+        },
+        {
+          type: "compensation_letter",
+          name: "Latest Compensation Letter",
+          required: false,
+        },
+        {
+          type: "experience_letter",
+          name: "Experience & Relieving Letter",
+          required: false,
+        },
+        {
+          type: "payslip",
+          name: "Latest 3 Months Pay Slips",
+          required: true,
+          multiple: true,
+        },
+        {
+          type: "form16",
+          name: "Form 16 / Form 12B / Taxable Income Statement",
+          required: false,
+        },
+      ],
+      education: [
+        {
+          type: "ssc_certificate",
+          name: "SSC Certificate (10th)",
+          required: true,
+        },
+        { type: "ssc_marksheet", name: "SSC Marksheet (10th)", required: true },
+        {
+          type: "hsc_certificate",
+          name: "HSC Certificate (12th)",
+          required: true,
+        },
+        { type: "hsc_marksheet", name: "HSC Marksheet (12th)", required: true },
+        {
+          type: "graduation_marksheet",
+          name: "Graduation Marksheet",
+          required: true,
+        },
+        {
+          type: "graduation_certificate",
+          name: "Graduation Certificate",
+          required: true,
+        },
+        {
+          type: "postgrad_marksheet",
+          name: "Post-Graduation Marksheet",
+          required: false,
+        },
+        {
+          type: "postgrad_certificate",
+          name: "Post-Graduation Certificate",
+          required: false,
+        },
+      ],
+      identity: [
+        { type: "aadhaar", name: "Aadhaar Card", required: true },
+        { type: "pan", name: "PAN Card", required: true },
+        { type: "passport", name: "Passport", required: false },
+      ],
+    };
+
+    // Create validation response with uploaded counts
+    const validation = {};
+    Object.keys(allRequirements).forEach((category) => {
+      validation[category] = allRequirements[category].map((req) => ({
+        ...req,
+        uploaded: combinedMap[req.type] || 0,
+      }));
+    });
+
+    const totalRequired = Object.values(validation)
+      .flat()
+      .filter((req) => req.required).length;
+    const uploadedRequired = Object.values(validation)
+      .flat()
+      .filter((req) => req.required && (combinedMap[req.type] || 0) > 0).length;
+
+    res.json({
+      validation,
+      allRequiredUploaded: uploadedRequired === totalRequired,
+      totalRequired,
+      uploadedRequired,
+    });
+  } catch (error) {
+    console.error("Document validation error:", error);
+    res.status(500).json({ error: "Failed to get document validation" });
+  }
+});
+
 router.get(
   "/validation/:employeeId/:employmentType",
   authenticateToken,

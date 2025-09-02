@@ -762,7 +762,7 @@ const initializeTables = async () => {
         }
 
         await pool.query(
-          "INSERT INTO company_emails (user_id, company_email, is_primary, is_active) VALUES ($1, $2, $3, $4)",
+          "INSERT INTO company_emails (user_id, company_email, is_primary, is_active) VALUES ($1, $2, $3, $4) ON CONFLICT (company_email) DO NOTHING",
           [user.id, companyEmail, true, true]
         );
         console.log(
@@ -791,7 +791,7 @@ const initializeTables = async () => {
         const companyEmail = `${username}@nxzen.com`;
 
         await pool.query(
-          "INSERT INTO company_emails (manager_id, company_email, is_primary, is_active) VALUES ($1, $2, $3, $4)",
+          "INSERT INTO company_emails (manager_id, company_email, is_primary, is_active) VALUES ($1, $2, $3, $4) ON CONFLICT (manager_id) DO NOTHING",
           [manager.manager_id, companyEmail, true, true]
         );
         console.log(

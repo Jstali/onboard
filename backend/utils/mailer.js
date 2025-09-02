@@ -13,29 +13,24 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 10000, // 10 seconds
 });
 
-async function sendOnboardingEmail(to, tempPassword) {
+async function sendOnboardingEmail(
+  to,
+  tempPassword,
+  employmentType = "Full-Time"
+) {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to,
     subject: "Welcome to nxzen - Employee Onboarding Login Details",
-    text: `Welcome to nxzen! \n\nLogin here: http://localhost:3000/login \nEmail: ${to} \nTemporary Password: ${tempPassword}\n\nPlease reset your password after logging in.`,
+    text: `Welcome to nxzen! \n\nLogin here: http://localhost:3000/login \nEmail: ${to} \nTemporary Password: ${tempPassword}\nEmployment Type: ${employmentType}\n\nPlease reset your password after logging in.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <!-- Logo Section -->
         <div style="text-align: center; margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border-radius: 12px;">
           <div style="display: inline-block; text-align: center;">
-            <!-- Green Symbol -->
-            <div style="width: 60px; height: 60px; margin: 0 auto 15px; position: relative;">
-              <svg width="60" height="60" viewBox="0 0 60 60" style="display: block;">
-                <!-- Infinity-like symbol in green -->
-                <path d="M15 30 Q15 15 30 15 Q45 15 45 30 Q45 45 30 45 Q15 45 15 30" 
-                      stroke="#00ff88" stroke-width="3" fill="none" stroke-linecap="round"/>
-                <path d="M15 30 Q15 45 30 45 Q45 45 45 30 Q45 15 30 15 Q15 15 15 30" 
-                      stroke="#00ff88" stroke-width="3" fill="none" stroke-linecap="round"/>
-                <!-- X lines -->
-                <line x1="20" y1="20" x2="40" y2="40" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
-                <line x1="40" y1="20" x2="20" y2="40" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
-              </svg>
+            <!-- nxzen Logo -->
+            <div style="margin: 0 auto 15px; position: relative;">
+              <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAF0WlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78i iglkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNy4yLWMwMDAgNzkuMWI2NWE3OWI0LCAyMDIyLzA2LzEzLTIyOjAxOjAxICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpypmY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdEV2dD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlRXZlbnQjIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgMjQuMCAoTWFjaW50b3NoKSIgeG1wOkNyZWF0ZURhdGU9IjIwMjQtMDMtMTlUMTU6NDc6NDErMDU6MzAiIHhtcDpNZXRhZGF0YURhdGU9IjIwMjQtMDMtMTlUMTU6NDc6NDErMDU6MzAiIHhtcDpNb2RpZnlEYXRlPSIyMDI0LTAzLTE5VDE1OjQ3OjQxKzA1OjMwIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjY5ZDM4YzM5LTM4ZTAtNDZiZC1hMzA0LTNmYzM5YzM5YzM5YyIgeG1wTU06RG9jdW1lbnRJRD0iYWRvYmU6ZG9jaWQ6cGhvdG9zaG9wOjY5ZDM4YzM5LTM4ZTAtNDZiZC1hMzA0LTNmYzM5YzM5YzM5YyIgeG1wTU06T3JpZ2luYWxEb2N1bWVudElEPSJ4bXA6ZGlkOjY5ZDM4YzM5LTM4ZTAtNDZiZC1hMzA0LTNmYzM5YzM5YzM5YyIgZGM6Zm9ybWF0PSJpbWFnZS9wbmciIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjY5ZDM4YzM5LTM4ZTAtNDZiZC1hMzA0LTNmYzM5YzM5YzM5YyIgc3RFdnQ6d2hlbj0iMjAyNC0wMy0xOVQxNTo0Nzo0MSswNTozMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIDI0LjAgKE1hY2ludG9zaCkiLz4gPC9yZGY6U2VxPiA8L3htcE1NOkhpc3Rvcnk+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+4cqj8wAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAASUVORK5CYII=" alt="nxzen" style="width: 120px; height: auto; display: block; margin: 0 auto;">
             </div>
             <!-- nxzen text -->
             <div style="color: white; font-size: 24px; font-weight: 300; letter-spacing: 2px; margin-top: 10px;">
@@ -53,6 +48,7 @@ async function sendOnboardingEmail(to, tempPassword) {
             <p style="margin: 10px 0;"><strong>🌐 Login URL:</strong> <a href="http://localhost:3000/login" style="color: #007bff; text-decoration: none;">http://localhost:3000/login</a></p>
             <p style="margin: 10px 0;"><strong>📧 Email:</strong> <span style="color: #495057;">${to}</span></p>
             <p style="margin: 10px 0;"><strong>🔑 Temporary Password:</strong> <span style="background-color: #f8f9fa; padding: 8px 12px; border-radius: 6px; font-family: 'Courier New', monospace; border: 1px solid #dee2e6; color: #495057;">${tempPassword}</span></p>
+            <p style="margin: 10px 0;"><strong>💼 Employment Type:</strong> <span style="background-color: #e7f3ff; padding: 8px 12px; border-radius: 6px; border: 1px solid #b3d9ff; color: #0066cc; font-weight: 500;">${employmentType}</span></p>
           </div>
         </div>
         

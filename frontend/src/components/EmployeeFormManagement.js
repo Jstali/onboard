@@ -698,7 +698,6 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     selectedForm.form_data?.name ||
                     `${selectedForm.first_name} ${selectedForm.last_name}`
                   }
-                  employmentType={selectedForm.employee_type}
                   isHR={true}
                   onRefresh={fetchEmployeeForms}
                 />
@@ -769,7 +768,6 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     name:
                       selectedForm.form_data?.name ||
                       `${selectedForm.first_name} ${selectedForm.last_name}`,
-                    employmentType: selectedForm.employee_type,
                   });
                   setShowDocumentStatus(true);
                 }}
@@ -824,7 +822,6 @@ const EmployeeFormManagement = ({ onRefresh }) => {
             <DocumentStatus
               employeeId={selectedEmployeeForDocs.id}
               employeeName={selectedEmployeeForDocs.name}
-              employmentType={selectedEmployeeForDocs.employmentType}
               isHR={true}
               onRefresh={fetchEmployeeForms}
             />

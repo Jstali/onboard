@@ -98,7 +98,7 @@ const EmployeeDashboard = () => {
                   className="w-10 h-10 object-contain transition-transform duration-300 hover:rotate-12"
                 />
                 <div className="text-black font-semibold text-lg transition-colors duration-300 hover:text-primary-600">
-                  nxzen
+                  NXZEN
                 </div>
               </div>
               <div className="border-l border-gray-300 h-8"></div>

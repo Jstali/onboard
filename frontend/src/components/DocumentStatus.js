@@ -16,7 +16,6 @@ import DocumentUploadSection from "./DocumentUploadSection";
 const DocumentStatus = ({
   employeeId,
   employeeName,
-  employmentType,
   isHR = false,
   readOnly = false,
   onRefresh,
@@ -35,7 +34,7 @@ const DocumentStatus = ({
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5001/api/documents/validation/${employeeId}/${employmentType}`,
+        `http://localhost:5001/api/documents/validation/${employeeId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setValidation(response.data.validation);
@@ -49,13 +48,13 @@ const DocumentStatus = ({
     } finally {
       setLoading(false);
     }
-  }, [employeeId, employmentType]);
+  }, [employeeId]);
 
   useEffect(() => {
-    if (employeeId && employmentType) {
+    if (employeeId) {
       fetchValidation();
     }
-  }, [employeeId, employmentType]);
+  }, [employeeId, fetchValidation]);
 
   const getTotalRequired = (validation) => {
     let total = 0;
@@ -102,6 +101,10 @@ const DocumentStatus = ({
         (doc) => doc.document_type === documentType
       );
 
+      console.log("🔍 Debug - All docs:", allDocs);
+      console.log("🔍 Debug - Looking for type:", documentType);
+      console.log("🔍 Debug - Found file:", fileToView);
+
       if (fileToView && fileToView.file_url) {
         // Ensure all required properties exist
         const safeFile = {
@@ -117,17 +120,20 @@ const DocumentStatus = ({
           fileName: safeFile.file_name,
           fileUrl: safeFile.file_url,
           fileType: safeFile.file_type,
+          fullUrl: `http://localhost:5001${safeFile.file_url}`,
         });
 
         setSelectedFile(safeFile);
         setShowFileViewer(true);
       } else {
         console.log("⚠️ File not found for document type:", documentType);
-        // Don't show error toast, just log it
+        console.log(
+          "⚠️ Available document types:",
+          allDocs.map((doc) => doc.document_type)
+        );
       }
     } catch (error) {
       console.error("Error viewing file:", error);
-      // Don't show error toast, just log it
     }
   };
 
@@ -252,6 +258,29 @@ const DocumentStatus = ({
     }
   };
 
+  const handleDownload = async (fileUrl, fileName) => {
+    try {
+      const fullUrl = `http://localhost:5001${fileUrl}`;
+      console.log("🔍 Downloading file:", fullUrl);
+
+      // Create a temporary link element
+      const link = document.createElement("a");
+      link.href = fullUrl;
+      link.download = fileName || "document";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+
+      // Add the link to the DOM, click it, and remove it
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      console.log("✅ Download initiated successfully");
+    } catch (error) {
+      console.error("❌ Download failed:", error);
+    }
+  };
+
   const getCategoryIcon = (category) => {
     switch (category) {
       case "employment":
@@ -353,8 +382,7 @@ const DocumentStatus = ({
               )}
             </h3>
             <p className="text-sm text-gray-600 mt-1">
-              Employment Type:{" "}
-              <span className="font-medium">{employmentType}</span>
+              Document Status for Employee
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -497,7 +525,6 @@ const DocumentStatus = ({
               </p>
             </div>
             <DocumentUploadSection
-              employmentType={employmentType}
               employeeId={employeeId}
               onDocumentsChange={fetchValidation}
               readOnly={false}
@@ -744,30 +771,49 @@ const DocumentStatus = ({
 
                     return (
                       <div className="relative">
-                        <iframe
-                          src={fullUrl}
-                          className="w-full h-96"
-                          title={selectedFile.file_name || "PDF"}
-                          onLoad={() => {
-                            console.log("✅ PDF iframe loaded successfully");
-                          }}
-                          onError={(e) => {
-                            console.error("❌ PDF load error:", e);
-                            console.error("❌ Failed URL:", fullUrl);
-                            // Don't show error toast, just log it
-                            console.log(
-                              "⚠️ PDF preview failed, showing download option instead"
-                            );
-                          }}
-                          style={{ border: "1px solid #e5e7eb" }}
-                        />
+                        {/* PDF Viewer with fallback */}
+                        <div className="w-full h-96 border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                          <object
+                            data={fullUrl}
+                            type="application/pdf"
+                            className="w-full h-full"
+                            onLoad={() => {
+                              console.log("✅ PDF object loaded successfully");
+                            }}
+                            onError={(e) => {
+                              console.error("❌ PDF load error:", e);
+                              console.error("❌ Failed URL:", fullUrl);
+                              // Show fallback
+                              const fallback =
+                                document.getElementById("pdf-fallback");
+                              if (fallback) fallback.style.display = "flex";
+                            }}
+                          >
+                            <div className="flex items-center justify-center h-full bg-gray-100">
+                              <div className="text-center">
+                                <p className="text-gray-600 mb-4">
+                                  PDF preview not available
+                                </p>
+                                <a
+                                  href={fullUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                >
+                                  Open PDF in New Tab
+                                </a>
+                              </div>
+                            </div>
+                          </object>
+                        </div>
+
                         {/* Fallback button for iframe issues */}
                         <div className="absolute top-2 left-2">
                           <a
                             href={fullUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                            className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 shadow-sm"
                             onClick={() => {
                               console.log(
                                 "✅ Opening PDF in new tab:",
@@ -778,15 +824,19 @@ const DocumentStatus = ({
                             Open in New Tab
                           </a>
                         </div>
+
+                        {/* PDF Preview label */}
+                        <div className="absolute top-2 right-2 bg-white bg-opacity-90 px-3 py-1 rounded-md text-sm text-gray-700 shadow-sm">
+                          PDF Preview
+                        </div>
+
+                        {/* File name label */}
+                        <div className="absolute bottom-2 left-2 bg-white bg-opacity-90 px-3 py-1 rounded-md text-sm text-gray-700 shadow-sm">
+                          {selectedFile?.file_name || "Document"}
+                        </div>
                       </div>
                     );
                   })()}
-                  <div className="absolute top-2 right-2 bg-white bg-opacity-75 px-2 py-1 rounded text-xs text-gray-600">
-                    PDF Preview
-                  </div>
-                  <div className="absolute bottom-2 left-2 bg-white bg-opacity-75 px-2 py-1 rounded text-xs text-gray-600">
-                    {selectedFile?.file_name || "Document"}
-                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-64 bg-gray-100">
@@ -805,64 +855,46 @@ const DocumentStatus = ({
                         </span>
                       )}
                     </p>
-                    <a
-                      href={
-                        selectedFile && selectedFile.file_url
-                          ? `http://localhost:5001${selectedFile.file_url}`
-                          : "#"
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                      onClick={(e) => {
-                        if (!selectedFile || !selectedFile.file_url) {
-                          e.preventDefault();
-                          // Don't show error toast, just log it
-                          console.log(
-                            "⚠️ Download not available - missing file_url"
+                    <button
+                      onClick={() => {
+                        if (selectedFile && selectedFile.file_url) {
+                          handleDownload(
+                            selectedFile.file_url,
+                            selectedFile.file_name
                           );
                         } else {
                           console.log(
-                            "✅ Download initiated:",
-                            selectedFile.file_url
+                            "⚠️ Download not available - missing file_url"
                           );
                         }
                       }}
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
                     >
                       <FaDownload className="mr-2" />
                       Download File
-                    </a>
+                    </button>
                   </div>
                 </div>
               )}
             </div>
 
             <div className="flex justify-end mt-6 space-x-3">
-              <a
-                href={
-                  selectedFile.file_url
-                    ? `http://localhost:5001${selectedFile.file_url}`
-                    : "#"
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                onClick={(e) => {
-                  if (!selectedFile.file_url) {
-                    e.preventDefault();
-                    // Don't show error toast, just log it
-                    console.log("⚠️ Download not available - missing file_url");
-                  } else {
-                    console.log(
-                      "✅ Download initiated:",
-                      selectedFile.file_url
+              <button
+                onClick={() => {
+                  if (selectedFile && selectedFile.file_url) {
+                    handleDownload(
+                      selectedFile.file_url,
+                      selectedFile.file_name
                     );
+                  } else {
+                    console.log("⚠️ Download not available - missing file_url");
                   }
                 }}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 <FaDownload className="mr-2" />
                 Download
-              </a>
+              </button>
               <button
                 onClick={() => {
                   setShowFileViewer(false);
