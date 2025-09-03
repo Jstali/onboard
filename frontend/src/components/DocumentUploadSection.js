@@ -8,6 +8,10 @@ import {
   FaTrash,
   FaCheck,
   FaExclamationTriangle,
+  FaSave,
+  FaPaperPlane,
+  FaClock,
+  FaArrowLeft,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -16,17 +20,38 @@ const DocumentUploadSection = ({
   employeeId,
   onDocumentsChange,
   readOnly = false,
+  onStatusChange,
+  initialStatus = "draft",
+  onBack,
 }) => {
   const [requirements, setRequirements] = useState({});
   const [uploadedDocuments, setUploadedDocuments] = useState({});
   const [uploading, setUploading] = useState({});
   const [validation, setValidation] = useState({});
+  const [formStatus, setFormStatus] = useState(initialStatus);
+  const [loading, setLoading] = useState(false);
+  const [requiredDocuments, setRequiredDocuments] = useState([]);
+  const [uploadedRequiredCount, setUploadedRequiredCount] = useState(0);
 
   const fetchRequirements = useCallback(async () => {
     try {
-      // Get all document requirements without employment type
       const response = await axios.get(`/documents/requirements`);
       setRequirements(response.data);
+
+      // Extract required documents
+      const required = [];
+      Object.entries(response.data).forEach(([category, docs]) => {
+        docs.forEach((doc) => {
+          if (doc.required) {
+            required.push({
+              type: doc.type,
+              category: category,
+              name: doc.name,
+            });
+          }
+        });
+      });
+      setRequiredDocuments(required);
     } catch (error) {
       console.error("Error fetching requirements:", error);
       toast.error("Failed to load document requirements");
@@ -41,6 +66,19 @@ const DocumentUploadSection = ({
       });
       setUploadedDocuments(response.data);
 
+      // Calculate uploaded required documents count
+      const uploadedTypes = new Set();
+      Object.values(response.data)
+        .flat()
+        .forEach((doc) => {
+          uploadedTypes.add(doc.document_type);
+        });
+
+      const uploadedRequired = requiredDocuments.filter((doc) =>
+        uploadedTypes.has(doc.type)
+      ).length;
+      setUploadedRequiredCount(uploadedRequired);
+
       // Also fetch validation status
       const validationResponse = await axios.get(
         `/documents/validation/${employeeId}`,
@@ -50,14 +88,30 @@ const DocumentUploadSection = ({
     } catch (error) {
       console.error("Error fetching uploaded documents:", error);
     }
-  }, [employeeId]);
+  }, [employeeId, requiredDocuments]);
+
+  const fetchFormStatus = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`/employee/form-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setFormStatus(response.data.status);
+      if (onStatusChange) {
+        onStatusChange(response.data.status);
+      }
+    } catch (error) {
+      console.error("Error fetching form status:", error);
+    }
+  }, [onStatusChange]);
 
   useEffect(() => {
     fetchRequirements();
     if (employeeId) {
       fetchUploadedDocuments();
+      fetchFormStatus();
     }
-  }, [employeeId, fetchRequirements, fetchUploadedDocuments]);
+  }, [employeeId, fetchRequirements, fetchUploadedDocuments, fetchFormStatus]);
 
   const handleFileUpload = async (documentType, documentCategory, files) => {
     if (!files || files.length === 0) return;
@@ -100,26 +154,67 @@ const DocumentUploadSection = ({
     }
   };
 
-  const handleSaveDocument = async (documentType, documentCategory) => {
+  const handleSaveDraft = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `/documents/save/${employeeId}`,
+        `/employee/save-draft`,
         {
-          documentType,
-          documentCategory,
-          status: "saved",
+          employeeId,
+          documents: uploadedDocuments,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      toast.success("Document saved successfully!");
-      fetchUploadedDocuments();
+      setFormStatus("draft");
+      if (onStatusChange) {
+        onStatusChange("draft");
+      }
+      toast.success("Draft saved successfully!");
     } catch (error) {
-      console.error("Error saving document:", error);
-      toast.error("Failed to save document");
+      console.error("Error saving draft:", error);
+      toast.error("Failed to save draft");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitForm = async () => {
+    // Check if all required documents are uploaded
+    if (uploadedRequiredCount < requiredDocuments.length) {
+      toast.error(
+        `Please upload all required documents. ${uploadedRequiredCount}/${requiredDocuments.length} uploaded.`
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `/employee/submit-form`,
+        {
+          employeeId,
+          documents: uploadedDocuments,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setFormStatus("submitted");
+      if (onStatusChange) {
+        onStatusChange("submitted");
+      }
+      toast.success("Form submitted successfully!");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("Failed to submit form");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -199,13 +294,23 @@ const DocumentUploadSection = ({
             return (
               <div
                 key={documentType}
-                className="border border-gray-200 rounded-lg p-4"
+                className={`border rounded-lg p-4 ${
+                  isRequired
+                    ? hasDocuments
+                      ? "border-green-200 bg-green-50"
+                      : "border-red-200 bg-red-50"
+                    : "border-gray-200"
+                }`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <span className="font-medium text-gray-900">
                       {requirement.name}
-                      <span className="text-blue-500 ml-1">(Optional)</span>
+                      {isRequired ? (
+                        <span className="text-red-500 ml-1">(Required)</span>
+                      ) : (
+                        <span className="text-blue-500 ml-1">(Optional)</span>
+                      )}
                     </span>
                     {validationInfo && (
                       <span className="ml-2">
@@ -223,15 +328,10 @@ const DocumentUploadSection = ({
                         Multiple files allowed
                       </span>
                     )}
-                    {hasDocuments && (
-                      <button
-                        onClick={() =>
-                          handleSaveDocument(documentType, category)
-                        }
-                        className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors"
-                      >
-                        Save
-                      </button>
+                    {isRequired && !hasDocuments && (
+                      <span className="text-xs text-red-500 bg-red-100 px-2 py-1 rounded">
+                        Required
+                      </span>
                     )}
                   </div>
                 </div>
@@ -327,9 +427,16 @@ const DocumentUploadSection = ({
                 )}
 
                 {!hasDocuments && (
-                  <div className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
-                    This document is optional. You can upload it later if
-                    needed.
+                  <div
+                    className={`text-sm p-2 rounded ${
+                      isRequired
+                        ? "text-red-600 bg-red-50"
+                        : "text-blue-600 bg-blue-50"
+                    }`}
+                  >
+                    {isRequired
+                      ? "This document is required. Please upload it to proceed."
+                      : "This document is optional. You can upload it later if needed."}
                   </div>
                 )}
               </div>
@@ -351,15 +458,99 @@ const DocumentUploadSection = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h2 className="text-lg font-semibold text-blue-900 mb-2">
-          Document Upload
-        </h2>
-        <p className="text-blue-700 text-sm">
-          All documents are optional. You can upload documents as needed and
-          save them individually.
-        </p>
+      {/* Status Header */}
+      <div
+        className={`border rounded-lg p-4 ${
+          formStatus === "submitted"
+            ? "bg-green-50 border-green-200"
+            : "bg-blue-50 border-blue-200"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                title="Back to form"
+              >
+                <FaArrowLeft className="mr-2" />
+                Back to Form
+              </button>
+            )}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                Document Upload
+              </h2>
+              <p className="text-sm text-gray-600">
+                {formStatus === "submitted"
+                  ? "✅ Form submitted successfully! Your documents are under review."
+                  : `📄 Upload your required documents. ${uploadedRequiredCount}/${requiredDocuments.length} required documents uploaded.`}
+              </p>
+              {formStatus === "draft" && (
+                <p className="text-xs text-gray-500 mt-1">
+                  You can save as draft and continue later, or submit when all
+                  required documents are uploaded.
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            {formStatus === "draft" && (
+              <>
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={loading}
+                  className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50"
+                >
+                  <FaSave className="mr-2" />
+                  Save Draft
+                </button>
+                <button
+                  onClick={handleSubmitForm}
+                  disabled={
+                    loading || uploadedRequiredCount < requiredDocuments.length
+                  }
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                >
+                  <FaPaperPlane className="mr-2" />
+                  Submit Form
+                </button>
+              </>
+            )}
+            {formStatus === "submitted" && (
+              <div className="flex items-center text-green-600">
+                <FaCheck className="mr-2" />
+                Submitted
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Progress Bar */}
+      {formStatus === "draft" && (
+        <div className="bg-gray-100 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">
+              Required Documents Progress
+            </span>
+            <span className="text-sm text-gray-500">
+              {uploadedRequiredCount}/{requiredDocuments.length}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-green-600 h-2 rounded-full transition-all duration-300"
+              style={{
+                width: `${
+                  (uploadedRequiredCount / requiredDocuments.length) * 100
+                }%`,
+              }}
+            ></div>
+          </div>
+        </div>
+      )}
 
       {requirements.employment &&
         renderDocumentSection("employment", "Employment Documents")}

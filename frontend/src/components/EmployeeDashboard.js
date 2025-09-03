@@ -236,15 +236,15 @@ const EmployeeDashboard = () => {
             {onboardingStatus?.status === "approved" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <Link
-                  to="/attendance"
+                  to="/employee/attendance"
                   className="bg-blue-600 text-white p-6 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
                 >
                   <div className="flex items-center">
                     <FaCalendarAlt className="text-3xl mr-4" />
                     <div>
-                      <h3 className="text-xl font-semibold">Mark Attendance</h3>
+                      <h3 className="text-xl font-semibold">Attendance</h3>
                       <p className="text-blue-100">
-                        Record your daily attendance
+                        Mark attendance and view calendar
                       </p>
                     </div>
                   </div>

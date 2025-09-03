@@ -256,6 +256,10 @@ const HRDocumentCollection = () => {
         return `${baseClasses} bg-green-100 text-green-800`;
       case "Pending":
         return `${baseClasses} bg-orange-100 text-orange-800`;
+      case "Uploaded":
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case "Not Uploaded":
+        return `${baseClasses} bg-orange-100 text-orange-800`;
       case "Follow-Up":
         return `${baseClasses} bg-blue-100 text-blue-800`;
       case "N/A":
@@ -270,6 +274,10 @@ const HRDocumentCollection = () => {
       case "Received":
         return "text-green-600";
       case "Pending":
+        return "text-orange-600";
+      case "Uploaded":
+        return "text-green-600";
+      case "Not Uploaded":
         return "text-orange-600";
       case "Follow-Up":
         return "text-blue-600";
@@ -447,14 +455,19 @@ const HRDocumentCollection = () => {
       if (doc.effective_status) {
         displayStatus = doc.effective_status;
       } else {
-        // Fallback calculation
-        const hasUploadedFile = doc.uploaded_file_url;
-        if (hasUploadedFile) {
+        // Map backend statuses to frontend display statuses
+        if (doc.status === "Uploaded" || doc.status === "Received") {
           displayStatus = "Received";
-        } else if (doc.status && doc.status !== "Pending") {
-          displayStatus = doc.status;
-        } else {
+        } else if (doc.status === "Not Uploaded" || doc.status === "Pending") {
           displayStatus = "Pending";
+        } else {
+          // Fallback calculation
+          const hasUploadedFile = doc.uploaded_file_url;
+          if (hasUploadedFile) {
+            displayStatus = "Received";
+          } else {
+            displayStatus = "Pending";
+          }
         }
       }
 
@@ -540,19 +553,14 @@ const HRDocumentCollection = () => {
           .includes(filters.searchTerm.toLowerCase()) ||
         group.emp_id.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
-      // Check document status filter
+      // Check document status filter - if status filter is applied, only show employees who have documents with that status
       const hasMatchingDocument = (() => {
-        // If no status filter is applied (All Status), show all documents
+        // If no status filter is applied (All Status), show all employees
         if (!filters.status) {
-          return group.documents.some((doc) => {
-            const matchesType =
-              !filters.documentType ||
-              doc.document_type === filters.documentType;
-            return matchesType;
-          });
+          return true;
         }
 
-        // If status filter is applied, only show documents with matching status
+        // If status filter is applied, only show employees who have documents with matching status
         return group.documents.some((doc) => {
           const matchesStatus = doc.display_status === filters.status;
           const matchesType =
@@ -610,14 +618,14 @@ const HRDocumentCollection = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Search
             </label>
             <input
               type="text"
-              placeholder="Employee name, document, or ID..."
+              placeholder="Employee name, email, or ID..."
               value={filters.searchTerm}
               onChange={(e) =>
                 setFilters({ ...filters, searchTerm: e.target.value })
@@ -627,7 +635,7 @@ const HRDocumentCollection = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
+              Document Status
             </label>
             <select
               value={filters.status}
@@ -639,6 +647,25 @@ const HRDocumentCollection = () => {
               <option value="">All Status</option>
               <option value="Pending">Pending</option>
               <option value="Received">Received</option>
+              <option value="Not Uploaded">Not Uploaded</option>
+              <option value="Uploaded">Uploaded</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Document Type
+            </label>
+            <select
+              value={filters.documentType}
+              onChange={(e) =>
+                setFilters({ ...filters, documentType: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Types</option>
+              <option value="Required">Required</option>
+              <option value="Optional">Optional</option>
             </select>
           </div>
 
@@ -657,6 +684,26 @@ const HRDocumentCollection = () => {
               <option value="Full-Time">Full-Time</option>
               <option value="Intern">Intern</option>
               <option value="Contract">Contract</option>
+              <option value="Manager">Manager</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Form Status
+            </label>
+            <select
+              value={filters.formStatus}
+              onChange={(e) =>
+                setFilters({ ...filters, formStatus: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Status</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+              <option value="rejected">Rejected</option>
+              <option value="submitted">Submitted</option>
             </select>
           </div>
         </div>
@@ -664,270 +711,208 @@ const HRDocumentCollection = () => {
 
       {/* Documents Table */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300">
+        <div className="overflow-x-auto" style={{ maxWidth: "100%" }}>
+          <table
+            className="min-w-full border border-gray-300"
+            style={{ tableLayout: "fixed" }}
+          >
             <thead className="bg-blue-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400 sticky left-0 z-10 bg-blue-800"
+                  style={{ width: "200px", minWidth: "200px" }}
+                >
                   Employee Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  style={{ width: "120px", minWidth: "120px" }}
+                >
                   Join Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  style={{ width: "140px", minWidth: "140px" }}
+                >
                   Form Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  style={{ width: "120px", minWidth: "120px" }}
+                >
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  style={{ width: "120px", minWidth: "120px" }}
+                >
                   Submitted
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  style={{ width: "150px", minWidth: "150px" }}
+                >
                   Document Summary
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400">
-                  Document
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400">
-                  Status
-                </th>
+                {/* Dynamic document type columns */}
+                {templates.map((template) => (
+                  <th
+                    key={template.id}
+                    className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                    style={{ width: "180px", minWidth: "180px" }}
+                  >
+                    {template.document_name}
+                    {template.document_type === "Required" && "*"}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="bg-white">
-              {currentEmployees.map((group, groupIndex) => {
-                // Filter documents based on status and document type
-                const filteredDocuments = group.documents.filter((doc) => {
-                  const matchesStatus =
-                    !filters.status || doc.display_status === filters.status;
-                  const matchesType =
-                    !filters.documentType ||
-                    doc.document_type === filters.documentType;
-                  return matchesStatus && matchesType;
-                });
+              {currentEmployees.map((group, groupIndex) => (
+                <tr
+                  key={`${group.employee_id}-${groupIndex}`}
+                  className="hover:bg-gray-50"
+                >
+                  {/* Employee Details - Frozen Column */}
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300 sticky left-0 z-10 bg-white shadow-sm"
+                    style={{ width: "200px", minWidth: "200px" }}
+                  >
+                    <div>
+                      <div className="text-gray-900 font-medium">
+                        {group.user_email}
+                      </div>
+                      <div className="text-gray-500 text-xs">
+                        {group.first_name} {group.last_name}
+                      </div>
+                    </div>
+                  </td>
 
-                return (
-                  <React.Fragment key={`${group.employee_id}-${groupIndex}`}>
-                    {filteredDocuments.length > 0 ? (
-                      filteredDocuments.map((doc, docIndex) => (
-                        <tr key={doc.id} className="hover:bg-gray-50">
-                          {/* Show employee details only for the first document */}
-                          {docIndex === 0 ? (
-                            <>
-                              <td
-                                className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
-                                rowSpan={filteredDocuments.length}
-                              >
-                                <div>
-                                  <div className="text-gray-900 font-medium">
-                                    {group.user_email}
-                                  </div>
-                                  <div className="text-gray-500 text-xs">
-                                    {group.first_name} {group.last_name}
-                                  </div>
-                                </div>
-                              </td>
+                  {/* Join Date */}
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
+                    style={{ width: "120px", minWidth: "120px" }}
+                  >
+                    {group.join_date && group.join_date !== "N/A"
+                      ? new Date(group.join_date).toISOString().split("T")[0]
+                      : "N/A"}
+                  </td>
 
-                              <td
-                                className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
-                                rowSpan={filteredDocuments.length}
-                              >
-                                {
-                                  new Date(group.join_date)
-                                    .toISOString()
-                                    .split("T")[0]
-                                }
-                              </td>
+                  {/* Form Status */}
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
+                    style={{ width: "140px", minWidth: "140px" }}
+                  >
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        group.form_status === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : group.form_status === "pending"
+                          ? "bg-orange-100 text-orange-800"
+                          : group.form_status === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {group.form_status === "approved"
+                        ? "Form Approved"
+                        : group.form_status === "pending"
+                        ? "Form Pending"
+                        : group.form_status === "rejected"
+                        ? "Form Rejected"
+                        : "Not Submitted"}
+                    </span>
+                  </td>
 
-                              <td
-                                className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
-                                rowSpan={filteredDocuments.length}
-                              >
-                                <span
-                                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    group.form_status === "approved"
-                                      ? "bg-green-100 text-green-800"
-                                      : group.form_status === "pending"
-                                      ? "bg-orange-100 text-orange-800"
-                                      : group.form_status === "rejected"
-                                      ? "bg-red-100 text-red-800"
-                                      : "bg-gray-100 text-gray-800"
-                                  }`}
-                                >
-                                  {group.form_status === "approved"
-                                    ? "Form Approved"
-                                    : group.form_status === "pending"
-                                    ? "Form Pending"
-                                    : group.form_status === "rejected"
-                                    ? "Form Rejected"
-                                    : "Not Submitted"}
-                                </span>
-                              </td>
-                              <td
-                                className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
-                                rowSpan={filteredDocuments.length}
-                              >
-                                <span
-                                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    group.employment_type === "Full-Time"
-                                      ? "bg-purple-100 text-purple-800"
-                                      : group.employment_type === "Intern"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : group.employment_type === "Contract"
-                                      ? "bg-orange-100 text-orange-800"
-                                      : "bg-gray-100 text-gray-800"
-                                  }`}
-                                >
-                                  {group.employment_type}
-                                </span>
-                              </td>
+                  {/* Type */}
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
+                    style={{ width: "120px", minWidth: "120px" }}
+                  >
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        group.employment_type === "Full-Time"
+                          ? "bg-purple-100 text-purple-800"
+                          : group.employment_type === "Intern"
+                          ? "bg-blue-100 text-blue-800"
+                          : group.employment_type === "Contract"
+                          ? "bg-orange-100 text-orange-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {group.employment_type || "Not Specified"}
+                    </span>
+                  </td>
 
-                              <td
-                                className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
-                                rowSpan={filteredDocuments.length}
-                              >
-                                {group.form_submitted_at
-                                  ? new Date(
-                                      group.form_submitted_at
-                                    ).toLocaleDateString("en-US", {
-                                      month: "numeric",
-                                      day: "numeric",
-                                      year: "numeric",
-                                    })
-                                  : "Not submitted"}
-                              </td>
-                              <td
-                                className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
-                                rowSpan={filteredDocuments.length}
-                              >
-                                <div className="text-xs">
-                                  <div className="font-medium text-gray-900">
-                                    {group.submitted_documents}/
-                                    {group.total_documents} Submitted
-                                  </div>
-                                  <div className="text-gray-500">
-                                    {group.pending_documents} Pending
-                                  </div>
-                                </div>
-                              </td>
-                            </>
-                          ) : null}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                            {doc.document_name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap border border-gray-300">
-                            <span className={getTypeBadge(doc.document_type)}>
-                              {doc.document_type}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap border border-gray-300">
-                            <button
-                              onClick={() => openStatusModal(doc)}
-                              className={`text-sm font-medium ${getStatusText(
-                                doc.display_status
-                              )} hover:underline cursor-pointer`}
-                            >
-                              {doc.display_status}
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      // Show employee row even if they have no documents
-                      <tr
-                        key={`${group.employee_id}-no-docs`}
-                        className="hover:bg-gray-50"
+                  {/* Submitted */}
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
+                    style={{ width: "120px", minWidth: "120px" }}
+                  >
+                    {group.form_submitted_at
+                      ? new Date(group.form_submitted_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "numeric",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )
+                      : "Not submitted"}
+                  </td>
+
+                  {/* Document Summary */}
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
+                    style={{ width: "150px", minWidth: "150px" }}
+                  >
+                    <div className="text-xs">
+                      <div className="font-medium text-gray-900">
+                        {group.submitted_documents}/{group.total_documents}{" "}
+                        Submitted
+                      </div>
+                      <div className="text-gray-500">
+                        {group.pending_documents} Pending
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Individual Document Status Columns */}
+                  {templates.map((template) => {
+                    // Find the document for this employee and template
+                    const document = group.documents.find(
+                      (doc) => doc.document_name === template.document_name
+                    );
+
+                    const status = document
+                      ? document.display_status
+                      : "Not Uploaded";
+
+                    return (
+                      <td
+                        key={template.id}
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
+                        style={{ width: "180px", minWidth: "180px" }}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                          <div>
-                            <div className="text-gray-900 font-medium">
-                              {group.user_email}
-                            </div>
-                            <div className="text-gray-500 text-xs">
-                              {group.first_name} {group.last_name}
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                          {group.join_date}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              group.form_status === "approved"
-                                ? "bg-green-100 text-green-800"
-                                : group.form_status === "pending"
-                                ? "bg-orange-100 text-orange-800"
-                                : group.form_status === "rejected"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {group.form_status === "approved"
-                              ? "Form Approved"
-                              : group.form_status === "pending"
-                              ? "Form Pending"
-                              : group.form_status === "rejected"
-                              ? "Form Rejected"
-                              : "Not Submitted"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              group.employment_type === "Full-Time"
-                                ? "bg-purple-100 text-purple-800"
-                                : group.employment_type === "Intern"
-                                ? "bg-blue-100 text-blue-800"
-                                : group.employment_type === "Contract"
-                                ? "bg-orange-100 text-orange-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {group.employment_type}
-                          </span>
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                          {group.form_submitted_at
-                            ? new Date(
-                                group.form_submitted_at
-                              ).toLocaleDateString("en-US", {
-                                month: "numeric",
-                                day: "numeric",
-                                year: "numeric",
-                              })
-                            : "Not submitted"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                          <div className="text-xs">
-                            <div className="font-medium text-gray-900">
-                              0/0 Submitted
-                            </div>
-                            <div className="text-gray-500">0 Pending</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                          <span className="text-gray-500 italic">
-                            No documents
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                          <span className="text-gray-500 italic">-</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300">
-                          <span className="text-gray-500 italic">-</span>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            status === "Received" || status === "Uploaded"
+                              ? "bg-green-100 text-green-800"
+                              : status === "Pending" ||
+                                status === "Not Uploaded"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {status === "Received" || status === "Uploaded"
+                            ? "Uploaded"
+                            : status}
+                        </span>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -936,11 +921,13 @@ const HRDocumentCollection = () => {
           <div className="text-center py-12">
             <FaFileAlt className="mx-auto text-gray-400 text-4xl mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Employee Forms Submitted
+              No Employee Data Found
             </h3>
             <p className="text-gray-500">
-              No employee forms have been submitted yet. Employee data will
-              appear here once they submit their onboarding forms.
+              {filters.searchTerm ||
+              Object.values(filters).some((f) => f !== "" && f !== "all")
+                ? "Try adjusting your search or filter criteria."
+                : "No employee forms have been submitted yet. Employee data will appear here once they submit their onboarding forms."}
             </p>
           </div>
         )}

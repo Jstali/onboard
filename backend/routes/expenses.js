@@ -6,7 +6,11 @@ const {
   sendManagerApprovalToHR,
   sendExpenseApprovalToEmployee,
 } = require("../utils/mailer.js");
-const { authenticateToken } = require("../middleware/auth.js");
+const {
+  authenticateToken,
+  requireEmployee,
+  requireHR,
+} = require("../middleware/auth.js");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -1217,214 +1221,68 @@ router.get("/approve/:id", async (req, res) => {
       <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Expense Approval - Success</title>
+          <title>Expense Request ${
+            action === "approve" ? "Approved" : "Rejected"
+          }</title>
           <script src="https://cdn.tailwindcss.com"></script>
-          <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
           <style>
-              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-              body { 
-                  font-family: 'Inter', sans-serif; 
-                  background: #f8fafc;
-                  margin: 0;
-                  padding: 0;
-              }
-              .header-bg {
-                  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-              }
-              .success-icon {
-                  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-              }
-              .reject-icon {
-                  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
-              }
-              .card-shadow {
-                  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-              }
-              .status-approved {
-                  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-                  border: 1px solid #10b981;
-                  color: #065f46;
-              }
-              .status-rejected {
-                  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-                  border: 1px solid #ef4444;
-                  color: #991b1b;
-              }
-              .status-pending {
-                  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-                  border: 1px solid #f59e0b;
-                  color: #92400e;
-              }
-              .fade-in {
-                  animation: fadeIn 0.6s ease-out;
-              }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+              .success-icon { background: linear-gradient(135deg, #10b981, #059669); }
+              .reject-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+              .fade-in { animation: fadeIn 0.5s ease-in; }
               @keyframes fadeIn {
-                  from { opacity: 0; transform: translateY(20px); }
+                  from { opacity: 0; transform: translateY(10px); }
                   to { opacity: 1; transform: translateY(0); }
-              }
-              .slide-up {
-                  animation: slideUp 0.8s ease-out 0.2s both;
-              }
-              @keyframes slideUp {
-                  from { opacity: 0; transform: translateY(30px); }
-                  to { opacity: 1; transform: translateY(0); }
-              }
-              .bounce-in {
-                  animation: bounceIn 0.8s ease-out 0.4s both;
-              }
-              @keyframes bounceIn {
-                  0% { opacity: 0; transform: scale(0.3); }
-                  50% { opacity: 1; transform: scale(1.05); }
-                  70% { transform: scale(0.9); }
-                  100% { opacity: 1; transform: scale(1); }
-              }
-              .professional-border {
-                  border: 1px solid #e2e8f0;
-              }
-              .hover-effect {
-                  transition: all 0.3s ease;
-              }
-              .hover-effect:hover {
-                  transform: translateY(-2px);
-                  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
               }
           </style>
       </head>
-      <body class="min-h-screen">
-          <!-- Professional Header -->
-          <header class="header-bg text-white py-6 fade-in">
-              <div class="max-w-4xl mx-auto px-6">
-                  <div class="flex items-center justify-between">
-                      <div class="flex items-center space-x-4">
-                          <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                              <svg width="24" height="24" viewBox="0 0 32 32" style="display: block;">
-                                  <path d="M6 12 Q6 8 10 8 Q14 8 14 12 Q14 16 10 16 Q6 16 6 12" stroke="#00ff88" stroke-width="2" fill="none" stroke-linecap="round"/>
-                                  <path d="M18 12 Q18 8 22 8 Q26 8 26 12 Q26 16 22 16 Q18 16 18 12" stroke="#00ff88" stroke-width="2" fill="none" stroke-linecap="round"/>
-                                  <path d="M6 20 Q6 16 10 16 Q14 16 14 20 Q14 24 10 24 Q6 24 6 20" stroke="#00ff88" stroke-width="2" fill="none" stroke-linecap="round"/>
-                                  <path d="M18 20 Q18 16 22 16 Q26 16 26 20 Q26 24 22 24 Q18 24 18 20" stroke="#00ff88" stroke-width="2" fill="none" stroke-linecap="round"/>
-                                  <line x1="14" y1="12" x2="18" y2="12" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
-                                  <line x1="14" y1="20" x2="18" y2="20" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
-                              </svg>
-                          </div>
-                          <div>
-                              <h1 class="text-2xl font-bold">nxzen</h1>
-                              <p class="text-gray-300 text-sm">HR Management System</p>
-                          </div>
-                      </div>
-                      <div class="text-right">
-                          <p class="text-sm text-gray-300">Expense Approval</p>
-                          <p class="text-xs text-gray-400">${new Date().toLocaleDateString()}</p>
-                      </div>
+      <body class="bg-gray-50 min-h-screen flex items-center justify-center">
+          <div class="max-w-md mx-auto bg-white rounded-lg shadow-sm p-8 fade-in">
+              <!-- Success Icon and Title -->
+              <div class="text-center mb-6">
+                  <div class="w-16 h-16 ${
+                    action === "approve" ? "success-icon" : "reject-icon"
+                  } rounded-full flex items-center justify-center mx-auto mb-4">
+                      <i class="fas ${
+                        action === "approve"
+                          ? "fa-check text-2xl text-white"
+                          : "fa-times text-2xl text-white"
+                      }"></i>
                   </div>
+                  <h1 class="text-2xl font-bold ${
+                    action === "approve" ? "text-green-600" : "text-red-600"
+                  } mb-2">
+                      Expense Request ${
+                        action === "approve" ? "Approved" : "Rejected"
+                      }!
+                  </h1>
+                  <p class="text-gray-600 text-sm leading-relaxed">
+                      You have successfully ${
+                        action === "approve" ? "approved" : "rejected"
+                      } the expense request from <strong>${
+      expenseData.employee_name
+    }</strong>.
+                  </p>
+                  <p class="text-gray-600 text-sm mt-2">
+                      ${
+                        action === "approve"
+                          ? finalStatus === "manager_approved"
+                            ? "The request has been forwarded to HR for final approval."
+                            : "Waiting for other managers to approve."
+                          : "The employee has been notified of the rejection."
+                      }
+                  </p>
               </div>
-          </header>
 
-          <!-- Main Content -->
-          <main class="max-w-2xl mx-auto px-6 py-12">
-              <!-- Success Card -->
-              <div class="bg-white rounded-xl card-shadow professional-border fade-in">
-                  <!-- Card Header -->
-                  <div class="border-b border-gray-200 px-8 py-6">
-                      <div class="text-center">
-                          <h2 class="text-2xl font-bold text-gray-900 mb-2">
-                              Expense Request ${
-                                action === "approve" ? "Approved" : "Rejected"
-                              }
-                          </h2>
-                          <p class="text-gray-600">
-                              ${
-                                action === "approve"
-                                  ? finalStatus === "manager_approved"
-                                    ? "The expense request has been successfully approved and forwarded to HR for final review."
-                                    : "The expense request has been approved. Waiting for other managers to approve."
-                                  : "The expense request has been rejected and the employee will be notified."
-                              }
-                          </p>
-                      </div>
-                  </div>
-
-                  <!-- Success Icon -->
-                  <div class="text-center py-8 bounce-in">
-                      <div class="w-20 h-20 ${
-                        action === "approve" ? "success-icon" : "reject-icon"
-                      } rounded-full flex items-center justify-center mx-auto">
-                          <i class="fas ${
-                            action === "approve"
-                              ? "fa-check text-3xl text-white"
-                              : "fa-times text-3xl text-white"
-                          }"></i>
-                      </div>
-                  </div>
-
-                  <!-- Status Badge -->
-                  <div class="text-center pb-6 slide-up">
-                      <span class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold ${
-                        finalStatus === "manager_approved"
-                          ? "status-approved"
-                          : finalStatus === "rejected"
-                          ? "status-rejected"
-                          : "status-pending"
-                      }">
-                          <i class="fas fa-clock mr-2"></i>
-                          ${
-                            finalStatus === "manager_approved"
-                              ? "Approved - Sent to HR"
-                              : finalStatus === "rejected"
-                              ? "Rejected"
-                              : "Pending Other Managers"
-                          }
-                      </span>
-                  </div>
-
-                  <!-- Details Section -->
-                  <div class="px-8 pb-8">
-                      <div class="bg-gray-50 rounded-lg p-6 hover-effect">
-                          <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
-                              <i class="fas fa-receipt mr-3 text-blue-600"></i>
-                              Request Details
-                          </h3>
-                          <div class="grid grid-cols-1 gap-4">
-                              <div class="flex justify-between items-center py-3 border-b border-gray-200">
-                                  <span class="text-gray-600 font-medium">Employee</span>
-                                  <span class="font-semibold text-gray-900">${
-                                    expenseData.employee_name
-                                  }</span>
-                              </div>
-                              <div class="flex justify-between items-center py-3 border-b border-gray-200">
-                                  <span class="text-gray-600 font-medium">Category</span>
-                                  <span class="font-semibold text-gray-900">${
-                                    expenseData.expense_category
-                                  }</span>
-                              </div>
-                              <div class="flex justify-between items-center py-3 border-b border-gray-200">
-                                  <span class="text-gray-600 font-medium">Amount</span>
-                                  <span class="font-bold text-green-600 text-lg">${
-                                    expenseData.currency
-                                  } ${expenseData.amount}</span>
-                              </div>
-                              <div class="flex justify-between items-center py-3">
-                                  <span class="text-gray-600 font-medium">Manager</span>
-                                  <span class="font-semibold text-gray-900">${managerName}</span>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-
-                  <!-- Footer -->
-                  <div class="border-t border-gray-200 px-8 py-6 slide-up">
-                      <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                          <p class="text-sm text-blue-800 font-medium text-center">
-                              <i class="fas fa-shield-alt mr-2"></i>
-                              This action has been logged and recorded for audit purposes.
-                          </p>
-                      </div>
-                  </div>
+              <!-- Call to Action Button -->
+              <div class="text-center">
+                  <button onclick="window.close()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200">
+                      Close Window
+                  </button>
               </div>
-          </main>
-      </body>
-      </html>
+          </body>
+          </html>
     `);
   } catch (error) {
     console.error("Email approval error:", error);
@@ -1695,5 +1553,70 @@ router.get("/hierarchy-export", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to export hierarchy" });
   }
 });
+
+// Get employee expenses - Missing endpoint
+router.get(
+  "/employee",
+  [authenticateToken, requireEmployee],
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT * FROM expense_requests WHERE employee_id = $1 ORDER BY created_at DESC`,
+        [req.user.userId]
+      );
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Get employee expenses error:", error);
+      res.status(500).json({ error: "Failed to get expenses" });
+    }
+  }
+);
+
+// Get HR expenses - Missing endpoint
+router.get("/hr", [authenticateToken, requireHR], async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT er.*, u.first_name, u.last_name, u.email 
+       FROM expense_requests er 
+       JOIN users u ON er.employee_id = u.id 
+       ORDER BY er.created_at DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Get HR expenses error:", error);
+    res.status(500).json({ error: "Failed to get expenses" });
+  }
+});
+
+// Create expense request - Missing endpoint
+router.post(
+  "/requests",
+  [authenticateToken, requireEmployee],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { expense_type, amount, description, date } = req.body;
+
+      const result = await pool.query(
+        `INSERT INTO expense_requests (employee_id, expense_type, amount, description, date, status)
+       VALUES ($1, $2, $3, $4, $5, 'pending')
+       RETURNING *`,
+        [req.user.userId, expense_type, amount, description, date]
+      );
+
+      res.json({
+        message: "Expense request created successfully",
+        expense: result.rows[0],
+      });
+    } catch (error) {
+      console.error("Create expense request error:", error);
+      res.status(500).json({ error: "Failed to create expense request" });
+    }
+  }
+);
 
 module.exports = router;

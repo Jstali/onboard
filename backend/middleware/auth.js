@@ -24,10 +24,11 @@ const authenticateToken = async (req, res, next) => {
 
     // Check if user still has temporary password
     if (result.rows[0].temp_password) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: "Password change required",
         requiresPasswordReset: true,
-        message: "Please change your temporary password before accessing the application"
+        message:
+          "Please change your temporary password before accessing the application",
       });
     }
 
@@ -46,7 +47,7 @@ const authenticateToken = async (req, res, next) => {
     }
     return res.status(500).json({ error: "Authentication failed" });
   }
- };
+};
 
 const requireRole = (roles) => {
   return (req, res, next) => {
@@ -64,10 +65,12 @@ const requireRole = (roles) => {
 
 const requireHR = requireRole(["hr"]);
 const requireEmployee = requireRole(["employee"]);
+const requireManager = requireRole(["manager"]);
 
 module.exports = {
   authenticateToken,
   requireRole,
   requireHR,
   requireEmployee,
+  requireManager,
 };

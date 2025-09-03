@@ -105,9 +105,10 @@ const DocumentStatus = ({
       console.log("🔍 Debug - Looking for type:", documentType);
       console.log("🔍 Debug - Found file:", fileToView);
 
-      if (fileToView && fileToView.file_url) {
+      if (fileToView && fileToView.id) {
         // Ensure all required properties exist
         const safeFile = {
+          id: fileToView.id,
           document_type: fileToView.document_type || documentType,
           file_name: fileToView.file_name || "Unknown File",
           file_type: fileToView.file_type || "application/octet-stream",
@@ -117,10 +118,9 @@ const DocumentStatus = ({
         };
 
         console.log("✅ File found, opening viewer:", {
+          documentId: safeFile.id,
           fileName: safeFile.file_name,
-          fileUrl: safeFile.file_url,
           fileType: safeFile.file_type,
-          fullUrl: `http://localhost:5001${safeFile.file_url}`,
         });
 
         setSelectedFile(safeFile);
@@ -131,9 +131,11 @@ const DocumentStatus = ({
           "⚠️ Available document types:",
           allDocs.map((doc) => doc.document_type)
         );
+        toast.error("Document not found");
       }
     } catch (error) {
       console.error("Error viewing file:", error);
+      toast.error("Failed to load document");
     }
   };
 
@@ -258,26 +260,35 @@ const DocumentStatus = ({
     }
   };
 
-  const handleDownload = async (fileUrl, fileName) => {
+  const handleDownload = async (documentId, fileName) => {
     try {
-      const fullUrl = `http://localhost:5001${fileUrl}`;
-      console.log("🔍 Downloading file:", fullUrl);
+      const token = localStorage.getItem("token");
+      console.log("🔍 Downloading document ID:", documentId);
 
-      // Create a temporary link element
+      const response = await axios.get(
+        `http://localhost:5001/api/documents/download/${documentId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
+
+      // Create blob URL and download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href = fullUrl;
+      link.href = url;
       link.download = fileName || "document";
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-
-      // Add the link to the DOM, click it, and remove it
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       console.log("✅ Download initiated successfully");
+      toast.success("Download started successfully");
     } catch (error) {
       console.error("❌ Download failed:", error);
+      toast.error("Failed to download document");
     }
   };
 
@@ -740,103 +751,63 @@ const DocumentStatus = ({
                 selectedFile.file_name
                   ?.toLowerCase()
                   .match(/\.(jpg|jpeg|png|gif|bmp|webp)$/)) ? (
-                <img
-                  src={`http://localhost:5001${selectedFile.file_url || ""}`}
-                  alt={selectedFile.file_name || "Image"}
-                  className="w-full h-auto max-h-96 object-contain"
-                  onError={(e) => {
-                    console.error("❌ Image load error:", e);
-                    toast.error("Failed to load image preview");
-                  }}
-                />
+                <div className="text-center">
+                  <img
+                    src={`http://localhost:5001/api/documents/preview/${selectedFile.id}`}
+                    alt={selectedFile.file_name || "Image"}
+                    className="w-full h-auto max-h-96 object-contain mx-auto"
+                    onError={(e) => {
+                      console.error("❌ Image load error:", e);
+                      toast.error("Failed to load image preview");
+                    }}
+                  />
+                  <div className="mt-4">
+                    <button
+                      onClick={() => {
+                        if (selectedFile && selectedFile.id) {
+                          handleDownload(
+                            selectedFile.id,
+                            selectedFile.file_name
+                          );
+                        }
+                      }}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      <FaDownload className="mr-2" />
+                      Download Image
+                    </button>
+                  </div>
+                </div>
               ) : selectedFile &&
-                selectedFile.file_url && // Ensure file_url exists
                 (selectedFile.file_type === "application/pdf" ||
                   selectedFile.file_type === "application/octet-stream" ||
                   selectedFile.file_name?.toLowerCase().endsWith(".pdf")) ? (
-                <div className="relative">
-                  {(() => {
-                    // Construct the file URL properly
-                    const fileUrl = selectedFile.file_url;
-                    const fullUrl = fileUrl
-                      ? `http://localhost:5001${fileUrl}`
-                      : "";
-
-                    console.log("🔍 File URL Debug:", {
-                      originalUrl: fileUrl,
-                      fullUrl: fullUrl,
-                      fileName: selectedFile.file_name,
-                      fileType: selectedFile.file_type,
-                    });
-
-                    return (
-                      <div className="relative">
-                        {/* PDF Viewer with fallback */}
-                        <div className="w-full h-96 border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
-                          <object
-                            data={fullUrl}
-                            type="application/pdf"
-                            className="w-full h-full"
-                            onLoad={() => {
-                              console.log("✅ PDF object loaded successfully");
-                            }}
-                            onError={(e) => {
-                              console.error("❌ PDF load error:", e);
-                              console.error("❌ Failed URL:", fullUrl);
-                              // Show fallback
-                              const fallback =
-                                document.getElementById("pdf-fallback");
-                              if (fallback) fallback.style.display = "flex";
-                            }}
-                          >
-                            <div className="flex items-center justify-center h-full bg-gray-100">
-                              <div className="text-center">
-                                <p className="text-gray-600 mb-4">
-                                  PDF preview not available
-                                </p>
-                                <a
-                                  href={fullUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                                >
-                                  Open PDF in New Tab
-                                </a>
-                              </div>
-                            </div>
-                          </object>
-                        </div>
-
-                        {/* Fallback button for iframe issues */}
-                        <div className="absolute top-2 left-2">
-                          <a
-                            href={fullUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 shadow-sm"
-                            onClick={() => {
-                              console.log(
-                                "✅ Opening PDF in new tab:",
-                                fullUrl
-                              );
-                            }}
-                          >
-                            Open in New Tab
-                          </a>
-                        </div>
-
-                        {/* PDF Preview label */}
-                        <div className="absolute top-2 right-2 bg-white bg-opacity-90 px-3 py-1 rounded-md text-sm text-gray-700 shadow-sm">
-                          PDF Preview
-                        </div>
-
-                        {/* File name label */}
-                        <div className="absolute bottom-2 left-2 bg-white bg-opacity-90 px-3 py-1 rounded-md text-sm text-gray-700 shadow-sm">
-                          {selectedFile?.file_name || "Document"}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                <div className="text-center">
+                  <iframe
+                    src={`http://localhost:5001/api/documents/preview/${selectedFile.id}`}
+                    className="w-full h-96 border border-gray-300 rounded-lg"
+                    title={selectedFile.file_name || "PDF Preview"}
+                    onError={(e) => {
+                      console.error("❌ PDF load error:", e);
+                      toast.error("Failed to load PDF preview");
+                    }}
+                  />
+                  <div className="mt-4">
+                    <button
+                      onClick={() => {
+                        if (selectedFile && selectedFile.id) {
+                          handleDownload(
+                            selectedFile.id,
+                            selectedFile.file_name
+                          );
+                        }
+                      }}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      <FaDownload className="mr-2" />
+                      Download PDF
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-64 bg-gray-100">
@@ -857,15 +828,16 @@ const DocumentStatus = ({
                     </p>
                     <button
                       onClick={() => {
-                        if (selectedFile && selectedFile.file_url) {
+                        if (selectedFile && selectedFile.id) {
                           handleDownload(
-                            selectedFile.file_url,
+                            selectedFile.id,
                             selectedFile.file_name
                           );
                         } else {
                           console.log(
-                            "⚠️ Download not available - missing file_url"
+                            "⚠️ Download not available - missing document ID"
                           );
+                          toast.error("Download not available");
                         }
                       }}
                       className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
@@ -881,13 +853,13 @@ const DocumentStatus = ({
             <div className="flex justify-end mt-6 space-x-3">
               <button
                 onClick={() => {
-                  if (selectedFile && selectedFile.file_url) {
-                    handleDownload(
-                      selectedFile.file_url,
-                      selectedFile.file_name
-                    );
+                  if (selectedFile && selectedFile.id) {
+                    handleDownload(selectedFile.id, selectedFile.file_name);
                   } else {
-                    console.log("⚠️ Download not available - missing file_url");
+                    console.log(
+                      "⚠️ Download not available - missing document ID"
+                    );
+                    toast.error("Download not available");
                   }
                 }}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"

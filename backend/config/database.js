@@ -55,15 +55,17 @@ const initializeTables = async () => {
       CREATE TABLE IF NOT EXISTS employee_forms (
         id SERIAL PRIMARY KEY,
         employee_id INTEGER REFERENCES users(id),
-        type VARCHAR(50) NOT NULL,
-        form_data JSONB NOT NULL,
+        type VARCHAR(50),
+        form_data JSONB,
         files TEXT[],
-        status VARCHAR(50) DEFAULT 'pending',
-        submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'draft',
+        submitted_at TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         reviewed_by INTEGER REFERENCES users(id),
         reviewed_at TIMESTAMP,
-        review_notes TEXT
+        review_notes TEXT,
+        draft_data JSONB,
+        documents_uploaded JSONB
       )
     `);
 
@@ -126,17 +128,34 @@ const initializeTables = async () => {
       )
     `);
 
-    // Attendance table
+    // Manager-Employee Mapping table for attendance management
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS manager_employee_mapping (
+        id SERIAL PRIMARY KEY,
+        manager_id INTEGER REFERENCES users(id),
+        employee_id INTEGER REFERENCES users(id),
+        mapping_type VARCHAR(50) DEFAULT 'primary', -- primary, secondary, tertiary
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(manager_id, employee_id, mapping_type)
+      )
+    `);
+
+    // Attendance table for daily attendance records
     await pool.query(`
       CREATE TABLE IF NOT EXISTS attendance (
         id SERIAL PRIMARY KEY,
         employee_id INTEGER REFERENCES users(id),
         date DATE NOT NULL,
-        status VARCHAR(50) NOT NULL,
-        reason TEXT,
-        clock_in_time TIMESTAMP,
-        clock_out_time TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        status VARCHAR(20) NOT NULL CHECK (status IN ('present', 'absent', 'wfh', 'leave', 'half_day', 'holiday')),
+        check_in_time TIME,
+        check_out_time TIME,
+        total_hours DECIMAL(4,2),
+        notes TEXT,
+        marked_by INTEGER REFERENCES users(id), -- who marked the attendance (employee or manager)
+        marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_by INTEGER REFERENCES users(id),
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(employee_id, date)
       )
@@ -569,30 +588,35 @@ const initializeTables = async () => {
       ON CONFLICT (type_name) DO NOTHING
     `);
 
-    // Insert default document templates
+    // Insert default document templates with proper categorization and required flags
     await pool.query(`
-      INSERT INTO document_templates (document_name, document_type, description) VALUES
-      ('Updated Resume', 'Required', 'Current resume with latest experience and skills'),
-      ('Offer & Appointment Letter', 'Optional', 'Official offer letter and appointment confirmation'),
-      ('Latest Compensation Letter', 'Optional', 'Most recent salary and compensation details'),
-      ('Experience & Relieving Letter', 'Optional', 'Previous employment experience and relieving letter'),
-      ('Latest 3 Months Pay Slips', 'Required', 'Pay slips from the last 3 months of previous employment'),
-      ('Form 16 / Form 12B / Taxable Income Statement', 'Optional', 'Tax-related documents for income verification'),
-      ('SSC Certificate (10th)', 'Required', 'Secondary School Certificate for 10th standard'),
-      ('SSC Marksheet (10th)', 'Required', 'Secondary School Certificate marksheet for 10th standard'),
-      ('HSC Certificate (12th)', 'Required', 'Higher Secondary Certificate for 12th standard'),
-      ('HSC Marksheet (12th)', 'Required', 'Higher Secondary Certificate marksheet for 12th standard'),
-      ('Graduation Consolidated Marksheet', 'Required', 'Graduation consolidated marksheet'),
-      ('Graduation Original/Provisional Certificate', 'Required', 'Graduation original or provisional certificate'),
-      ('Post-Graduation Marksheet', 'Optional', 'Post-graduation marksheet if applicable'),
-      ('Post-Graduation Certificate', 'Optional', 'Post-graduation certificate if applicable'),
-      ('PAN Card', 'Required', 'Permanent Account Number card for tax purposes'),
-      ('Aadhaar Card', 'Required', 'Aadhaar card for identity verification'),
-      ('Passport', 'Required', 'Passport for identity verification'),
-      ('Address Proof', 'Required', 'Valid address proof document'),
-      ('Educational Certificates', 'Optional', 'Relevant educational qualification certificates'),
-      ('Professional Certifications', 'Optional', 'Professional certifications and training documents')
-      ON CONFLICT (document_name) DO NOTHING
+      INSERT INTO document_templates (document_name, document_type, category, is_required, allow_multiple, description) VALUES
+      ('Updated Resume', 'resume', 'employment', false, false, 'Current resume with latest experience and skills'),
+      ('Offer & Appointment Letter', 'offer_letter', 'employment', false, false, 'Official offer letter and appointment confirmation'),
+      ('Latest Compensation Letter', 'compensation_letter', 'employment', false, false, 'Most recent salary and compensation details'),
+      ('Experience & Relieving Letter', 'experience_letter', 'employment', false, false, 'Previous employment experience and relieving letter'),
+      ('Latest 3 Months Pay Slips', 'payslip', 'employment', false, true, 'Pay slips from the last 3 months of previous employment'),
+      ('Form 16 / Form 12B / Taxable Income Statement', 'form16', 'employment', false, false, 'Tax-related documents for income verification'),
+      ('SSC Certificate (10th)', 'ssc_certificate', 'education', false, false, 'Secondary School Certificate for 10th standard'),
+      ('SSC Marksheet (10th)', 'ssc_marksheet', 'education', false, false, 'Secondary School Certificate marksheet for 10th standard'),
+      ('HSC Certificate (12th)', 'hsc_certificate', 'education', false, false, 'Higher Secondary Certificate for 12th standard'),
+      ('HSC Marksheet (12th)', 'hsc_marksheet', 'education', false, false, 'Higher Secondary Certificate marksheet for 12th standard'),
+      ('Graduation Consolidated Marksheet', 'graduation_marksheet', 'education', false, false, 'Graduation consolidated marksheet'),
+      ('Graduation Original/Provisional Certificate', 'graduation_certificate', 'education', true, false, 'Graduation original or provisional certificate'),
+      ('Post-Graduation Marksheet', 'postgrad_marksheet', 'education', false, false, 'Post-graduation marksheet if applicable'),
+      ('Post-Graduation Certificate', 'postgrad_certificate', 'education', false, false, 'Post-graduation certificate if applicable'),
+      ('Aadhaar Card', 'aadhaar', 'identity', true, false, 'Aadhaar card for identity verification'),
+      ('PAN Card', 'pan', 'identity', true, false, 'Permanent Account Number card for tax purposes'),
+      ('Passport', 'passport', 'identity', false, false, 'Passport for identity verification'),
+      ('Address Proof', 'address_proof', 'identity', false, false, 'Valid address proof document'),
+      ('Educational Certificates', 'educational_certificates', 'education', false, true, 'Relevant educational qualification certificates'),
+      ('Professional Certifications', 'professional_certifications', 'employment', false, true, 'Professional certifications and training documents')
+      ON CONFLICT (document_name) DO UPDATE SET
+        document_type = EXCLUDED.document_type,
+        category = EXCLUDED.category,
+        is_required = EXCLUDED.is_required,
+        allow_multiple = EXCLUDED.allow_multiple,
+        description = EXCLUDED.description
     `);
 
     // Create indexes for better performance
@@ -843,6 +867,71 @@ const initializeTables = async () => {
       AFTER INSERT OR UPDATE ON employee_documents
       FOR EACH ROW
       EXECUTE FUNCTION update_document_collection_status();
+    `);
+
+    // Drop existing function if it exists
+    await pool.query(
+      `DROP FUNCTION IF EXISTS manually_add_employee(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR) CASCADE`
+    );
+
+    // Create function to manually add employee with employment type
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION manually_add_employee(
+        p_email VARCHAR,
+        p_first_name VARCHAR,
+        p_last_name VARCHAR,
+        p_employment_type VARCHAR,
+        p_temp_password VARCHAR
+      )
+      RETURNS INTEGER AS $$
+      DECLARE
+        v_user_id INTEGER;
+        v_generated_password VARCHAR;
+      BEGIN
+        -- Generate password if not provided
+        IF p_temp_password IS NULL OR p_temp_password = '' THEN
+          v_generated_password := substr(md5(random()::text), 1, 8);
+        ELSE
+          v_generated_password := p_temp_password;
+        END IF;
+
+        -- Create user
+        INSERT INTO users (email, password, role, temp_password, first_name, last_name)
+        VALUES (p_email, '', 'employee', v_generated_password, p_first_name, p_last_name)
+        RETURNING id INTO v_user_id;
+
+        -- Create initial employee form record with employment type
+        INSERT INTO employee_forms (employee_id, type, status)
+        VALUES (v_user_id, p_employment_type, 'pending');
+
+        RETURN v_user_id;
+      END;
+      $$ LANGUAGE plpgsql;
+    `);
+
+    // Attendance settings table for configuration
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS attendance_settings (
+        id SERIAL PRIMARY KEY,
+        setting_key VARCHAR(100) UNIQUE NOT NULL,
+        setting_value TEXT,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Insert default attendance settings
+    await pool.query(`
+      INSERT INTO attendance_settings (setting_key, setting_value, description) VALUES
+      ('working_hours', '8', 'Standard working hours per day'),
+      ('check_in_time', '09:00', 'Standard check-in time'),
+      ('check_out_time', '18:00', 'Standard check-out time'),
+      ('late_threshold_minutes', '15', 'Minutes after check-in time to be considered late'),
+      ('early_leave_threshold_minutes', '30', 'Minutes before check-out time to be considered early leave'),
+      ('allow_attendance_edit_days', '7', 'Number of days in the past for which attendance can be edited'),
+      ('manager_edit_attendance_days', '30', 'Number of days in the past for which managers can edit attendance')
+      ON CONFLICT (setting_key) DO NOTHING
     `);
 
     console.log("✅ Database tables initialized successfully");

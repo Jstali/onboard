@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaUser,
   FaEnvelope,
@@ -7,6 +7,7 @@ import {
   FaGraduationCap,
   FaBriefcase,
   FaCalendarAlt,
+  FaSave,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -29,9 +30,41 @@ const OnboardingForm = ({ onSuccess }) => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
   const [submittedUserId, setSubmittedUserId] = useState(null);
   const [errors, setErrors] = useState({});
+  const [hasSavedForm, setHasSavedForm] = useState(false);
+
+  // Load saved form data on component mount
+  useEffect(() => {
+    const loadSavedForm = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await axios.get("/employee/onboarding-form", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.data.hasForm && response.data.form.form_data) {
+          setFormData(response.data.form.form_data);
+          setHasSavedForm(true);
+          toast.success("Saved form data loaded successfully!");
+        }
+      } catch (error) {
+        // Silently handle errors - form might not exist yet
+        console.log("No saved form found or error loading:", error.message);
+      }
+    };
+
+    loadSavedForm();
+  }, []);
+
+  const handleBackToForm = () => {
+    setShowDocuments(false);
+    setSubmittedUserId(null);
+  };
 
   // Validation functions
   const validateName = (name) => {
@@ -175,20 +208,36 @@ const OnboardingForm = ({ onSuccess }) => {
     }
   };
 
-  const handleDocumentsComplete = async () => {
+  const handleSaveDraft = async () => {
+    setSaving(true);
+
     try {
-      // Submit the form to change status from draft to submitted
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Please log in to save your progress");
+        return;
+      }
+
       await axios.post(
-        "http://localhost:5001/api/employee/onboarding-form/submit"
+        "/employee/onboarding-form/save-draft",
+        {
+          formData: {
+            ...formData,
+            savedAt: new Date().toISOString(),
+          },
+          files: [],
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
-      toast.success("Onboarding completed successfully!");
-      onSuccess();
+      setHasSavedForm(true);
+      toast.success("Form saved successfully! You can continue later.");
     } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error(
-        error.response?.data?.error || "Failed to complete onboarding"
-      );
+      toast.error(error.response?.data?.error || "Failed to save form");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -205,20 +254,8 @@ const OnboardingForm = ({ onSuccess }) => {
         <DocumentUploadSection
           employeeId={submittedUserId}
           onDocumentsChange={() => {}}
+          onBack={handleBackToForm}
         />
-
-        <div className="mt-8 flex justify-end">
-          <div className="text-sm text-gray-600 mr-4">
-            <p>📋 Document uploads are optional.</p>
-            <p>You can upload missing documents later from your profile.</p>
-          </div>
-          <button
-            onClick={handleDocumentsComplete}
-            className="btn-primary px-6 py-3"
-          >
-            Complete Onboarding
-          </button>
-        </div>
       </div>
     );
   }
@@ -464,18 +501,41 @@ const OnboardingForm = ({ onSuccess }) => {
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary px-8 py-3"
-          >
-            {loading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            ) : (
-              "Submit Onboarding Form"
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            {hasSavedForm && (
+              <div className="flex items-center text-green-600 text-sm">
+                <FaSave className="mr-1" />
+                <span>Form saved</span>
+              </div>
             )}
-          </button>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              disabled={saving}
+              className="flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {saving ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+              ) : (
+                <FaSave className="mr-2" />
+              )}
+              {saving ? "Saving..." : "Save Draft"}
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary px-8 py-3"
+            >
+              {loading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                "Document Upload"
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>

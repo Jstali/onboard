@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import {
-  FaEye,
   FaTrash,
   FaDownload,
   FaSearch,
@@ -126,11 +125,6 @@ const EmployeeFormManagement = ({ onRefresh }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleViewForm = (form) => {
-    setSelectedForm(form);
-    setShowFormDetails(true);
   };
 
   const handleViewDocuments = (form) => {
@@ -307,7 +301,28 @@ const EmployeeFormManagement = ({ onRefresh }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
+    if (
+      !dateString ||
+      dateString === "1970-01-01T00:00:00.000Z" ||
+      dateString === "1970-01-01"
+    ) {
+      return "Not submitted";
+    }
+
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Invalid date";
+      }
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Invalid date";
+    }
   };
 
   const filteredForms = employeeForms.filter((form) => {
@@ -464,14 +479,6 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleViewForm(form)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="View Form Details"
-                      >
-                        <FaEye className="inline-block" />
-                      </button>
-
                       <button
                         onClick={() => handleEditEmployee(form)}
                         className="text-purple-600 hover:text-purple-900"

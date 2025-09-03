@@ -6,12 +6,15 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Login";
 import PasswordReset from "./components/PasswordReset";
 import HRDashboard from "./components/HRDashboard";
 import EmployeeDashboard from "./components/EmployeeDashboard";
 import AttendancePortal from "./components/AttendancePortal";
+import EmployeeAttendance from "./components/EmployeeAttendance";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmployeeLeaveRequest from "./components/EmployeeLeaveRequest";
 import ManagerLeaveApproval from "./components/ManagerLeaveApproval";
@@ -64,7 +67,15 @@ function AppRoutes() {
         path="/attendance"
         element={
           <ProtectedRoute role="employee">
-            <AttendancePortal />
+             <EmployeeAttendance />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/employee/attendance"
+        element={
+          <ProtectedRoute role="employee">
+            <EmployeeAttendance />
           </ProtectedRoute>
         }
       />
@@ -165,6 +176,17 @@ function App() {
                 },
               },
             }}
+          />
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
           />
         </div>
       </Router>

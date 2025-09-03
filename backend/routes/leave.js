@@ -6,7 +6,11 @@ const {
   sendManagerApprovalToHR,
   sendLeaveApprovalToEmployee,
 } = require("../utils/mailer.js");
-const { authenticateToken } = require("../middleware/auth.js");
+const {
+  authenticateToken,
+  requireEmployee,
+  requireHR,
+} = require("../middleware/auth.js");
 
 const router = express.Router();
 
@@ -1158,6 +1162,7 @@ router.put(
     body("notes").optional(),
   ],
   async (req, res) => {
+    const client = await pool.connect();
     try {
       if (req.user.role !== "hr") {
         return res
@@ -1174,34 +1179,34 @@ router.put(
       const { action, notes } = req.body;
       const hrId = req.user.userId;
 
+      // Start transaction
+      await client.query("BEGIN");
+
       // Get HR details
-      const hrResult = await pool.query(
-        `
-      SELECT first_name, last_name FROM users WHERE id = $1
-    `,
+      const hrResult = await client.query(
+        `SELECT first_name, last_name FROM users WHERE id = $1`,
         [hrId]
       );
       const hrName = `${hrResult.rows[0].first_name} ${hrResult.rows[0].last_name}`;
 
       // Update leave request
       const status = action === "approve" ? "approved" : "rejected";
-      const updateResult = await pool.query(
-        `
-      UPDATE leave_requests 
-      SET 
-        status = $1,
-        hr_id = $2,
-        hr_name = $3,
-        hr_approved_at = CURRENT_TIMESTAMP,
-        hr_approval_notes = $4,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = $5
-      RETURNING *
-    `,
+      const updateResult = await client.query(
+        `UPDATE leave_requests 
+         SET 
+           status = $1,
+           hr_id = $2,
+           hr_name = $3,
+           hr_approved_at = CURRENT_TIMESTAMP,
+           hr_approval_notes = $4,
+           updated_at = CURRENT_TIMESTAMP
+         WHERE id = $5
+         RETURNING *`,
         [status, hrId, hrName, notes, id]
       );
 
       if (updateResult.rows.length === 0) {
+        await client.query("ROLLBACK");
         return res.status(404).json({ error: "Leave request not found" });
       }
 
@@ -1235,14 +1240,14 @@ router.put(
             console.log("🔍 Comp Off - Deducting from Comp Off balance");
 
             // Check if employee has Comp Off balance
-            const compOffResult = await pool.query(
+            const compOffResult = await client.query(
               `SELECT * FROM comp_off_balances WHERE employee_id = $1 AND year = $2`,
               [leaveRequest.employee_id, currentYear]
             );
 
             if (compOffResult.rows.length === 0) {
               // Create Comp Off balance record if it doesn't exist
-              await pool.query(
+              await client.query(
                 `INSERT INTO comp_off_balances (employee_id, year, total_earned, comp_off_taken, comp_off_remaining) 
                  VALUES ($1, $2, 0, 0, 0)`,
                 [leaveRequest.employee_id, currentYear]
@@ -1250,7 +1255,7 @@ router.put(
             }
 
             // Update Comp Off balance
-            await pool.query(
+            await client.query(
               `UPDATE comp_off_balances 
                SET 
                  comp_off_taken = comp_off_taken + $1,
@@ -1264,7 +1269,7 @@ router.put(
             console.log("🔍 Paid Leave - Deducting from annual allocation");
 
             // Update overall leave balance
-            await pool.query(
+            await client.query(
               `UPDATE leave_balances 
                SET 
                  leaves_taken = leaves_taken + $1,
@@ -1280,7 +1285,7 @@ router.put(
                 "🔍 Updating leave type balance for:",
                 leaveRequest.leave_type
               );
-              await pool.query(
+              await client.query(
                 `UPDATE leave_type_balances 
                  SET 
                    leaves_taken = leaves_taken + $1,
@@ -1314,15 +1319,17 @@ router.put(
           // The leave request is still approved
         }
 
-        // Add to attendance table
+        // Add to attendance table (optimized)
         const fromDate = new Date(leaveRequest.from_date);
         const toDate = leaveRequest.to_date
           ? new Date(leaveRequest.to_date)
           : fromDate; // Use from_date if to_date is NULL (single day leave)
 
-        // Handle single day vs multi-day leaves
+        // Optimized attendance creation - batch insert
+        const attendanceValues = [];
+
         if (leaveRequest.to_date) {
-          // Multi-day leave: loop through dates
+          // Multi-day leave: collect all dates
           for (
             let d = new Date(fromDate);
             d <= toDate;
@@ -1331,84 +1338,81 @@ router.put(
             // Skip weekends
             if (d.getDay() === 0 || d.getDay() === 6) continue;
 
-            // Check if attendance already exists
-            const existingAttendance = await pool.query(
-              `
-            SELECT id FROM attendance WHERE employee_id = $1 AND date = $2
-          `,
-              [leaveRequest.employee_id, d.toISOString().split("T")[0]]
+            attendanceValues.push(
+              `(${leaveRequest.employee_id}, '${
+                d.toISOString().split("T")[0]
+              }', 'Leave', 'Approved leave: ${leaveRequest.reason}')`
             );
-
-            if (existingAttendance.rows.length === 0) {
-              await pool.query(
-                `
-              INSERT INTO attendance (employee_id, date, status, reason)
-              VALUES ($1, $2, 'Leave', $3)
-            `,
-                [
-                  leaveRequest.employee_id,
-                  d.toISOString().split("T")[0],
-                  `Approved leave: ${leaveRequest.reason}`,
-                ]
-              );
-            }
           }
         } else {
-          // Single day leave: just add one attendance record
-          const existingAttendance = await pool.query(
-            `
-          SELECT id FROM attendance WHERE employee_id = $1 AND date = $2
-        `,
-            [leaveRequest.employee_id, fromDate.toISOString().split("T")[0]]
+          // Single day leave
+          attendanceValues.push(
+            `(${leaveRequest.employee_id}, '${
+              fromDate.toISOString().split("T")[0]
+            }', 'Leave', 'Approved leave: ${leaveRequest.reason}')`
           );
-
-          if (existingAttendance.rows.length === 0) {
-            await pool.query(
-              `
-            INSERT INTO attendance (employee_id, date, status, reason)
-            VALUES ($1, $2, 'Leave', $3)
-          `,
-              [
-                leaveRequest.employee_id,
-                fromDate.toISOString().split("T")[0],
-                `Approved leave: ${leaveRequest.reason}`,
-              ]
-            );
-          }
         }
 
-        // Notify employee using new email system
-        const employeeResult = await pool.query(
-          `
-        SELECT email FROM users WHERE id = $1
-      `,
+        // Batch insert attendance records
+        if (attendanceValues.length > 0) {
+          await client.query(
+            `INSERT INTO attendance (employee_id, date, status, reason)
+             VALUES ${attendanceValues.join(", ")}
+             ON CONFLICT (employee_id, date) DO NOTHING`
+          );
+          console.log(
+            `✅ Created ${attendanceValues.length} attendance records`
+          );
+        }
+
+        // Notify employee using new email system (asynchronous)
+        const employeeResult = await client.query(
+          `SELECT email FROM users WHERE id = $1`,
           [leaveRequest.employee_id]
         );
 
+        // Commit transaction first
+        await client.query("COMMIT");
+        console.log("✅ Transaction committed successfully");
+
+        // Send email asynchronously (don't wait for it)
         if (employeeResult.rows.length > 0) {
-          await sendLeaveApprovalToEmployee(
+          sendLeaveApprovalToEmployee(
             employeeResult.rows[0].email,
             leaveRequest,
             "approved",
             hrName
-          );
+          ).catch((emailError) => {
+            console.error(
+              "❌ Email sending failed (non-blocking):",
+              emailError
+            );
+          });
         }
       } else {
         // If rejected, notify employee
-        const employeeResult = await pool.query(
-          `
-        SELECT email FROM users WHERE id = $1
-      `,
+        const employeeResult = await client.query(
+          `SELECT email FROM users WHERE id = $1`,
           [leaveRequest.employee_id]
         );
 
+        // Commit transaction first
+        await client.query("COMMIT");
+        console.log("✅ Transaction committed successfully");
+
+        // Send email asynchronously (don't wait for it)
         if (employeeResult.rows.length > 0) {
-          await sendLeaveApprovalToEmployee(
+          sendLeaveApprovalToEmployee(
             employeeResult.rows[0].email,
             leaveRequest,
             "rejected",
             hrName
-          );
+          ).catch((emailError) => {
+            console.error(
+              "❌ Email sending failed (non-blocking):",
+              emailError
+            );
+          });
         }
       }
 
@@ -1427,6 +1431,14 @@ router.put(
         console.error("❌ Error detail:", error.detail);
       }
 
+      // Rollback transaction on error
+      try {
+        await client.query("ROLLBACK");
+        console.log("✅ Transaction rolled back due to error");
+      } catch (rollbackError) {
+        console.error("❌ Error rolling back transaction:", rollbackError);
+      }
+
       // Provide more specific error messages
       let errorMessage = "Failed to process approval";
       if (error.code === "23505") {
@@ -1443,6 +1455,8 @@ router.put(
         details: error.message,
         code: error.code || "UNKNOWN_ERROR",
       });
+    } finally {
+      client.release();
     }
   }
 );
@@ -1684,5 +1698,36 @@ router.get("/my-leave-type-balances", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch leave type balances" });
   }
 });
+
+// Create leave request - Missing endpoint
+router.post(
+  "/requests",
+  [authenticateToken, requireEmployee],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { leave_type, from_date, to_date, reason, half_day } = req.body;
+
+      const result = await pool.query(
+        `INSERT INTO leave_requests (employee_id, leave_type, from_date, to_date, reason, half_day, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+       RETURNING *`,
+        [req.user.userId, leave_type, from_date, to_date, reason, half_day]
+      );
+
+      res.json({
+        message: "Leave request created successfully",
+        leaveRequest: result.rows[0],
+      });
+    } catch (error) {
+      console.error("Create leave request error:", error);
+      res.status(500).json({ error: "Failed to create leave request" });
+    }
+  }
+);
 
 module.exports = router;

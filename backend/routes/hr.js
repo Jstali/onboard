@@ -197,28 +197,35 @@ async function createDocumentCollectionForEmployee(
     // Create document collection records for required documents only
     let createdCount = 0;
     for (const template of templatesResult.rows) {
-      await pool.query(
-        `
-        INSERT INTO document_collection (
-          employee_id, employee_name, emp_id, department, join_date, due_date,
-          document_name, document_type, status, notes
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        ON CONFLICT (employee_id, document_name) DO NOTHING
-        `,
-        [
-          employeeId,
-          employeeName,
-          employeeId, // Using user ID as emp_id for now
-          "N/A", // Department will be updated later
-          new Date().toISOString().split("T")[0], // Today's date as join date
-          dueDate.toISOString().split("T")[0],
-          template.document_name,
-          template.document_type,
-          "Pending",
-          "Document required for onboarding",
-        ]
+      // Check if document already exists
+      const existingDoc = await pool.query(
+        "SELECT id FROM document_collection WHERE employee_id = $1 AND document_name = $2",
+        [employeeId, template.document_name]
       );
-      createdCount++;
+
+      if (existingDoc.rows.length === 0) {
+        await pool.query(
+          `
+          INSERT INTO document_collection (
+            employee_id, employee_name, emp_id, department, join_date, due_date,
+            document_name, document_type, status, notes
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          `,
+          [
+            employeeId,
+            employeeName,
+            employeeId, // Using user ID as emp_id for now
+            "N/A", // Department will be updated later
+            new Date().toISOString().split("T")[0], // Today's date as join date
+            dueDate.toISOString().split("T")[0],
+            template.document_name,
+            template.document_type,
+            "Not Uploaded",
+            "Document required for onboarding",
+          ]
+        );
+        createdCount++;
+      }
     }
 
     console.log(
@@ -287,6 +294,14 @@ router.post(
 
       const userId = userResult.rows[0].id;
       console.log("✅ User created with ID:", userId);
+
+      // Create initial employee form record with the employment type
+      console.log("🔍 Creating initial employee form with type:", type);
+      await pool.query(
+        "INSERT INTO employee_forms (employee_id, type, status) VALUES ($1, $2, 'pending')",
+        [userId, type]
+      );
+      console.log("✅ Initial employee form created with type");
 
       // Send onboarding email
       console.log("🔍 Sending onboarding email to:", email);
@@ -866,37 +881,53 @@ router.put(
           return res.status(400).json({ error: "Invalid form data structure" });
         }
 
-        // Determine employment type if not already set
+        // Get employment type from employee_master table (HR assigned type)
         let employmentType = form.type;
         if (
           !employmentType ||
           employmentType === null ||
           employmentType === ""
         ) {
-          const employeeName =
-            formData.name || `${user.first_name} ${user.last_name}`;
+          // Try to get type from employee_master table first
+          const masterResult = await pool.query(
+            "SELECT type FROM employee_master WHERE company_email = $1",
+            [user.email]
+          );
 
-          // Determine type based on form data or employee name
-          if (
-            employeeName.toLowerCase().includes("intern") ||
-            employeeName.toLowerCase().includes("pradeep") ||
-            formData.education?.toLowerCase().includes("student") ||
-            formData.experience === "" ||
-            formData.experience === null
-          ) {
-            employmentType = "Intern";
-          } else if (
-            employeeName.toLowerCase().includes("contract") ||
-            formData.doj?.includes("contract")
-          ) {
-            employmentType = "Contract";
-          } else if (
-            employeeName.toLowerCase().includes("manager") ||
-            employeeName.toLowerCase().includes("lead")
-          ) {
-            employmentType = "Manager";
+          if (masterResult.rows.length > 0 && masterResult.rows[0].type) {
+            employmentType = masterResult.rows[0].type;
+            console.log(
+              `✅ Using HR assigned type from master table: ${employmentType}`
+            );
           } else {
-            employmentType = "Full-Time"; // Default type
+            // Fallback to automatic detection if not in master table
+            const employeeName =
+              formData.name || `${user.first_name} ${user.last_name}`;
+
+            // Determine type based on form data or employee name
+            if (
+              employeeName.toLowerCase().includes("intern") ||
+              employeeName.toLowerCase().includes("pradeep") ||
+              formData.education?.toLowerCase().includes("student") ||
+              formData.experience === "" ||
+              formData.experience === null
+            ) {
+              employmentType = "Intern";
+            } else if (
+              employeeName.toLowerCase().includes("contract") ||
+              formData.doj?.includes("contract")
+            ) {
+              employmentType = "Contract";
+            } else if (
+              employeeName.toLowerCase().includes("manager") ||
+              employeeName.toLowerCase().includes("lead")
+            ) {
+              employmentType = "Manager";
+            } else {
+              employmentType = "Full-Time"; // Default type
+            }
+
+            console.log(`✅ Auto-detected employment type: ${employmentType}`);
           }
 
           // Update the form with the determined type
@@ -922,13 +953,14 @@ router.put(
         // Move employee to onboarded_employees table (pending assignment)
         await pool.query(
           `
-        INSERT INTO onboarded_employees (user_id, status, notes)
-        VALUES ($1, $2, $3)
+        INSERT INTO onboarded_employees (user_id, status, notes, employee_type)
+        VALUES ($1, $2, $3, $4)
       `,
           [
             id,
             "pending_assignment",
             `Approved on ${new Date().toISOString()}. Awaiting HR assignment of employee ID, company email, and manager.`,
+            employmentType,
           ]
         );
 
@@ -1800,12 +1832,13 @@ router.put(
       SELECT 
         oe.user_id,
         oe.status,
+        oe.employee_type,
         u.email as user_email,
-        ef.type as employee_type,
+        ef.type as form_employee_type,
         ef.form_data
       FROM onboarded_employees oe
       JOIN users u ON oe.user_id = u.id
-      JOIN employee_forms ef ON oe.user_id = ef.employee_id
+      LEFT JOIN employee_forms ef ON oe.user_id = ef.employee_id
       WHERE oe.id = $1
     `,
         [id]
@@ -1817,6 +1850,13 @@ router.put(
 
       const onboarded = onboardedResult.rows[0];
       const formData = onboarded.form_data || {};
+
+      // Determine employment type - prioritize onboarded.employee_type, then form_employee_type, then default to Full-Time
+      let employmentType =
+        onboarded.employee_type || onboarded.form_employee_type || "Full-Time";
+      console.log(
+        `🔍 Employment type for assignment: ${employmentType} (onboarded: ${onboarded.employee_type}, form: ${onboarded.form_employee_type})`
+      );
 
       // Check if company email already exists in master table
       const existingMaster = await pool.query(
@@ -1922,7 +1962,7 @@ router.put(
           manager2Info?.manager_name || null, // Manager 2 name
           manager3Info?.manager_id || null, // Manager 3 ID
           manager3Info?.manager_name || null, // Manager 3 name
-          onboarded.employee_type,
+          employmentType,
           formData.doj || new Date(),
         ]
       );
@@ -3125,7 +3165,7 @@ router.post("/document-collection", async (req, res) => {
 });
 
 // Update document collection status
-router.put("/document-collection/:id", async (req, res) => {
+router.put("/document-collection/:id", authenticateToken, async (req, res) => {
   try {
     console.log("🔍 Document status update route hit");
     console.log("🔍 Request params:", req.params);
@@ -3135,8 +3175,21 @@ router.put("/document-collection/:id", async (req, res) => {
     const { id } = req.params;
     const { status, notes, uploaded_file_url, uploaded_file_name } = req.body;
 
+    // Verify user is HR or admin
+    if (req.user.role !== "hr" && req.user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ error: "Access denied. HR role required." });
+    }
+
+    // Convert id to integer
+    const documentId = parseInt(id);
+    if (isNaN(documentId)) {
+      return res.status(400).json({ error: "Invalid document ID" });
+    }
+
     console.log("🔍 Document status update request:", {
-      id,
+      id: documentId,
       status,
       notes,
       uploaded_file_url,
@@ -3146,7 +3199,7 @@ router.put("/document-collection/:id", async (req, res) => {
     const result = await pool.query(
       `
       UPDATE document_collection 
-      SET status = $1, 
+      SET status = $1::varchar(50), 
           notes = COALESCE($2, notes), 
           uploaded_file_url = COALESCE($3, uploaded_file_url), 
           uploaded_file_name = COALESCE($4, uploaded_file_name), 
@@ -3160,7 +3213,7 @@ router.put("/document-collection/:id", async (req, res) => {
         notes || null,
         uploaded_file_url || null,
         uploaded_file_name || null,
-        id,
+        documentId,
       ]
     );
 
@@ -3197,29 +3250,46 @@ router.put("/document-collection/:id", async (req, res) => {
 });
 
 // Delete document collection record
-router.delete("/document-collection/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
+router.delete(
+  "/document-collection/:id",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    const result = await pool.query(
-      "DELETE FROM document_collection WHERE id = $1 RETURNING *",
-      [id]
-    );
+      // Verify user is HR or admin
+      if (req.user.role !== "hr" && req.user.role !== "admin") {
+        return res
+          .status(403)
+          .json({ error: "Access denied. HR role required." });
+      }
 
-    if (result.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "Document collection record not found" });
+      // Convert id to integer
+      const documentId = parseInt(id);
+      if (isNaN(documentId)) {
+        return res.status(400).json({ error: "Invalid document ID" });
+      }
+
+      const result = await pool.query(
+        "DELETE FROM document_collection WHERE id = $1 RETURNING *",
+        [documentId]
+      );
+
+      if (result.rows.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "Document collection record not found" });
+      }
+
+      res.json({ message: "Document collection record deleted successfully" });
+    } catch (error) {
+      console.error("Delete document collection error:", error);
+      res
+        .status(500)
+        .json({ error: "Failed to delete document collection record" });
     }
-
-    res.json({ message: "Document collection record deleted successfully" });
-  } catch (error) {
-    console.error("Delete document collection error:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to delete document collection record" });
   }
-});
+);
 
 // Bulk create document collection records for an employee
 router.post("/document-collection/bulk", async (req, res) => {
@@ -3372,5 +3442,93 @@ router.delete("/document-templates/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete document template" });
   }
 });
+
+// Manual employee re-addition endpoint
+router.post(
+  "/manual-add-employee",
+  [
+    body("email").isEmail().withMessage("Please enter a valid email"),
+    body("first_name").notEmpty().withMessage("First name is required"),
+    body("last_name").notEmpty().withMessage("Last name is required"),
+    body("employment_type")
+      .optional()
+      .isIn(["Full-Time", "Contract", "Intern", "Manager"]),
+    body("temp_password").optional().isLength({ min: 6 }),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const {
+        email,
+        first_name,
+        last_name,
+        employment_type = "Full-Time",
+        temp_password,
+      } = req.body;
+
+      // Check if email already exists
+      const existingUser = await pool.query(
+        "SELECT id FROM users WHERE email = $1",
+        [email]
+      );
+
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ error: "Email already exists" });
+      }
+
+      // Call the database function to create the user
+      const result = await pool.query(
+        "SELECT manually_add_employee($1, $2, $3, $4, $5) as user_id",
+        [email, first_name, last_name, employment_type, temp_password]
+      );
+
+      const userId = result.rows[0].user_id;
+
+      // Get the temporary password that was generated
+      const userResult = await pool.query(
+        "SELECT temp_password FROM users WHERE id = $1",
+        [userId]
+      );
+
+      const generatedPassword = userResult.rows[0].temp_password;
+
+      // Send welcome email with credentials
+      try {
+        const emailSent = await sendOnboardingEmail(
+          email,
+          generatedPassword,
+          employment_type
+        );
+
+        if (!emailSent) {
+          console.warn(
+            "Failed to send onboarding email, but employee was created"
+          );
+        }
+      } catch (emailError) {
+        console.error("Email sending error:", emailError);
+      }
+
+      res.status(201).json({
+        message: "Employee manually added successfully",
+        employee: {
+          id: userId,
+          email,
+          first_name,
+          last_name,
+          employment_type,
+          temp_password: generatedPassword,
+        },
+      });
+    } catch (error) {
+      console.error("Manual add employee error:", error);
+      res.status(500).json({ error: "Failed to manually add employee" });
+    }
+  }
+);
 
 module.exports = router;

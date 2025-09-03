@@ -3,7 +3,11 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { pool } = require("../config/database");
-const { authenticateToken } = require("../middleware/auth");
+const {
+  authenticateToken,
+  requireEmployee,
+  requireHR,
+} = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -246,7 +250,7 @@ router.get("/requirements", (req, res) => {
   // Return all document requirements combined
   const allRequirements = {
     employment: [
-      { type: "resume", name: "Updated Resume", required: true },
+      { type: "resume", name: "Updated Resume", required: false },
       {
         type: "offer_letter",
         name: "Offer & Appointment Letter",
@@ -265,7 +269,7 @@ router.get("/requirements", (req, res) => {
       {
         type: "payslip",
         name: "Latest 3 Months Pay Slips",
-        required: true,
+        required: false,
         multiple: true,
       },
       {
@@ -278,19 +282,19 @@ router.get("/requirements", (req, res) => {
       {
         type: "ssc_certificate",
         name: "SSC Certificate (10th)",
-        required: true,
+        required: false,
       },
-      { type: "ssc_marksheet", name: "SSC Marksheet (10th)", required: true },
+      { type: "ssc_marksheet", name: "SSC Marksheet (10th)", required: false },
       {
         type: "hsc_certificate",
         name: "HSC Certificate (12th)",
-        required: true,
+        required: false,
       },
-      { type: "hsc_marksheet", name: "HSC Marksheet (12th)", required: true },
+      { type: "hsc_marksheet", name: "HSC Marksheet (12th)", required: false },
       {
         type: "graduation_marksheet",
         name: "Graduation Marksheet",
-        required: true,
+        required: false,
       },
       {
         type: "graduation_certificate",
@@ -473,6 +477,61 @@ router.get("/employee/:employeeId", authenticateToken, async (req, res) => {
   }
 });
 
+// Preview a document (for viewing in browser)
+router.get("/preview/:documentId", authenticateToken, async (req, res) => {
+  try {
+    const { documentId } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT ed.*, u.email 
+      FROM employee_documents ed
+      JOIN users u ON ed.employee_id = u.id
+      WHERE ed.id = $1
+    `,
+      [documentId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Document not found" });
+    }
+
+    const document = result.rows[0];
+
+    // Verify user can view this document (own documents or HR)
+    if (
+      req.user.role !== "hr" &&
+      req.user.role !== "admin" &&
+      req.user.userId !== document.employee_id
+    ) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const filePath = path.join(__dirname, "..", document.file_url);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "File not found on server" });
+    }
+
+    // Set appropriate headers for preview
+    res.setHeader(
+      "Content-Type",
+      document.file_type || "application/octet-stream"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      'inline; filename="' + document.file_name + '"'
+    );
+
+    // Stream the file
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error("Error previewing document:", error);
+    res.status(500).json({ error: "Failed to preview document" });
+  }
+});
+
 // Download a document
 router.get("/download/:documentId", authenticateToken, async (req, res) => {
   try {
@@ -605,6 +664,14 @@ router.get("/validation/:employeeId", authenticateToken, async (req, res) => {
     // Create a map of manually entered documents
     const manualMap = {};
     manualDocs.rows.forEach((doc) => {
+      // Only count documents that are actually uploaded
+      if (
+        doc.status === "Not Uploaded" ||
+        (doc.status === "Pending" && !doc.uploaded_file_url)
+      ) {
+        return; // Skip documents that are not uploaded
+      }
+
       // Map document names to document types (approximate mapping)
       const docName = doc.document_name.toLowerCase();
       let docType = null;
@@ -995,5 +1062,36 @@ router.put(
     }
   }
 );
+
+// Get employee documents - Missing endpoint
+router.get(
+  "/employee",
+  [authenticateToken, requireEmployee],
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT * FROM document_collection WHERE employee_id = $1 ORDER BY created_at DESC`,
+        [req.user.userId]
+      );
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Get employee documents error:", error);
+      res.status(500).json({ error: "Failed to get documents" });
+    }
+  }
+);
+
+// Get document templates - Missing endpoint
+router.get("/templates", [authenticateToken], async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM document_templates ORDER BY created_at DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Get document templates error:", error);
+    res.status(500).json({ error: "Failed to get templates" });
+  }
+});
 
 module.exports = router;

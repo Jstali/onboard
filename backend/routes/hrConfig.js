@@ -681,4 +681,17 @@ router.get(
   }
 );
 
+// Get HR config - Missing endpoint
+router.get("/", [authenticateToken, checkHRRole], async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM hr_config ORDER BY created_at DESC LIMIT 1`
+    );
+    res.json(result.rows[0] || {});
+  } catch (error) {
+    console.error("Get HR config error:", error);
+    res.status(500).json({ error: "Failed to get HR config" });
+  }
+});
+
 module.exports = router;
