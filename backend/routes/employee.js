@@ -26,12 +26,14 @@ router.post(
 
       // If not found by email, try to find by name and phone
       if (userResult.rows.length === 0) {
+        // Split name into first and last name
+        const nameParts = formData.name.trim().split(" ");
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(" ") || "";
+
         userResult = await pool.query(
           "SELECT id FROM users WHERE first_name = $1 AND last_name = $2",
-          [
-            formData.name.split(" ")[0],
-            formData.name.split(" ").slice(1).join(" "),
-          ]
+          [firstName, lastName]
         );
       }
 
@@ -46,7 +48,7 @@ router.post(
 
       // Check if form already exists
       const existingForm = await pool.query(
-        "SELECT id, status, type FROM employee_forms WHERE employee_id = $1 ORDER BY created_at DESC LIMIT 1",
+        "SELECT id, status, type FROM employee_forms WHERE employee_id = $1 ORDER BY submitted_at DESC LIMIT 1",
         [userId]
       );
 
@@ -860,7 +862,7 @@ router.get("/profile", async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT u.id, u.email, u.created_at, ef.type, ef.form_data
+      SELECT u.id, u.email, u.first_name, u.last_name, ef.type, ef.form_data
       FROM users u
       LEFT JOIN employee_forms ef ON u.id = ef.employee_id
       WHERE u.id = $1
