@@ -18,11 +18,22 @@ router.post(
 
       const { formData, files = [] } = req.body;
 
-      // Check if user exists by email
-      const userResult = await pool.query(
+      // Try to find user by email first, then by name and phone
+      let userResult = await pool.query(
         "SELECT id FROM users WHERE email = $1",
         [formData.email]
       );
+
+      // If not found by email, try to find by name and phone
+      if (userResult.rows.length === 0) {
+        userResult = await pool.query(
+          "SELECT id FROM users WHERE first_name = $1 AND last_name = $2",
+          [
+            formData.name.split(" ")[0],
+            formData.name.split(" ").slice(1).join(" "),
+          ]
+        );
+      }
 
       if (userResult.rows.length === 0) {
         return res.status(400).json({
@@ -112,6 +123,44 @@ router.post(
     }
   }
 );
+
+// Public endpoint to help employees find their account
+router.post("/public/find-account", async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({
+        error: "Name and phone number are required",
+      });
+    }
+
+    // Try to find user by name and phone
+    const userResult = await pool.query(
+      "SELECT id, email, first_name, last_name FROM users WHERE first_name = $1 AND last_name = $2",
+      [name.split(" ")[0], name.split(" ").slice(1).join(" ")]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({
+        error:
+          "Account not found. Please contact HR to create your account first.",
+      });
+    }
+
+    const user = userResult.rows[0];
+
+    res.json({
+      message: "Account found",
+      email: user.email,
+      firstName: user.first_name,
+      lastName: user.last_name,
+    });
+  } catch (error) {
+    console.error("Find account error:", error);
+    res.status(500).json({ error: "Failed to find account" });
+  }
+});
 
 // Apply authentication to all employee routes except public onboarding
 router.use(authenticateToken, requireEmployee);
