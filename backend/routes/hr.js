@@ -2269,71 +2269,126 @@ router.put(
 
 // Delete employee
 router.delete("/employees/:id", async (req, res) => {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
     console.log("🔍 Deleting employee with ID:", id);
 
+    // Start transaction
+    await client.query("BEGIN");
+
     // Check if employee exists first
-    const employeeCheck = await pool.query(
+    const employeeCheck = await client.query(
       "SELECT id, email FROM users WHERE id = $1",
       [id]
     );
     if (employeeCheck.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ error: "Employee not found" });
     }
 
     console.log("🔍 Employee found:", employeeCheck.rows[0]);
 
-    // Delete from all related tables in the correct order
+    // Delete from all related tables in the correct order (child tables first)
     try {
       // Delete from attendance table
-      const attendanceResult = await pool.query(
+      const attendanceResult = await client.query(
         "DELETE FROM attendance WHERE employee_id = $1",
         [id]
       );
       console.log("✅ Attendance records deleted:", attendanceResult.rowCount);
 
       // Delete from leave_requests table
-      const leaveResult = await pool.query(
+      const leaveResult = await client.query(
         "DELETE FROM leave_requests WHERE employee_id = $1",
         [id]
       );
       console.log("✅ Leave requests deleted:", leaveResult.rowCount);
 
-      // Delete from leave_balances table (using user ID directly)
-      const balanceResult = await pool.query(
+      // Delete from leave_balances table
+      const balanceResult = await client.query(
         "DELETE FROM leave_balances WHERE employee_id = $1",
         [id]
       );
       console.log("✅ Leave balances deleted:", balanceResult.rowCount);
 
+      // Delete from comp_off_balances table
+      const compOffResult = await client.query(
+        "DELETE FROM comp_off_balances WHERE employee_id = $1",
+        [id]
+      );
+      console.log("✅ Comp off balances deleted:", compOffResult.rowCount);
+
+      // Delete from employee_documents table
+      const documentsResult = await client.query(
+        "DELETE FROM employee_documents WHERE employee_id = $1",
+        [id]
+      );
+      console.log("✅ Employee documents deleted:", documentsResult.rowCount);
+
+      // Delete from document_collection table
+      const docCollectionResult = await client.query(
+        "DELETE FROM document_collection WHERE employee_id = $1",
+        [id]
+      );
+      console.log(
+        "✅ Document collection deleted:",
+        docCollectionResult.rowCount
+      );
+
+      // Delete from expenses table
+      const expensesResult = await client.query(
+        "DELETE FROM expenses WHERE employee_id = $1",
+        [id]
+      );
+      console.log("✅ Expenses deleted:", expensesResult.rowCount);
+
+      // Delete from company_emails table
+      const emailsResult = await client.query(
+        "DELETE FROM company_emails WHERE user_id = $1",
+        [id]
+      );
+      console.log("✅ Company emails deleted:", emailsResult.rowCount);
+
+      // Delete from manager_employee_mapping table
+      const mappingResult = await client.query(
+        "DELETE FROM manager_employee_mapping WHERE employee_id = $1 OR manager_id = $1",
+        [id, id]
+      );
+      console.log("✅ Manager mappings deleted:", mappingResult.rowCount);
+
       // Delete from employee_forms table
-      const formsResult = await pool.query(
+      const formsResult = await client.query(
         "DELETE FROM employee_forms WHERE employee_id = $1",
         [id]
       );
       console.log("✅ Employee forms deleted:", formsResult.rowCount);
 
       // Delete from onboarded_employees table
-      const onboardedResult = await pool.query(
+      const onboardedResult = await client.query(
         "DELETE FROM onboarded_employees WHERE user_id = $1",
         [id]
       );
       console.log("✅ Onboarded records deleted:", onboardedResult.rowCount);
 
       // Delete from employee_master table (if exists)
-      const masterResult = await pool.query(
+      const masterResult = await client.query(
         "DELETE FROM employee_master WHERE company_email = (SELECT email FROM users WHERE id = $1)",
         [id]
       );
       console.log("✅ Master records deleted:", masterResult.rowCount);
 
       // Finally delete from users table
-      const userResult = await pool.query("DELETE FROM users WHERE id = $1", [
+      const userResult = await client.query("DELETE FROM users WHERE id = $1", [
         id,
       ]);
       console.log("✅ User deleted:", userResult.rowCount);
+
+      // Commit transaction
+      await client.query("COMMIT");
+      console.log("✅ Transaction committed successfully");
     } catch (deleteError) {
+      await client.query("ROLLBACK");
       console.error("❌ Error during deletion process:", deleteError);
       throw deleteError;
     }
@@ -2351,6 +2406,8 @@ router.delete("/employees/:id", async (req, res) => {
       error: "Failed to delete employee",
       details: error.message,
     });
+  } finally {
+    client.release();
   }
 });
 
