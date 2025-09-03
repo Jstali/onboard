@@ -874,7 +874,7 @@ const initializeTables = async () => {
       `DROP FUNCTION IF EXISTS manually_add_employee(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR) CASCADE`
     );
 
-    // Create function to manually add employee with employment type
+    // Create function to manually add employee with employment type-specific storage
     await pool.query(`
       CREATE OR REPLACE FUNCTION manually_add_employee(
         p_email VARCHAR,
@@ -888,6 +888,7 @@ const initializeTables = async () => {
         v_user_id INTEGER;
         v_generated_password VARCHAR;
         v_employee_id VARCHAR;
+        v_full_name VARCHAR;
       BEGIN
         -- Generate password if not provided
         IF p_temp_password IS NULL OR p_temp_password = '' THEN
@@ -898,6 +899,9 @@ const initializeTables = async () => {
 
         -- Generate employee ID
         v_employee_id := substr(md5(random()::text), 1, 6);
+        
+        -- Create full name
+        v_full_name := p_first_name || ' ' || p_last_name;
 
         -- Create user
         INSERT INTO users (email, password, role, temp_password, first_name, last_name)
@@ -920,7 +924,7 @@ const initializeTables = async () => {
           updated_at
         ) VALUES (
           v_employee_id,
-          p_first_name || ' ' || p_last_name,
+          v_full_name,
           p_email,
           p_employment_type,
           'active',
@@ -928,6 +932,30 @@ const initializeTables = async () => {
           CURRENT_TIMESTAMP,
           CURRENT_TIMESTAMP
         );
+
+        -- Store in type-specific table based on employment type
+        CASE p_employment_type
+          WHEN 'Manager' THEN
+            INSERT INTO managers (manager_id, manager_name, email, status)
+            VALUES (v_employee_id, v_full_name, p_email, 'active');
+            
+          WHEN 'Intern' THEN
+            INSERT INTO interns (intern_id, intern_name, email, status)
+            VALUES (v_employee_id, v_full_name, p_email, 'active');
+            
+          WHEN 'Full-Time' THEN
+            INSERT INTO full_time_employees (employee_id, employee_name, email, status)
+            VALUES (v_employee_id, v_full_name, p_email, 'active');
+            
+          WHEN 'Contract' THEN
+            INSERT INTO contract_employees (employee_id, employee_name, email, status)
+            VALUES (v_employee_id, v_full_name, p_email, 'active');
+            
+          ELSE
+            -- Default to full-time employees table for unknown types
+            INSERT INTO full_time_employees (employee_id, employee_name, email, status)
+            VALUES (v_employee_id, v_full_name, p_email, 'active');
+        END CASE;
 
         RETURN v_user_id;
       END;

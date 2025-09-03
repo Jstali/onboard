@@ -3827,4 +3827,136 @@ router.delete("/managers/:managerId", async (req, res) => {
   }
 });
 
+// Get all managers
+router.get("/managers-list", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        manager_id,
+        manager_name,
+        email,
+        department,
+        designation,
+        status,
+        created_at
+      FROM managers 
+      ORDER BY created_at DESC
+    `);
+
+    res.json({ managers: result.rows });
+  } catch (error) {
+    console.error("Get managers error:", error);
+    res.status(500).json({ error: "Failed to get managers" });
+  }
+});
+
+// Get all interns
+router.get("/interns-list", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        intern_id,
+        intern_name,
+        email,
+        department,
+        designation,
+        status,
+        created_at
+      FROM interns 
+      ORDER BY created_at DESC
+    `);
+
+    res.json({ interns: result.rows });
+  } catch (error) {
+    console.error("Get interns error:", error);
+    res.status(500).json({ error: "Failed to get interns" });
+  }
+});
+
+// Get all full-time employees
+router.get("/full-time-list", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        employee_id,
+        employee_name,
+        email,
+        department,
+        designation,
+        status,
+        created_at
+      FROM full_time_employees 
+      ORDER BY created_at DESC
+    `);
+
+    res.json({ fullTimeEmployees: result.rows });
+  } catch (error) {
+    console.error("Get full-time employees error:", error);
+    res.status(500).json({ error: "Failed to get full-time employees" });
+  }
+});
+
+// Get all contract employees
+router.get("/contract-list", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        employee_id,
+        employee_name,
+        email,
+        department,
+        designation,
+        contract_start_date,
+        contract_end_date,
+        status,
+        created_at
+      FROM contract_employees 
+      ORDER BY created_at DESC
+    `);
+
+    res.json({ contractEmployees: result.rows });
+  } catch (error) {
+    console.error("Get contract employees error:", error);
+    res.status(500).json({ error: "Failed to get contract employees" });
+  }
+});
+
+// Get all employees by type (summary)
+router.get("/employees-by-type", async (req, res) => {
+  try {
+    const [managersResult, internsResult, fullTimeResult, contractResult] =
+      await Promise.all([
+        pool.query(
+          "SELECT COUNT(*) as count FROM managers WHERE status = 'active'"
+        ),
+        pool.query(
+          "SELECT COUNT(*) as count FROM interns WHERE status = 'active'"
+        ),
+        pool.query(
+          "SELECT COUNT(*) as count FROM full_time_employees WHERE status = 'active'"
+        ),
+        pool.query(
+          "SELECT COUNT(*) as count FROM contract_employees WHERE status = 'active'"
+        ),
+      ]);
+
+    res.json({
+      summary: {
+        managers: parseInt(managersResult.rows[0].count),
+        interns: parseInt(internsResult.rows[0].count),
+        fullTime: parseInt(fullTimeResult.rows[0].count),
+        contract: parseInt(contractResult.rows[0].count),
+        total:
+          parseInt(managersResult.rows[0].count) +
+          parseInt(internsResult.rows[0].count) +
+          parseInt(fullTimeResult.rows[0].count) +
+          parseInt(contractResult.rows[0].count),
+      },
+    });
+  } catch (error) {
+    console.error("Get employees by type error:", error);
+    res.status(500).json({ error: "Failed to get employees by type" });
+  }
+});
+
 module.exports = router;
