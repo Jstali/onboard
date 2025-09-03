@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import apiConfig from "../config/api";
 
 // Configure axios defaults
-axios.defaults.timeout = 15000; // 15 second timeout
-axios.defaults.baseURL = "http://localhost:5001/api";
+axios.defaults.timeout = apiConfig.timeout;
+axios.defaults.baseURL = apiConfig.baseURL;
 
 const AuthContext = createContext();
 
@@ -85,6 +86,18 @@ export const AuthProvider = ({ children }) => {
         email,
         password,
       });
+
+      if (response.data.requiresPasswordSetup) {
+        return {
+          success: true,
+          requiresPasswordSetup: true,
+          userId: response.data.userId,
+          email: response.data.email,
+          role: response.data.role,
+          firstName: response.data.firstName,
+          lastName: response.data.lastName,
+        };
+      }
 
       if (response.data.requiresPasswordReset) {
         return {

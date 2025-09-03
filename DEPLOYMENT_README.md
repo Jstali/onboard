@@ -1,293 +1,268 @@
-# ONBOARD HR System - Deployment Guide
+# NXZEN HR Employee Onboarding & Attendance Management
 
-## Overview
+## Deployment and Management Scripts
 
-This guide provides step-by-step instructions for deploying the ONBOARD HR System, which includes an employee attendance tracking system with manager dashboard functionality.
+This document describes the deployment and management scripts for the ONDOARD HR system.
 
-## Prerequisites
+## 📁 Script Files
+
+### Linux/macOS Scripts
+
+- `deploy.sh` - Complete deployment script
+- `stop.sh` - Stop all application services
+- `restart.sh` - Restart the application
+
+### Windows Scripts
+
+- `start-application.bat` - Start the application
+- `stop-application.bat` - Stop all application services
+- `restart-application.bat` - Restart the application
+
+### Database Migration
+
+- `migrations/002_cleanup_managers.sql` - Clean up deleted manager data
+
+## 🚀 Quick Start
+
+### Linux/macOS
+
+```bash
+# Make scripts executable
+chmod +x deploy.sh stop.sh restart.sh
+
+# Deploy the application
+./deploy.sh
+
+# Stop the application
+./stop.sh
+
+# Restart the application
+./restart.sh
+```
+
+### Windows
+
+```batch
+# Start the application
+start-application.bat
+
+# Stop the application
+stop-application.bat
+
+# Restart the application
+restart-application.bat
+```
+
+## 📋 Prerequisites
 
 ### Required Software
 
-1. **Node.js** (v16 or higher)
+- **Node.js** (v16 or higher)
+- **npm** (v8 or higher)
+- **PostgreSQL** (v12 or higher)
+- **PostgreSQL Client** (psql command-line tool)
 
-   - Download from: https://nodejs.org/
-   - Verify installation: `node --version`
+### Database Setup
 
-2. **npm** (comes with Node.js)
+- Database name: `onboardd`
+- Database user: `postgres`
+- Database host: `localhost`
+- Database port: `5432`
 
-   - Verify installation: `npm --version`
+## 🔧 Configuration
 
-3. **PostgreSQL** (v12 or higher)
+### Environment Variables
 
-   - Download from: https://www.postgresql.org/download/
-   - Create a database named `onboardd`
-
-4. **Git** (optional, for version control)
-   - Download from: https://git-scm.com/
-
-### System Requirements
-
-- **Operating System**: Windows 10/11, macOS, or Linux
-- **RAM**: Minimum 4GB (8GB recommended)
-- **Storage**: 2GB free space
-- **Network**: Internet connection for dependency installation
-
-## Quick Start
-
-### Option 1: Automated Deployment (Windows)
-
-1. **Run the deployment script**:
-
-   ```bash
-   deploy.bat
-   ```
-
-2. **Start the application**:
-
-   ```bash
-   start-application.bat
-   ```
-
-3. **Access the application**:
-   - Frontend: http://localhost:3001
-   - Backend API: http://localhost:5001
-
-### Option 2: Manual Deployment
-
-#### Step 1: Database Setup
-
-1. **Create PostgreSQL database**:
-
-   ```sql
-   CREATE DATABASE onboardd;
-   ```
-
-2. **Run the migration**:
-   ```bash
-   cd backend
-   psql -d onboardd -f migrations/001_initial_attendance_setup.sql
-   ```
-
-#### Step 2: Backend Setup
-
-1. **Navigate to backend directory**:
-
-   ```bash
-   cd backend
-   ```
-
-2. **Install dependencies**:
-
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment**:
-
-   - Copy `config.env.example` to `config.env`
-   - Update database credentials in `config.env`
-
-4. **Start backend server**:
-   ```bash
-   npm start
-   ```
-
-#### Step 3: Frontend Setup
-
-1. **Navigate to frontend directory**:
-
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies**:
-
-   ```bash
-   npm install
-   ```
-
-3. **Start frontend server**:
-   ```bash
-   npm start
-   ```
-
-## Configuration
-
-### Database Configuration
-
-Update `backend/config.env` with your PostgreSQL credentials:
+The application uses the following configuration in `backend/config.env`:
 
 ```env
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=onboardd
 DB_USER=postgres
-DB_PASSWORD=your_password
-JWT_SECRET=your_jwt_secret_key
+DB_PASSWORD=Stali
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_EXPIRES_IN=24h
+
+# Email Configuration
+EMAIL_USER=alphanxzen@gmail.com
+EMAIL_PASS=rewn cxqu eiuz fgmd
+
+# Server Configuration
+PORT=5001
+NODE_ENV=development
 ```
 
-### Environment Variables
+## 🌐 Application URLs
 
-- `DB_HOST`: PostgreSQL host (default: localhost)
-- `DB_PORT`: PostgreSQL port (default: 5432)
-- `DB_NAME`: Database name (default: onboardd)
-- `DB_USER`: Database username
-- `DB_PASSWORD`: Database password
-- `JWT_SECRET`: Secret key for JWT tokens
-- `PORT`: Backend server port (default: 5001)
+- **Frontend**: http://localhost:3001
+- **Backend API**: http://localhost:5001
+- **Database**: localhost:5432/onboardd
 
-## Features
+## 🔑 Default Login Credentials
 
-### Employee Features
+| Role              | Email               | Password |
+| ----------------- | ------------------- | -------- |
+| **HR Admin**      | hr@nxzen.com        | test123  |
+| **Test HR**       | testhr@nxzen.com    | test123  |
+| **Manager**       | manager@company.com | test123  |
+| **Test Employee** | test@test.com       | test123  |
 
-- **Attendance Tracking**: Mark daily attendance (Present, WFH, Leave, Absent, Half Day)
-- **Weekly View**: View and edit attendance for the current week
-- **Calendar View**: Visual calendar representation of attendance
-- **Profile Management**: Update personal information
+## 📊 Current Database Status
 
-### Manager Features
+### User Counts
 
-- **Team Dashboard**: View all team members
-- **Attendance Management**: Edit team member attendance
-- **Reports**: Generate attendance reports
-- **Team Management**: Add/remove team members
+- **Employees**: 5
+- **HR**: 2
+- **Managers**: 1 (dori d)
 
-### HR Features
+### Cleaned Up Data
 
-- **Employee Management**: Add new employees
-- **Document Collection**: Manage onboarding documents
-- **Leave Management**: Approve/reject leave requests
+The following managers were removed from the system:
 
-## Test Credentials
+- John Manager
+- Rakesh Manager
+- Test Manager
+- Vamshi Manager
+- Vinod Manager (both accounts)
 
-### Default Test User
+## 🛠️ Management Commands
 
-- **Email**: test.employee@company.com
-- **Password**: test123
-- **Role**: Employee
+### View Logs
 
-### Creating Manager Account
+```bash
+# View backend logs
+tail -f backend.log
 
-1. Login as HR user
-2. Navigate to Employee Management
-3. Add a new employee with role "manager"
-4. Use the generated credentials to login
+# View frontend logs
+tail -f frontend.log
 
-## Troubleshooting
+# View both logs
+tail -f backend.log frontend.log
+```
+
+### Database Management
+
+```bash
+# Connect to database
+psql -U postgres -h localhost -d onboardd
+
+# Run migrations manually
+psql -U postgres -h localhost -d onboardd -f migrations/002_cleanup_managers.sql
+```
+
+### Process Management
+
+```bash
+# Check running processes
+ps aux | grep node
+
+# Kill specific processes
+pkill -f "node.*server.js"
+pkill -f "npm start"
+
+# Check port usage
+lsof -i :5001
+lsof -i :3001
+```
+
+## 🔄 Deployment Process
+
+The `deploy.sh` script performs the following steps:
+
+1. **Dependency Check** - Verifies Node.js, npm, and PostgreSQL
+2. **Database Check** - Tests database connectivity
+3. **Backend Setup** - Installs dependencies and starts server
+4. **Frontend Setup** - Installs dependencies and starts server
+5. **Migration Run** - Executes database migrations
+6. **Service Start** - Starts both backend and frontend services
+7. **Health Check** - Verifies services are running
+
+## 🚨 Troubleshooting
 
 ### Common Issues
 
-#### 1. Port Already in Use
-
-**Error**: `EADDRINUSE: address already in use :::5001`
-
-**Solution**:
+#### Port Already in Use
 
 ```bash
-# Windows
-netstat -ano | findstr :5001
-taskkill /PID <PID> /F
+# Find process using port
+lsof -i :5001
+lsof -i :3001
 
-# macOS/Linux
-lsof -ti:5001 | xargs kill -9
+# Kill process
+kill -9 <PID>
 ```
 
-#### 2. Database Connection Failed
+#### Database Connection Failed
 
-**Error**: `ECONNREFUSED: connect ECONNREFUSED 127.0.0.1:5432`
+```bash
+# Check PostgreSQL status
+sudo systemctl status postgresql
 
-**Solution**:
+# Start PostgreSQL
+sudo systemctl start postgresql
 
-1. Ensure PostgreSQL is running
-2. Check database credentials in `config.env`
-3. Verify database `onboardd` exists
+# Check database exists
+psql -U postgres -l | grep onboardd
+```
 
-#### 3. Dependencies Installation Failed
+#### Node Modules Missing
 
-**Error**: `npm ERR! code ENOENT`
+```bash
+# Reinstall dependencies
+cd backend && npm install
+cd ../frontend && npm install
+```
 
-**Solution**:
+### Log Analysis
 
-1. Clear npm cache: `npm cache clean --force`
-2. Delete `node_modules` and `package-lock.json`
-3. Run `npm install` again
+```bash
+# Check for errors in backend
+grep -i error backend.log
 
-#### 4. Migration Failed
+# Check for errors in frontend
+grep -i error frontend.log
+```
 
-**Error**: `relation "attendance" already exists`
+## 📈 Monitoring
 
-**Solution**:
+### Health Check Endpoints
 
-1. Drop existing tables (if safe to do so):
-   ```sql
-   DROP TABLE IF EXISTS attendance CASCADE;
-   DROP TABLE IF EXISTS manager_employee_mapping CASCADE;
-   DROP TABLE IF EXISTS attendance_settings CASCADE;
-   ```
-2. Run migration again
+- Backend: `http://localhost:5001/api/attendance/settings`
+- Frontend: `http://localhost:3001`
 
-### Logs and Debugging
+### Performance Monitoring
 
-#### Backend Logs
+```bash
+# Monitor CPU usage
+top -p $(pgrep -f "node.*server.js")
 
-- Location: `backend/server.log`
-- View logs: `tail -f backend/server.log`
+# Monitor memory usage
+ps aux | grep node
+```
 
-#### Frontend Logs
+## 🔒 Security Notes
 
-- Check browser console (F12)
-- Development server logs in terminal
+- Change default passwords in production
+- Update JWT_SECRET in production
+- Configure proper CORS settings
+- Use HTTPS in production
+- Regular database backups
 
-#### Database Logs
+## 📞 Support
 
-- PostgreSQL logs: Check PostgreSQL configuration
-- Query logs: Enable query logging in PostgreSQL
+For issues or questions:
 
-## Production Deployment
-
-### Environment Setup
-
-1. **Use environment variables** instead of config files
-2. **Set up SSL certificates** for HTTPS
-3. **Configure reverse proxy** (nginx/Apache)
-4. **Set up PM2** for process management
-
-### Security Considerations
-
-1. **Change default passwords**
-2. **Use strong JWT secrets**
-3. **Enable HTTPS**
-4. **Set up firewall rules**
-5. **Regular security updates**
-
-### Performance Optimization
-
-1. **Database indexing** (already included in migration)
-2. **Caching** (Redis recommended)
-3. **CDN** for static assets
-4. **Load balancing** for high traffic
-
-## Support
-
-### Getting Help
-
-1. **Check the logs** for error messages
-2. **Review this documentation**
-3. **Check GitHub issues** (if applicable)
-4. **Contact system administrator**
-
-### Maintenance
-
-- **Regular backups** of the database
-- **Monitor disk space** and logs
-- **Update dependencies** regularly
-- **Test after updates**
-
-## License
-
-This project is proprietary software. All rights reserved.
+1. Check the logs for error messages
+2. Verify all prerequisites are installed
+3. Ensure database is running and accessible
+4. Check firewall settings for port access
 
 ---
 
-**Last Updated**: September 3, 2025
-**Version**: 1.0.0
+**Version**: 1.0.0  
+**Last Updated**: 2025-09-03  
+**Author**: System Administrator

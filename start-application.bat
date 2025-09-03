@@ -1,124 +1,174 @@
 @echo off
+REM NXZEN HR Employee Onboarding & Attendance Management
+REM Start Application Script for Windows
+REM Version: 1.0.0
+REM Date: 2025-09-03
+
 echo ========================================
-echo    ONBOARD HR System - Starting Application
+echo   ONBOARD HR System - Start Application
 echo ========================================
 echo.
 
-:: Check if Node.js is installed
-echo Checking Node.js installation...
+REM Set colors for output
+set "GREEN=[92m"
+set "YELLOW=[93m"
+set "RED=[91m"
+set "BLUE=[94m"
+set "NC=[0m"
+
+REM Configuration
+set "PROJECT_NAME=ONDOARD"
+set "BACKEND_PORT=5001"
+set "FRONTEND_PORT=3001"
+set "DB_NAME=onboardd"
+set "DB_USER=postgres"
+set "DB_HOST=localhost"
+set "DB_PORT=5432"
+
+echo %BLUE%🚀 Starting %PROJECT_NAME% application...%NC%
+echo.
+
+REM Check if Node.js is installed
+echo %GREEN%✅ Checking Node.js installation...%NC%
 node --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo ERROR: Node.js is not installed or not in PATH
+    echo %RED%❌ Node.js is not installed or not in PATH%NC%
     echo Please install Node.js from https://nodejs.org/
     pause
     exit /b 1
 )
+echo Node.js found: 
+node --version
 
-:: Check if required directories exist
-if not exist "backend" (
-    echo ERROR: Backend directory not found
-    echo Please ensure you are running this script from the project root directory
+REM Check if npm is installed
+echo %GREEN%✅ Checking npm installation...%NC%
+npm --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo %RED%❌ npm is not installed or not in PATH%NC%
     pause
     exit /b 1
 )
+echo npm found:
+npm --version
+echo.
 
-if not exist "frontend" (
-    echo ERROR: Frontend directory not found
-    echo Please ensure you are running this script from the project root directory
-    pause
-    exit /b 1
+REM Check if PostgreSQL is available
+echo %GREEN%✅ Checking PostgreSQL connection...%NC%
+psql -U %DB_USER% -h %DB_HOST% -p %DB_PORT% -d %DB_NAME% -c "SELECT 1;" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo %YELLOW%⚠️  Warning: Cannot connect to PostgreSQL%NC%
+    echo Please ensure PostgreSQL is running and database '%DB_NAME%' exists
+    echo.
+    set /p "CONTINUE=Do you want to continue anyway? (y/N): "
+    if /i not "%CONTINUE%"=="y" (
+        echo Deployment cancelled.
+        pause
+        exit /b 1
+    )
+) else (
+    echo %GREEN%✅ Database connection successful%NC%
 )
+echo.
 
-:: Check if node_modules exist
+REM Kill existing processes
+echo %GREEN%✅ Stopping existing processes...%NC%
+taskkill /f /im node.exe >nul 2>&1
+taskkill /f /im npm.cmd >nul 2>&1
+timeout /t 2 >nul
+
+REM Install backend dependencies if needed
 if not exist "backend\node_modules" (
-    echo ERROR: Backend dependencies not installed
-    echo Please run deploy.bat first to install dependencies
-    pause
-    exit /b 1
+    echo %GREEN%✅ Installing backend dependencies...%NC%
+    cd backend
+    call npm install
+    if %errorlevel% neq 0 (
+        echo %RED%❌ Failed to install backend dependencies%NC%
+        pause
+        exit /b 1
+    )
+    cd ..
+    echo %GREEN%✅ Backend dependencies installed%NC%
+) else (
+    echo %GREEN%✅ Backend dependencies already installed%NC%
 )
 
+REM Install frontend dependencies if needed
 if not exist "frontend\node_modules" (
-    echo ERROR: Frontend dependencies not installed
-    echo Please run deploy.bat first to install dependencies
-    pause
-    exit /b 1
-)
-
-echo.
-echo ========================================
-echo Starting Backend Server...
-echo ========================================
-
-:: Start backend server in a new window
-echo Starting backend server on port 5001...
-start "ONBOARD Backend Server" cmd /k "cd backend && npm start"
-
-:: Wait a moment for backend to start
-timeout /t 3 /nobreak >nul
-
-echo.
-echo ========================================
-echo Starting Frontend Server...
-echo ========================================
-
-:: Start frontend server in a new window
-echo Starting frontend server on port 3001...
-start "ONBOARD Frontend Server" cmd /k "cd frontend && npm start"
-
-:: Wait a moment for frontend to start
-timeout /t 5 /nobreak >nul
-
-echo.
-echo ========================================
-echo Application Started Successfully!
-echo ========================================
-echo.
-echo Backend Server: http://localhost:5001
-echo Frontend Application: http://localhost:3001
-echo.
-echo Test Credentials:
-echo - Employee: test.employee@company.com / test123
-echo - Manager: (create manager account through HR portal)
-echo.
-echo ========================================
-echo Application Status
-echo ========================================
-echo.
-echo Checking application status...
-
-:: Check if backend is running
-echo Checking backend server...
-curl -s http://localhost:5001/api/auth/me >nul 2>&1
-if %errorlevel% equ 0 (
-    echo ✓ Backend server is running
+    echo %GREEN%✅ Installing frontend dependencies...%NC%
+    cd frontend
+    call npm install
+    if %errorlevel% neq 0 (
+        echo %RED%❌ Failed to install frontend dependencies%NC%
+        pause
+        exit /b 1
+    )
+    cd ..
+    echo %GREEN%✅ Frontend dependencies installed%NC%
 ) else (
-    echo ⚠ Backend server may still be starting up
+    echo %GREEN%✅ Frontend dependencies already installed%NC%
 )
 
-:: Check if frontend is running
-echo Checking frontend server...
-curl -s http://localhost:3001 >nul 2>&1
-if %errorlevel% equ 0 (
-    echo ✓ Frontend server is running
+echo.
+
+REM Start backend server
+echo %GREEN%✅ Starting backend server on port %BACKEND_PORT%...%NC%
+cd backend
+start "Backend Server" cmd /k "npm start"
+cd ..
+timeout /t 5 >nul
+
+REM Check if backend is running
+echo %GREEN%✅ Checking backend server...%NC%
+curl -s http://localhost:%BACKEND_PORT%/api/attendance/settings >nul 2>&1
+if %errorlevel% neq 0 (
+    echo %YELLOW%⚠️  Backend server may still be starting up%NC%
 ) else (
-    echo ⚠ Frontend server may still be starting up
+    echo %GREEN%✅ Backend server is running%NC%
+)
+
+REM Start frontend server
+echo %GREEN%✅ Starting frontend server on port %FRONTEND_PORT%...%NC%
+cd frontend
+start "Frontend Server" cmd /k "npm start"
+cd ..
+timeout /t 10 >nul
+
+REM Check if frontend is running
+echo %GREEN%✅ Checking frontend server...%NC%
+curl -s http://localhost:%FRONTEND_PORT% >nul 2>&1
+if %errorlevel% neq 0 (
+    echo %YELLOW%⚠️  Frontend server may still be starting up%NC%
+) else (
+    echo %GREEN%✅ Frontend server is running%NC%
 )
 
 echo.
 echo ========================================
-echo Next Steps
+echo   🎉 Application Started Successfully!
 echo ========================================
 echo.
-echo 1. Open your browser and go to: http://localhost:3001
-echo 2. Login with the test credentials
-echo 3. Navigate to the attendance section
+echo %BLUE%📋 Application Information:%NC%
+echo    Project: %PROJECT_NAME%
+echo    Backend: http://localhost:%BACKEND_PORT%
+echo    Frontend: http://localhost:%FRONTEND_PORT%
+echo    Database: %DB_NAME%
 echo.
-echo To stop the application:
-echo - Close the command windows that opened
-echo - Or press Ctrl+C in each window
+echo %BLUE%🔑 Default Login Credentials:%NC%
+echo    HR Admin: hr@nxzen.com / test123
+echo    Test HR: testhr@nxzen.com / test123
+echo    Manager: manager@company.com / test123
+echo    Test Employee: test@test.com / test123
 echo.
-echo ========================================
-echo Application is ready!
-echo ========================================
+echo %BLUE%🛠️  Management Commands:%NC%
+echo    Stop all services: stop-application.bat
+echo    Restart services: restart-application.bat
+echo    View logs: Check the command windows that opened
 echo.
-pause
+echo %GREEN%✅ Opening application in browser...%NC%
+timeout /t 3 >nul
+start http://localhost:%FRONTEND_PORT%
+
+echo.
+echo %GREEN%✅ Application is now running!%NC%
+echo Press any key to close this window...
+pause >nul

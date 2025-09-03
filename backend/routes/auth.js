@@ -10,7 +10,7 @@ const router = express.Router();
 // Login
 router.post(
   "/login",
-  [body("email").isEmail().normalizeEmail(), body("password").notEmpty()],
+  [body("email").isEmail().normalizeEmail(), body("password").optional()],
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -32,7 +32,39 @@ router.post(
 
       const user = userResult.rows[0];
 
-      // Check if user has temp password (first login)
+      // Check if this is a manager's first login
+      if (user.role === "manager" && user.is_first_login === true) {
+        // For first-time manager login, no password required
+        if (!password) {
+          return res.status(200).json({
+            message: "First login detected",
+            requiresPasswordSetup: true,
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            firstName: user.first_name,
+            lastName: user.last_name,
+          });
+        } else {
+          // If password is provided but it's first login, still redirect to password setup
+          return res.status(200).json({
+            message: "First login detected",
+            requiresPasswordSetup: true,
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            firstName: user.first_name,
+            lastName: user.last_name,
+          });
+        }
+      }
+
+      // For non-first-time logins, password is required
+      if (!password) {
+        return res.status(400).json({ error: "Password is required" });
+      }
+
+      // Check if user has temp password (legacy first login)
       if (user.temp_password) {
         if (password === user.temp_password) {
           // First login with temp password - require password reset
@@ -80,6 +112,8 @@ router.post(
           id: user.id,
           email: user.email,
           role: user.role,
+          firstName: user.first_name,
+          lastName: user.last_name,
         },
       });
     } catch (error) {
@@ -109,6 +143,81 @@ router.get("/me", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to get user info" });
   }
 });
+
+// Set initial password (manager first login)
+router.post(
+  "/set-initial-password",
+  [
+    body("userId").isInt(),
+    body("newPassword")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters long"),
+    body("confirmPassword")
+      .notEmpty()
+      .withMessage("Please confirm your password"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { userId, newPassword, confirmPassword } = req.body;
+
+      // Check if passwords match
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({ error: "Passwords do not match" });
+      }
+
+      // Get user details
+      const userResult = await pool.query(
+        "SELECT id, email, role, is_first_login FROM users WHERE id = $1",
+        [userId]
+      );
+
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const user = userResult.rows[0];
+
+      // Verify this is a manager's first login
+      if (user.role !== "manager" || user.is_first_login !== true) {
+        return res.status(403).json({ error: "Invalid request" });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update user password and mark first login as complete
+      await pool.query(
+        "UPDATE users SET password = $1, is_first_login = false, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+        [hashedPassword, userId]
+      );
+
+      // Generate JWT token for immediate login
+      const token = jwt.sign(
+        { userId: user.id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN }
+      );
+
+      res.json({
+        message: "Password set successfully",
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    } catch (error) {
+      console.error("Set initial password error:", error);
+      res.status(500).json({ error: "Failed to set password" });
+    }
+  }
+);
 
 // Reset password (first login)
 router.post(

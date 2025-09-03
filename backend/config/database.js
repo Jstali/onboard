@@ -907,8 +907,11 @@ const initializeTables = async () => {
         v_full_name := p_first_name || ' ' || p_last_name;
 
         -- Create user
-        INSERT INTO users (email, password, role, temp_password, first_name, last_name)
-        VALUES (p_email, '', 'employee', v_generated_password, p_first_name, p_last_name)
+        INSERT INTO users (email, password, role, temp_password, first_name, last_name, is_first_login)
+        VALUES (p_email, '', 
+                CASE WHEN p_employment_type = 'Manager' THEN 'manager' ELSE 'employee' END, 
+                v_generated_password, p_first_name, p_last_name, 
+                CASE WHEN p_employment_type = 'Manager' THEN true ELSE false END)
         RETURNING id INTO v_user_id;
 
         -- Create initial employee form record with employment type

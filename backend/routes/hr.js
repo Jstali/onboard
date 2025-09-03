@@ -1498,8 +1498,8 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
           const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
           await client.query(
-            `INSERT INTO users (email, password, role, first_name, last_name, temp_password, created_at, updated_at) 
-             VALUES ($1, $2, 'employee', $3, 'Employee', $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            `INSERT INTO users (email, password, role, first_name, last_name, temp_password, is_first_login, created_at, updated_at) 
+             VALUES ($1, $2, 'employee', $3, 'Employee', $4, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
             [
               mappedData.company_email,
               hashedPassword,
