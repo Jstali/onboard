@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { FaUsers, FaCalendarAlt } from 'react-icons/fa';
-import axios from 'axios';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { FaUsers, FaCalendarAlt } from "react-icons/fa";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const AttendanceStats = () => {
   const [stats, setStats] = useState(null);
@@ -16,10 +16,13 @@ const AttendanceStats = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`http://localhost:5001/api/attendance/stats?month=${selectedMonth}&year=${selectedYear}`);
-      setStats(response.data);
+      const response = await axios.get(
+        `/attendance/stats?month=${selectedMonth}&year=${selectedYear}`
+      );
+      setStats(response.data.stats);
     } catch (error) {
-      toast.error('Failed to fetch attendance statistics');
+      console.error("Error fetching stats:", error);
+      toast.error("Failed to fetch attendance statistics");
     } finally {
       setLoading(false);
     }
@@ -47,7 +50,9 @@ const AttendanceStats = () => {
     <div className="space-y-6">
       {/* Month/Year Selector */}
       <div className="flex items-center space-x-4">
-        <label className="text-sm font-medium text-gray-700">Select Month:</label>
+        <label className="text-sm font-medium text-gray-700">
+          Select Month:
+        </label>
         <select
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
@@ -55,11 +60,11 @@ const AttendanceStats = () => {
         >
           {Array.from({ length: 12 }, (_, i) => (
             <option key={i + 1} value={i + 1}>
-              {new Date(2024, i).toLocaleDateString('en-US', { month: 'long' })}
+              {new Date(2024, i).toLocaleDateString("en-US", { month: "long" })}
             </option>
           ))}
         </select>
-        
+
         <label className="text-sm font-medium text-gray-700">Year:</label>
         <select
           value={selectedYear}
@@ -87,8 +92,12 @@ const AttendanceStats = () => {
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Employees</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
+              <p className="text-sm font-medium text-gray-500">
+                Total Employees
+              </p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {stats.total}
+              </p>
             </div>
           </div>
         </div>
@@ -102,8 +111,12 @@ const AttendanceStats = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Present</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.stats.Present}</p>
-              <p className="text-sm text-success-600">{stats.percentages.Present}%</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {stats.stats.Present}
+              </p>
+              <p className="text-sm text-success-600">
+                {stats.percentages.Present}%
+              </p>
             </div>
           </div>
         </div>
@@ -116,9 +129,15 @@ const AttendanceStats = () => {
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Work From Home</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.stats['Work From Home']}</p>
-              <p className="text-sm text-blue-600">{stats.percentages['Work From Home']}%</p>
+              <p className="text-sm font-medium text-gray-500">
+                Work From Home
+              </p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {stats.stats["Work From Home"]}
+              </p>
+              <p className="text-sm text-blue-600">
+                {stats.percentages["Work From Home"]}%
+              </p>
             </div>
           </div>
         </div>
@@ -132,7 +151,9 @@ const AttendanceStats = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Leave</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.stats.Leave}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {stats.stats.Leave}
+              </p>
               <p className="text-sm text-red-600">{stats.percentages.Leave}%</p>
             </div>
           </div>
@@ -143,32 +164,44 @@ const AttendanceStats = () => {
 
       {/* Detailed Statistics */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Detailed Statistics</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          Detailed Statistics
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <h4 className="text-sm font-medium text-gray-500 mb-2">Present</h4>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Count:</span>
-                <span className="text-sm font-medium">{stats.stats.Present}</span>
+                <span className="text-sm font-medium">
+                  {stats.stats.Present}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Percentage:</span>
-                <span className="text-sm font-medium text-success-600">{stats.percentages.Present}%</span>
+                <span className="text-sm font-medium text-success-600">
+                  {stats.percentages.Present}%
+                </span>
               </div>
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-2">Work From Home</h4>
+            <h4 className="text-sm font-medium text-gray-500 mb-2">
+              Work From Home
+            </h4>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Count:</span>
-                <span className="text-sm font-medium">{stats.stats['Work From Home']}</span>
+                <span className="text-sm font-medium">
+                  {stats.stats["Work From Home"]}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Percentage:</span>
-                <span className="text-sm font-medium text-blue-600">{stats.percentages['Work From Home']}%</span>
+                <span className="text-sm font-medium text-blue-600">
+                  {stats.percentages["Work From Home"]}%
+                </span>
               </div>
             </div>
           </div>
@@ -182,7 +215,9 @@ const AttendanceStats = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Percentage:</span>
-                <span className="text-sm font-medium text-red-600">{stats.percentages.Leave}%</span>
+                <span className="text-sm font-medium text-red-600">
+                  {stats.percentages.Leave}%
+                </span>
               </div>
             </div>
           </div>

@@ -17,8 +17,7 @@ const HRAttendanceDetails = () => {
   const [editStatus, setEditStatus] = useState("");
   const [editReason, setEditReason] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -33,7 +32,7 @@ const HRAttendanceDetails = () => {
       const response = await axios.get(
         `/attendance/hr/details?month=${selectedMonth}&year=${selectedYear}`
       );
-      setAttendanceRecords(response.data.records || []);
+      setAttendanceRecords(response.data.employees || []);
     } catch (error) {
       console.error("Error fetching attendance details:", error);
       toast.error("Failed to fetch attendance details");
@@ -57,12 +56,23 @@ const HRAttendanceDetails = () => {
   };
 
   const formatDate = (dateString) => {
-    return format(new Date(dateString), "MMM dd, yyyy");
+    if (!dateString) return "-";
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
+      return "-";
+    }
   };
 
   const formatTime = (timeString) => {
     if (!timeString) return "-";
-    return format(new Date(timeString), "hh:mm a");
+    try {
+      return format(new Date(timeString), "hh:mm a");
+    } catch (error) {
+      console.error("Error formatting time:", timeString, error);
+      return "-";
+    }
   };
 
   const openEditModal = (record) => {
@@ -158,16 +168,15 @@ const HRAttendanceDetails = () => {
   const filteredRecords = attendanceRecords.filter((record) => {
     const matchesSearch =
       !searchTerm ||
-      record.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.employee_email?.toLowerCase().includes(searchTerm.toLowerCase());
+      `${record.first_name} ${record.last_name}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      record.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesDate =
-      !selectedDate ||
-      format(new Date(record.date), "yyyy-MM-dd") === selectedDate;
+    const matchesDepartment =
+      !selectedDepartment || record.department === selectedDepartment;
 
-    const matchesStatus = !selectedStatus || record.status === selectedStatus;
-
-    return matchesSearch && matchesDate && matchesStatus;
+    return matchesSearch && matchesDepartment;
   });
 
   if (loading) {
@@ -253,29 +262,18 @@ const HRAttendanceDetails = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date
-            </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
+              Department
             </label>
             <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All Status</option>
-              <option value="Present">Present</option>
-              <option value="Work From Home">Work From Home</option>
-              <option value="Leave">Leave</option>
+              <option value="">All Departments</option>
+              <option value="IT">IT</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+              <option value="Marketing">Marketing</option>
             </select>
           </div>
         </div>
@@ -315,19 +313,19 @@ const HRAttendanceDetails = () => {
                     Employee
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    Department
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    Present Days
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Clock In
+                    WFH Days
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Clock Out
+                    Leave Days
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Reason
+                    Total Days
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -336,45 +334,48 @@ const HRAttendanceDetails = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredRecords.map((record) => (
-                  <tr
-                    key={`${record.employee_id}-${record.date}`}
-                    className="hover:bg-gray-50"
-                  >
+                  <tr key={record.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {record.employee_name || "Unknown"}
+                          {record.first_name} {record.last_name}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {record.employee_email}
+                          {record.email}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(record.date)}
+                      {record.department || "N/A"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={getStatusBadge(record.status)}>
-                        {record.status}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                        {record.present_days}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatTime(record.clock_in_time)}
+                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                        {record.wfh_days}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatTime(record.clock_out_time)}
+                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
+                        {record.leave_days}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {record.reason || "-"}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
+                        {record.total_attendance_days}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button
                         onClick={() => openEditModal(record)}
                         className="font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-3 py-2 transition-colors duration-200 text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 hover:border-blue-300"
-                        title="Edit attendance record"
+                        title="View employee details"
                       >
                         <FaEdit className="inline mr-1" />
-                        Edit
+                        View
                       </button>
                     </td>
                   </tr>
