@@ -3451,14 +3451,25 @@ router.post(
     body("first_name").notEmpty().withMessage("First name is required"),
     body("last_name").notEmpty().withMessage("Last name is required"),
     body("employment_type")
+      .isIn(["Full-Time", "Contract", "Intern", "Manager"])
+      .withMessage("Please select a valid employment type"),
+    body("temp_password")
       .optional()
-      .isIn(["Full-Time", "Contract", "Intern", "Manager"]),
-    body("temp_password").optional().isLength({ min: 6 }),
+      .custom((value) => {
+        if (value === null || value === undefined || value === "") {
+          return true;
+        }
+        return value.length >= 6;
+      })
+      .withMessage("Temporary password must be at least 6 characters long"),
   ],
   async (req, res) => {
     try {
+      console.log("🔍 Manual add employee request body:", req.body);
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log("❌ Validation errors:", errors.array());
         return res.status(400).json({ errors: errors.array() });
       }
 
@@ -3512,6 +3523,15 @@ router.post(
       } catch (emailError) {
         console.error("Email sending error:", emailError);
       }
+
+      console.log("✅ Employee manually added successfully:", {
+        id: userId,
+        email,
+        first_name,
+        last_name,
+        employment_type,
+        temp_password: generatedPassword,
+      });
 
       res.status(201).json({
         message: "Employee manually added successfully",
