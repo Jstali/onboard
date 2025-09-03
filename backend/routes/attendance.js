@@ -579,39 +579,50 @@ router.get("/stats", requireHR, async (req, res) => {
 
     // Calculate totals
     const stats = {
-      total_employees: totalEmployees,
-      present: 0,
-      absent: 0,
-      wfh: 0,
-      leave: 0,
-      half_day: 0,
-      holiday: 0,
+      total: totalEmployees,
+      stats: {
+        Present: 0,
+        Absent: 0,
+        "Work From Home": 0,
+        Leave: 0,
+        "Half Day": 0,
+        Holiday: 0,
+      },
+      percentages: {
+        Present: 0,
+        Absent: 0,
+        "Work From Home": 0,
+        Leave: 0,
+        "Half Day": 0,
+        Holiday: 0,
+      },
       total_attendance_records: 0,
     };
 
+    // Map backend status to frontend status
+    const statusMapping = {
+      present: "Present",
+      absent: "Absent",
+      wfh: "Work From Home",
+      leave: "Leave",
+      half_day: "Half Day",
+      holiday: "Holiday",
+    };
+
     statsResult.rows.forEach((row) => {
-      stats[row.status] = parseInt(row.count);
+      const frontendStatus = statusMapping[row.status] || row.status;
+      stats.stats[frontendStatus] = parseInt(row.count);
       stats.total_attendance_records += parseInt(row.count);
     });
 
     // Calculate percentages
     const totalDays = stats.total_attendance_records;
     if (totalDays > 0) {
-      stats.present_percentage = Math.round((stats.present / totalDays) * 100);
-      stats.absent_percentage = Math.round((stats.absent / totalDays) * 100);
-      stats.wfh_percentage = Math.round((stats.wfh / totalDays) * 100);
-      stats.leave_percentage = Math.round((stats.leave / totalDays) * 100);
-      stats.half_day_percentage = Math.round(
-        (stats.half_day / totalDays) * 100
-      );
-      stats.holiday_percentage = Math.round((stats.holiday / totalDays) * 100);
-    } else {
-      stats.present_percentage = 0;
-      stats.absent_percentage = 0;
-      stats.wfh_percentage = 0;
-      stats.leave_percentage = 0;
-      stats.half_day_percentage = 0;
-      stats.holiday_percentage = 0;
+      Object.keys(stats.stats).forEach((status) => {
+        stats.percentages[status] = Math.round(
+          (stats.stats[status] / totalDays) * 100
+        );
+      });
     }
 
     res.json({ stats });

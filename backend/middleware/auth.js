@@ -55,10 +55,24 @@ const requireRole = (roles) => {
       return res.status(401).json({ error: "Authentication required" });
     }
 
+    console.log(
+      `🔍 Role check - User ID: ${req.user.userId}, Role: ${
+        req.user.role
+      }, Required roles: ${roles.join(", ")}`
+    );
+
     if (!roles.includes(req.user.role)) {
+      console.log(
+        `❌ Access denied - User role '${
+          req.user.role
+        }' not in required roles: ${roles.join(", ")}`
+      );
       return res.status(403).json({ error: "Insufficient permissions" });
     }
 
+    console.log(
+      `✅ Access granted - User role '${req.user.role}' has required permissions`
+    );
     next();
   };
 };
