@@ -27,12 +27,17 @@ const ManualEmployeeAdd = ({ onSuccess, onClose }) => {
     try {
       setLoading(true);
 
+      console.log("🔍 Sending employee data:", formData);
       const response = await axios.post("/hr/manual-add-employee", formData);
 
       toast.success("Employee manually added successfully!");
 
       if (onSuccess) {
-        onSuccess();
+        // Add a small delay to ensure database transaction is complete
+        setTimeout(() => {
+          console.log("🔍 Calling onSuccess after delay");
+          onSuccess();
+        }, 500);
       }
 
       // Reset form
@@ -49,10 +54,18 @@ const ManualEmployeeAdd = ({ onSuccess, onClose }) => {
       }
     } catch (error) {
       console.error("Error manually adding employee:", error);
+      console.error("Error response:", error.response?.data);
 
       if (error.response?.status === 400) {
         const errorMessage = error.response?.data?.error;
-        if (errorMessage) {
+        const validationErrors = error.response?.data?.errors;
+
+        if (validationErrors && validationErrors.length > 0) {
+          const errorMessages = validationErrors
+            .map((err) => err.msg)
+            .join(", ");
+          toast.error(`Validation errors: ${errorMessages}`);
+        } else if (errorMessage) {
           toast.error(errorMessage);
         } else {
           toast.error("Please check your input and try again");

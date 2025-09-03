@@ -72,6 +72,7 @@ const HRDashboard = () => {
       console.log("🔍 Fetching master employees...");
       const response = await axios.get("http://localhost:5001/api/hr/master");
       console.log("✅ Master employees fetched:", response.data);
+      console.log("📊 Number of employees:", response.data.employees.length);
       setMasterEmployees(response.data.employees);
     } catch (error) {
       console.error("❌ Error fetching master employees:", error);

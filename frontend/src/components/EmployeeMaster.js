@@ -33,9 +33,13 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
   const [employeesPerPage] = useState(20);
 
   const handleEmployeeAdded = () => {
+    console.log("🔍 handleEmployeeAdded called");
     setShowAddForm(false);
     if (onRefresh) {
+      console.log("🔍 Calling onRefresh function");
       onRefresh();
+    } else {
+      console.log("❌ onRefresh function not provided");
     }
   };
 
