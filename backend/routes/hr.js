@@ -2352,10 +2352,20 @@ router.delete("/employees/:id", async (req, res) => {
 
       // Delete from manager_employee_mapping table
       const mappingResult = await client.query(
-        "DELETE FROM manager_employee_mapping WHERE employee_id = $1 OR manager_id = $1",
-        [id, id]
+        "DELETE FROM manager_employee_mapping WHERE employee_id = $1",
+        [id]
       );
       console.log("✅ Manager mappings deleted:", mappingResult.rowCount);
+
+      // Delete manager mappings where this user is a manager
+      const managerMappingResult = await client.query(
+        "DELETE FROM manager_employee_mapping WHERE manager_id = $1",
+        [id]
+      );
+      console.log(
+        "✅ Manager role mappings deleted:",
+        managerMappingResult.rowCount
+      );
 
       // Delete from employee_forms table
       const formsResult = await client.query(
