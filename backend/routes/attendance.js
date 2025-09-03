@@ -5,6 +5,7 @@ const {
   authenticateToken,
   requireEmployee,
   requireManager,
+  requireHR,
 } = require("../middleware/auth");
 
 const router = express.Router();
@@ -545,6 +546,126 @@ router.get("/team-summary", async (req, res) => {
   } catch (error) {
     console.error("Error fetching team summary:", error);
     res.status(500).json({ error: "Failed to fetch team summary" });
+  }
+});
+
+// Get attendance statistics for HR dashboard
+router.get("/stats", requireHR, async (req, res) => {
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: "Month and year are required" });
+    }
+
+    // Get total employees
+    const totalEmployeesResult = await pool.query(
+      "SELECT COUNT(*) as total FROM users WHERE role = 'employee'"
+    );
+    const totalEmployees = parseInt(totalEmployeesResult.rows[0].total);
+
+    // Get attendance statistics for the month
+    const statsResult = await pool.query(
+      `
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM attendance 
+      WHERE EXTRACT(MONTH FROM date) = $1 AND EXTRACT(YEAR FROM date) = $2
+      GROUP BY status
+    `,
+      [parseInt(month), parseInt(year)]
+    );
+
+    // Calculate totals
+    const stats = {
+      total_employees: totalEmployees,
+      present: 0,
+      absent: 0,
+      wfh: 0,
+      leave: 0,
+      half_day: 0,
+      holiday: 0,
+      total_attendance_records: 0,
+    };
+
+    statsResult.rows.forEach((row) => {
+      stats[row.status] = parseInt(row.count);
+      stats.total_attendance_records += parseInt(row.count);
+    });
+
+    // Calculate percentages
+    const totalDays = stats.total_attendance_records;
+    if (totalDays > 0) {
+      stats.present_percentage = Math.round((stats.present / totalDays) * 100);
+      stats.absent_percentage = Math.round((stats.absent / totalDays) * 100);
+      stats.wfh_percentage = Math.round((stats.wfh / totalDays) * 100);
+      stats.leave_percentage = Math.round((stats.leave / totalDays) * 100);
+      stats.half_day_percentage = Math.round(
+        (stats.half_day / totalDays) * 100
+      );
+      stats.holiday_percentage = Math.round((stats.holiday / totalDays) * 100);
+    } else {
+      stats.present_percentage = 0;
+      stats.absent_percentage = 0;
+      stats.wfh_percentage = 0;
+      stats.leave_percentage = 0;
+      stats.half_day_percentage = 0;
+      stats.holiday_percentage = 0;
+    }
+
+    res.json({ stats });
+  } catch (error) {
+    console.error("Error fetching attendance stats:", error);
+    res.status(500).json({ error: "Failed to fetch attendance statistics" });
+  }
+});
+
+// Get detailed attendance data for HR dashboard
+router.get("/hr/details", requireHR, async (req, res) => {
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: "Month and year are required" });
+    }
+
+    // Get all employees with their attendance for the month
+    const result = await pool.query(
+      `
+      SELECT 
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        em.employee_id as emp_id,
+        em.department,
+        em.designation,
+        em.type as employment_type,
+        em.status as employee_status,
+        COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_days,
+        COUNT(CASE WHEN a.status = 'wfh' THEN 1 END) as wfh_days,
+        COUNT(CASE WHEN a.status = 'leave' THEN 1 END) as leave_days,
+        COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_days,
+        COUNT(CASE WHEN a.status = 'half_day' THEN 1 END) as half_days,
+        COUNT(CASE WHEN a.status = 'holiday' THEN 1 END) as holiday_days,
+        COUNT(a.id) as total_attendance_days
+      FROM users u
+      LEFT JOIN employee_master em ON u.email = em.company_email
+      LEFT JOIN attendance a ON u.id = a.employee_id 
+        AND EXTRACT(MONTH FROM a.date) = $1 
+        AND EXTRACT(YEAR FROM a.date) = $2
+      WHERE u.role = 'employee'
+      GROUP BY u.id, u.first_name, u.last_name, u.email, em.employee_id, em.department, em.designation, em.type, em.status
+      ORDER BY u.first_name, u.last_name
+    `,
+      [parseInt(month), parseInt(year)]
+    );
+
+    res.json({ employees: result.rows });
+  } catch (error) {
+    console.error("Error fetching HR attendance details:", error);
+    res.status(500).json({ error: "Failed to fetch attendance details" });
   }
 });
 
