@@ -1673,13 +1673,41 @@ router.delete("/master/:id", async (req, res) => {
       await client.query("DELETE FROM leave_balances WHERE employee_id = $1", [
         userId,
       ]);
+      await client.query(
+        "DELETE FROM comp_off_balances WHERE employee_id = $1",
+        [userId]
+      );
+      await client.query(
+        "DELETE FROM employee_documents WHERE employee_id = $1",
+        [userId]
+      );
+      await client.query(
+        "DELETE FROM document_collection WHERE employee_id = $1",
+        [userId]
+      );
+      await client.query("DELETE FROM expenses WHERE employee_id = $1", [
+        userId,
+      ]);
+      await client.query("DELETE FROM company_emails WHERE user_id = $1", [
+        userId,
+      ]);
+
+      // Delete manager mappings where this user is an employee
+      await client.query(
+        "DELETE FROM manager_employee_mapping WHERE employee_id = $1",
+        [userId]
+      );
+
+      // Delete manager mappings where this user is a manager
+      await client.query(
+        "DELETE FROM manager_employee_mapping WHERE manager_id = $1",
+        [userId]
+      );
+
       await client.query("DELETE FROM employee_forms WHERE employee_id = $1", [
         userId,
       ]);
       await client.query("DELETE FROM onboarded_employees WHERE user_id = $1", [
-        userId,
-      ]);
-      await client.query("DELETE FROM company_emails WHERE user_id = $1", [
         userId,
       ]);
     }
@@ -3617,5 +3645,186 @@ router.post(
     }
   }
 );
+
+// Delete manager and all related data
+router.delete("/managers/:managerId", async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { managerId } = req.params;
+    console.log("🔍 Deleting manager with ID:", managerId);
+
+    // Check if manager exists
+    const managerCheck = await client.query(
+      "SELECT manager_id, email FROM managers WHERE manager_id = $1",
+      [managerId]
+    );
+
+    if (managerCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Manager not found" });
+    }
+
+    const managerEmail = managerCheck.rows[0].email;
+    console.log("🔍 Manager found:", managerCheck.rows[0]);
+
+    // Get user ID for this manager
+    const userResult = await client.query(
+      "SELECT id FROM users WHERE email = $1",
+      [managerEmail]
+    );
+
+    const userId = userResult.rows[0]?.id;
+
+    // Start transaction
+    await client.query("BEGIN");
+
+    try {
+      // Delete from all related tables
+      if (userId) {
+        // Delete attendance records
+        const attendanceResult = await client.query(
+          "DELETE FROM attendance WHERE employee_id = $1",
+          [userId]
+        );
+        console.log(
+          "✅ Attendance records deleted:",
+          attendanceResult.rowCount
+        );
+
+        // Delete leave requests
+        const leaveResult = await client.query(
+          "DELETE FROM leave_requests WHERE employee_id = $1",
+          [userId]
+        );
+        console.log("✅ Leave requests deleted:", leaveResult.rowCount);
+
+        // Delete leave balances
+        const balanceResult = await client.query(
+          "DELETE FROM leave_balances WHERE employee_id = $1",
+          [userId]
+        );
+        console.log("✅ Leave balances deleted:", balanceResult.rowCount);
+
+        // Delete comp off balances
+        const compOffResult = await client.query(
+          "DELETE FROM comp_off_balances WHERE employee_id = $1",
+          [userId]
+        );
+        console.log("✅ Comp off balances deleted:", compOffResult.rowCount);
+
+        // Delete employee documents
+        const documentsResult = await client.query(
+          "DELETE FROM employee_documents WHERE employee_id = $1",
+          [userId]
+        );
+        console.log("✅ Employee documents deleted:", documentsResult.rowCount);
+
+        // Delete document collection
+        const docCollectionResult = await client.query(
+          "DELETE FROM document_collection WHERE employee_id = $1",
+          [userId]
+        );
+        console.log(
+          "✅ Document collection deleted:",
+          docCollectionResult.rowCount
+        );
+
+        // Delete expenses
+        const expensesResult = await client.query(
+          "DELETE FROM expenses WHERE employee_id = $1",
+          [userId]
+        );
+        console.log("✅ Expenses deleted:", expensesResult.rowCount);
+
+        // Delete company emails
+        const emailsResult = await client.query(
+          "DELETE FROM company_emails WHERE user_id = $1",
+          [userId]
+        );
+        console.log("✅ Company emails deleted:", emailsResult.rowCount);
+
+        // Delete manager mappings where this user is an employee
+        const employeeMappingResult = await client.query(
+          "DELETE FROM manager_employee_mapping WHERE employee_id = $1",
+          [userId]
+        );
+        console.log(
+          "✅ Employee mappings deleted:",
+          employeeMappingResult.rowCount
+        );
+
+        // Delete manager mappings where this user is a manager
+        const managerMappingResult = await client.query(
+          "DELETE FROM manager_employee_mapping WHERE manager_id = $1",
+          [userId]
+        );
+        console.log(
+          "✅ Manager role mappings deleted:",
+          managerMappingResult.rowCount
+        );
+
+        // Delete employee forms
+        const formsResult = await client.query(
+          "DELETE FROM employee_forms WHERE employee_id = $1",
+          [userId]
+        );
+        console.log("✅ Employee forms deleted:", formsResult.rowCount);
+
+        // Delete onboarded employees
+        const onboardedResult = await client.query(
+          "DELETE FROM onboarded_employees WHERE user_id = $1",
+          [userId]
+        );
+        console.log("✅ Onboarded records deleted:", onboardedResult.rowCount);
+
+        // Delete from employee master
+        const masterResult = await client.query(
+          "DELETE FROM employee_master WHERE company_email = $1",
+          [managerEmail]
+        );
+        console.log("✅ Master records deleted:", masterResult.rowCount);
+
+        // Delete from users table
+        const userDeleteResult = await client.query(
+          "DELETE FROM users WHERE id = $1",
+          [userId]
+        );
+        console.log("✅ User deleted:", userDeleteResult.rowCount);
+      }
+
+      // Delete from managers table
+      const managerResult = await client.query(
+        "DELETE FROM managers WHERE manager_id = $1",
+        [managerId]
+      );
+      console.log("✅ Manager deleted:", managerResult.rowCount);
+
+      // Commit transaction
+      await client.query("COMMIT");
+      console.log("✅ Transaction committed successfully");
+
+      res.json({
+        message: "Manager and all related data deleted successfully",
+      });
+    } catch (deleteError) {
+      await client.query("ROLLBACK");
+      console.error("❌ Error during deletion process:", deleteError);
+      throw deleteError;
+    }
+  } catch (error) {
+    console.error("❌ Delete manager error:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      error: "Failed to delete manager",
+      details: error.message,
+    });
+  } finally {
+    client.release();
+  }
+});
 
 module.exports = router;
