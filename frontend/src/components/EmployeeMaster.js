@@ -314,7 +314,10 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
       {showAddForm && (
         <div className="mb-8">
           <React.Suspense fallback={<div>Loading form...</div>}>
-            <ManualEmployeeAdd onEmployeeAdded={handleEmployeeAdded} />
+            <ManualEmployeeAdd
+              onSuccess={handleEmployeeAdded}
+              onClose={() => setShowAddForm(false)}
+            />
           </React.Suspense>
         </div>
       )}
