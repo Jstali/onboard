@@ -20,6 +20,10 @@ import EmployeeLeaveRequest from "./components/EmployeeLeaveRequest";
 import ManagerLeaveApproval from "./components/ManagerLeaveApproval";
 import HRLeaveApproval from "./components/HRLeaveApproval";
 import ManagerDashboard from "./components/ManagerDashboard";
+import ManagerAttendance from "./components/ManagerAttendance";
+import ManagerLeaveRequests from "./components/ManagerLeaveRequests";
+import ManagerLeaveRequest from "./components/ManagerLeaveRequest";
+import ManagerEmployeeAttendance from "./components/ManagerEmployeeAttendance";
 import Profile from "./components/Profile";
 
 function AppRoutes() {
@@ -47,6 +51,8 @@ function AppRoutes() {
           <ProtectedRoute>
             {user?.role === "hr" ? (
               <Navigate to="/hr" />
+            ) : user?.role === "manager" ? (
+              <Navigate to="/manager/dashboard" />
             ) : (
               <Navigate to="/employee" />
             )}
@@ -67,7 +73,7 @@ function AppRoutes() {
         path="/attendance"
         element={
           <ProtectedRoute role="employee">
-             <EmployeeAttendance />
+            <EmployeeAttendance />
           </ProtectedRoute>
         }
       />
@@ -98,10 +104,50 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/manager/dashboard"
+        element={
+          <ProtectedRoute role="manager">
+            <ManagerDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manager/my-attendance"
+        element={
+          <ProtectedRoute role="manager">
+            <ManagerAttendance />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manager/attendance"
+        element={
+          <ProtectedRoute role="manager">
+            <ManagerEmployeeAttendance />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manager/attendance/:employeeId"
+        element={
+          <ProtectedRoute role="manager">
+            <ManagerAttendance />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/manager/leave-requests"
         element={
           <ProtectedRoute role="manager">
-            <ManagerLeaveApproval />
+            <ManagerLeaveRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manager/leave-request"
+        element={
+          <ProtectedRoute role="manager">
+            <ManagerLeaveRequest />
           </ProtectedRoute>
         }
       />

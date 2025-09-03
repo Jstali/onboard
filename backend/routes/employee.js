@@ -18,6 +18,21 @@ router.post(
 
       const { formData, files = [] } = req.body;
 
+      // Validate phone number uniqueness on server side
+      const phoneNumbers = [
+        formData.phone,
+        formData.emergencyContact?.phone,
+        formData.emergencyContact2?.phone,
+      ].filter((phone) => phone && phone.trim() !== "");
+
+      const uniquePhoneNumbers = new Set(phoneNumbers);
+      if (uniquePhoneNumbers.size !== phoneNumbers.length) {
+        return res.status(400).json({
+          error:
+            "All phone numbers (employee, emergency contact 1, and emergency contact 2) must be different",
+        });
+      }
+
       // Try to find user by email first, then by name and phone
       let userResult = await pool.query(
         "SELECT id FROM users WHERE email = $1",

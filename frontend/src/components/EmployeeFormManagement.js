@@ -669,6 +669,50 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                 </div>
               )}
 
+              {/* Second Emergency Contact Information */}
+              {(selectedForm.emergency_contact_name2 ||
+                selectedForm.emergency_contact_phone2) && (
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">
+                    Second Emergency Contact
+                  </h4>
+                  <div className="bg-orange-50 rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedForm.emergency_contact_name2 && (
+                        <div>
+                          <label className="block text-sm font-medium text-orange-700 mb-1">
+                            Contact Name
+                          </label>
+                          <p className="text-sm text-orange-900">
+                            {selectedForm.emergency_contact_name2}
+                          </p>
+                        </div>
+                      )}
+                      {selectedForm.emergency_contact_phone2 && (
+                        <div>
+                          <label className="block text-sm font-medium text-orange-700 mb-1">
+                            Contact Phone
+                          </label>
+                          <p className="text-sm text-orange-900">
+                            {selectedForm.emergency_contact_phone2}
+                          </p>
+                        </div>
+                      )}
+                      {selectedForm.emergency_contact_relationship2 && (
+                        <div>
+                          <label className="block text-sm font-medium text-orange-700 mb-1">
+                            Relationship
+                          </label>
+                          <p className="text-sm text-orange-900">
+                            {selectedForm.emergency_contact_relationship2}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Form Data */}
               <div>
                 <h4 className="text-md font-medium text-gray-900 mb-3">
@@ -898,6 +942,11 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       name: formData.get("emergency_name"),
                       phone: formData.get("emergency_phone"),
                       relationship: formData.get("emergency_relationship"),
+                    },
+                    emergencyContact2: {
+                      name: formData.get("emergency_name2"),
+                      phone: formData.get("emergency_phone2"),
+                      relationship: formData.get("emergency_relationship2"),
                     },
                   },
                   employee_type: formData.get("employment_type"),
@@ -1151,6 +1200,57 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       name="emergency_relationship"
                       defaultValue={
                         editingEmployee.form_data?.emergencyContact
+                          ?.relationship || ""
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">
+                  Second Emergency Contact
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Name
+                    </label>
+                    <input
+                      type="text"
+                      name="emergency_name2"
+                      defaultValue={
+                        editingEmployee.form_data?.emergencyContact2?.name || ""
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      name="emergency_phone2"
+                      defaultValue={
+                        editingEmployee.form_data?.emergencyContact2?.phone ||
+                        ""
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Relationship
+                    </label>
+                    <input
+                      type="text"
+                      name="emergency_relationship2"
+                      defaultValue={
+                        editingEmployee.form_data?.emergencyContact2
                           ?.relationship || ""
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

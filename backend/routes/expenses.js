@@ -254,6 +254,7 @@ router.get("/categories", async (req, res) => {
         "Conference",
         "Books",
       ],
+      Gifts: ["Gifts(clients)", "Gifts(onsite)"],
       Miscellaneous: ["Internet", "Phone", "Utilities", "Maintenance", "Other"],
       Other: [],
     };

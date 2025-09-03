@@ -64,11 +64,10 @@ router.put("/document-collection/test", (req, res) => {
 router.get("/managers", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT employee_name, company_email 
-      FROM employee_master 
+      SELECT manager_name as employee_name, email as company_email 
+      FROM managers 
       WHERE status = 'active' 
-      AND employee_name IN ('Pradeep', 'Vinod', 'Vamshi', 'Rakesh')
-      ORDER BY employee_name
+      ORDER BY manager_name
     `);
 
     res.json({
@@ -127,7 +126,7 @@ async function createDocumentCollectionForEmployee(
             "HSC Certificate (12th)",
             "HSC Marksheet (12th)",
             "Graduation Consolidated Marksheet",
-            "Graduation Original/Provisional Certificate",
+            "Latest Graduation",
             "Aadhaar Card",
             "PAN Card",
           ];
@@ -145,7 +144,7 @@ async function createDocumentCollectionForEmployee(
             "HSC Certificate (12th)",
             "HSC Marksheet (12th)",
             "Graduation Consolidated Marksheet",
-            "Graduation Original/Provisional Certificate",
+            "Latest Graduation",
             "Aadhaar Card",
             "PAN Card",
             "Passport",
@@ -163,7 +162,7 @@ async function createDocumentCollectionForEmployee(
             "HSC Certificate (12th)",
             "HSC Marksheet (12th)",
             "Graduation Consolidated Marksheet",
-            "Graduation Original/Provisional Certificate",
+            "Latest Graduation",
             "Aadhaar Card",
             "PAN Card",
           ];
@@ -175,7 +174,7 @@ async function createDocumentCollectionForEmployee(
             "HSC Certificate (12th)",
             "HSC Marksheet (12th)",
             "Graduation Consolidated Marksheet",
-            "Graduation Original/Provisional Certificate",
+            "Latest Graduation",
             "Aadhaar Card",
             "PAN Card",
           ];
@@ -349,6 +348,9 @@ router.get("/employees", async (req, res) => {
         u.emergency_contact_name,
         u.emergency_contact_phone,
         u.emergency_contact_relationship,
+        u.emergency_contact_name2,
+        u.emergency_contact_phone2,
+        u.emergency_contact_relationship2,
         u.created_at, 
         ef.type, 
         ef.status as form_status,
@@ -406,6 +408,9 @@ router.get("/employee-forms", async (req, res) => {
         u.emergency_contact_name,
         u.emergency_contact_phone,
         u.emergency_contact_relationship,
+        u.emergency_contact_name2,
+        u.emergency_contact_phone2,
+        u.emergency_contact_relationship2,
         u.created_at as user_created_at,
         em.employee_id as assigned_employee_id,
         em.manager_name as assigned_manager,
@@ -450,6 +455,9 @@ router.get("/approved-employee-forms", async (req, res) => {
         u.emergency_contact_name,
         u.emergency_contact_phone,
         u.emergency_contact_relationship,
+        u.emergency_contact_name2,
+        u.emergency_contact_phone2,
+        u.emergency_contact_relationship2,
         u.created_at as user_created_at,
         em.employee_id as assigned_employee_id,
         em.manager_name as assigned_manager,
@@ -509,7 +517,7 @@ router.post("/sync-document-collection", async (req, res) => {
               "HSC Certificate (12th)",
               "HSC Marksheet (12th)",
               "Graduation Consolidated Marksheet",
-              "Graduation Original/Provisional Certificate",
+              "Latest Graduation",
               "Aadhaar Card",
               "PAN Card",
             ];
@@ -527,7 +535,7 @@ router.post("/sync-document-collection", async (req, res) => {
               "HSC Certificate (12th)",
               "HSC Marksheet (12th)",
               "Graduation Consolidated Marksheet",
-              "Graduation Original/Provisional Certificate",
+              "Latest Graduation",
               "Aadhaar Card",
               "PAN Card",
               "Passport",
@@ -545,7 +553,7 @@ router.post("/sync-document-collection", async (req, res) => {
               "HSC Certificate (12th)",
               "HSC Marksheet (12th)",
               "Graduation Consolidated Marksheet",
-              "Graduation Original/Provisional Certificate",
+              "Latest Graduation",
               "Aadhaar Card",
               "PAN Card",
             ];
@@ -557,7 +565,7 @@ router.post("/sync-document-collection", async (req, res) => {
               "HSC Certificate (12th)",
               "HSC Marksheet (12th)",
               "Graduation Consolidated Marksheet",
-              "Graduation Original/Provisional Certificate",
+              "Latest Graduation",
               "Aadhaar Card",
               "PAN Card",
             ];
@@ -1758,6 +1766,9 @@ router.get("/onboarded", async (req, res) => {
         u.emergency_contact_name,
         u.emergency_contact_phone,
         u.emergency_contact_relationship,
+        u.emergency_contact_name2,
+        u.emergency_contact_phone2,
+        u.emergency_contact_relationship2,
         ef.type as employee_type,
         ef.form_data,
         ef.submitted_at,
@@ -1898,9 +1909,12 @@ router.put(
         });
       }
 
-      // Get manager details from managers table
+      // Get manager details from managers table and get the user ID
       const managerResult = await pool.query(
-        "SELECT manager_id, manager_name FROM managers WHERE manager_name ILIKE $1 AND status = 'active'",
+        `SELECT m.manager_id, m.manager_name, u.id as user_id 
+         FROM managers m 
+         LEFT JOIN users u ON m.email = u.email 
+         WHERE m.manager_name ILIKE $1 AND m.status = 'active'`,
         [manager]
       );
 
@@ -1911,6 +1925,12 @@ router.put(
       }
 
       const managerInfo = managerResult.rows[0];
+
+      if (!managerInfo.user_id) {
+        return res.status(400).json({
+          error: "Manager does not have a user account",
+        });
+      }
 
       // Generate unique 6-digit employee ID
       const employeeId = await generateEmployeeId();
@@ -1950,7 +1970,10 @@ router.put(
 
       if (manager2) {
         const manager2Result = await pool.query(
-          "SELECT manager_id, manager_name FROM managers WHERE manager_id = $1",
+          `SELECT m.manager_id, m.manager_name, u.id as user_id 
+           FROM managers m 
+           LEFT JOIN users u ON m.email = u.email 
+           WHERE m.manager_id = $1`,
           [manager2]
         );
         if (manager2Result.rows.length > 0) {
@@ -1960,7 +1983,10 @@ router.put(
 
       if (manager3) {
         const manager3Result = await pool.query(
-          "SELECT manager_id, manager_name FROM managers WHERE manager_id = $1",
+          `SELECT m.manager_id, m.manager_name, u.id as user_id 
+           FROM managers m 
+           LEFT JOIN users u ON m.email = u.email 
+           WHERE m.manager_id = $1`,
           [manager3]
         );
         if (manager3Result.rows.length > 0) {
@@ -1996,6 +2022,50 @@ router.put(
       );
 
       console.log("✅ Employee moved to master table successfully");
+
+      // Create manager-employee mapping entries for all assigned managers
+      const mappingPromises = [];
+
+      // Primary manager mapping
+      mappingPromises.push(
+        pool.query(
+          `INSERT INTO manager_employee_mapping (manager_id, employee_id, mapping_type, is_active)
+           VALUES ($1, $2, 'primary', true)
+           ON CONFLICT (manager_id, employee_id, mapping_type) 
+           DO UPDATE SET is_active = true, updated_at = CURRENT_TIMESTAMP`,
+          [managerInfo.user_id, onboarded.user_id]
+        )
+      );
+
+      // Secondary manager mapping (if assigned)
+      if (manager2Info?.user_id) {
+        mappingPromises.push(
+          pool.query(
+            `INSERT INTO manager_employee_mapping (manager_id, employee_id, mapping_type, is_active)
+             VALUES ($1, $2, 'secondary', true)
+             ON CONFLICT (manager_id, employee_id, mapping_type) 
+             DO UPDATE SET is_active = true, updated_at = CURRENT_TIMESTAMP`,
+            [manager2Info.user_id, onboarded.user_id]
+          )
+        );
+      }
+
+      // Tertiary manager mapping (if assigned)
+      if (manager3Info?.user_id) {
+        mappingPromises.push(
+          pool.query(
+            `INSERT INTO manager_employee_mapping (manager_id, employee_id, mapping_type, is_active)
+             VALUES ($1, $2, 'tertiary', true)
+             ON CONFLICT (manager_id, employee_id, mapping_type) 
+             DO UPDATE SET is_active = true, updated_at = CURRENT_TIMESTAMP`,
+            [manager3Info.user_id, onboarded.user_id]
+          )
+        );
+      }
+
+      // Execute all mapping insertions
+      await Promise.all(mappingPromises);
+      console.log("✅ Manager-employee mappings created successfully");
 
       res.json({
         message:
@@ -2217,6 +2287,96 @@ router.post(
       }
 
       console.log("✅ Employee Master synchronization completed successfully");
+
+      // Create manager-employee mapping entries for all assigned managers
+      const mappingPromises = [];
+      const userId =
+        userExistsResult.rows[0]?.id ||
+        (
+          await pool.query("SELECT id FROM users WHERE email = $1", [
+            companyEmail,
+          ])
+        ).rows[0].id;
+
+      // Get manager user IDs from managers table
+      let primaryManagerUserId = null;
+      let secondaryManagerUserId = null;
+      let tertiaryManagerUserId = null;
+
+      if (managerId) {
+        const primaryManagerResult = await pool.query(
+          "SELECT u.id FROM managers m JOIN users u ON m.email = u.email WHERE m.manager_id = $1",
+          [managerId]
+        );
+        if (primaryManagerResult.rows.length > 0) {
+          primaryManagerUserId = primaryManagerResult.rows[0].id;
+        }
+      }
+
+      if (manager2Id) {
+        const secondaryManagerResult = await pool.query(
+          "SELECT u.id FROM managers m JOIN users u ON m.email = u.email WHERE m.manager_id = $1",
+          [manager2Id]
+        );
+        if (secondaryManagerResult.rows.length > 0) {
+          secondaryManagerUserId = secondaryManagerResult.rows[0].id;
+        }
+      }
+
+      if (manager3Id) {
+        const tertiaryManagerResult = await pool.query(
+          "SELECT u.id FROM managers m JOIN users u ON m.email = u.email WHERE m.manager_id = $1",
+          [manager3Id]
+        );
+        if (tertiaryManagerResult.rows.length > 0) {
+          tertiaryManagerUserId = tertiaryManagerResult.rows[0].id;
+        }
+      }
+
+      // Primary manager mapping
+      if (primaryManagerUserId) {
+        mappingPromises.push(
+          pool.query(
+            `INSERT INTO manager_employee_mapping (manager_id, employee_id, mapping_type, is_active)
+             VALUES ($1, $2, 'primary', true)
+             ON CONFLICT (manager_id, employee_id, mapping_type) 
+             DO UPDATE SET is_active = true, updated_at = CURRENT_TIMESTAMP`,
+            [primaryManagerUserId, userId]
+          )
+        );
+      }
+
+      // Secondary manager mapping (if assigned)
+      if (secondaryManagerUserId) {
+        mappingPromises.push(
+          pool.query(
+            `INSERT INTO manager_employee_mapping (manager_id, employee_id, mapping_type, is_active)
+             VALUES ($1, $2, 'secondary', true)
+             ON CONFLICT (manager_id, employee_id, mapping_type) 
+             DO UPDATE SET is_active = true, updated_at = CURRENT_TIMESTAMP`,
+            [secondaryManagerUserId, userId]
+          )
+        );
+      }
+
+      // Tertiary manager mapping (if assigned)
+      if (tertiaryManagerUserId) {
+        mappingPromises.push(
+          pool.query(
+            `INSERT INTO manager_employee_mapping (manager_id, employee_id, mapping_type, is_active)
+             VALUES ($1, $2, 'tertiary', true)
+             ON CONFLICT (manager_id, employee_id, mapping_type) 
+             DO UPDATE SET is_active = true, updated_at = CURRENT_TIMESTAMP`,
+            [tertiaryManagerUserId, userId]
+          )
+        );
+      }
+
+      // Execute all mapping insertions
+      if (mappingPromises.length > 0) {
+        await Promise.all(mappingPromises);
+        console.log("✅ Manager-employee mappings created successfully");
+      }
 
       res
         .status(201)
@@ -2446,32 +2606,6 @@ router.delete("/employees/:id", async (req, res) => {
     });
   } finally {
     client.release();
-  }
-});
-
-// Get all managers
-router.get("/managers", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT 
-        id,
-        manager_id,
-        manager_name,
-        email,
-        department,
-        designation,
-        status,
-        created_at,
-        updated_at
-      FROM managers
-      WHERE status = 'active'
-      ORDER BY manager_name
-    `);
-
-    res.json({ managers: result.rows });
-  } catch (error) {
-    console.error("Get managers error:", error);
-    res.status(500).json({ error: "Failed to get managers" });
   }
 });
 
@@ -2849,6 +2983,21 @@ router.put(
       const { id } = req.params;
       const { form_data, employee_type, manager1, manager2, manager3 } =
         req.body;
+
+      // Validate phone number uniqueness on server side
+      const phoneNumbers = [
+        form_data.phone,
+        form_data.emergencyContact?.phone,
+        form_data.emergencyContact2?.phone,
+      ].filter((phone) => phone && phone.trim() !== "");
+
+      const uniquePhoneNumbers = new Set(phoneNumbers);
+      if (uniquePhoneNumbers.size !== phoneNumbers.length) {
+        return res.status(400).json({
+          error:
+            "All phone numbers (employee, emergency contact 1, and emergency contact 2) must be different",
+        });
+      }
 
       // Check if form exists
       const existingForm = await pool.query(

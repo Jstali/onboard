@@ -45,6 +45,15 @@ const EmployeeAttendance = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         console.log("No token found, skipping attendance fetch");
+        toast.error("Please login to view attendance");
+        setLoading(false);
+        return;
+      }
+
+      // Validate date parameters
+      if (!startDate || !endDate) {
+        console.error("Missing date parameters");
+        toast.error("Invalid date range provided");
         setLoading(false);
         return;
       }
@@ -63,18 +72,45 @@ const EmployeeAttendance = () => {
         if (contentType && contentType.includes("application/json")) {
           const data = await response.json();
           setAttendance(data.attendance || []);
+
+          // Show friendly message if no records found
+          if (data.attendance && data.attendance.length === 0) {
+            toast.info("No attendance records found for the selected period");
+          }
         } else {
           console.error("Response is not JSON:", contentType);
+          toast.error("Invalid response format from server");
+          setAttendance([]);
         }
+      } else if (response.status === 400) {
+        const errorData = await response.json().catch(() => ({}));
+        const message = errorData.error || "Invalid request parameters";
+        toast.error(message);
+        setAttendance([]);
       } else if (response.status === 401) {
         console.log("Unauthorized - user needs to login");
         // Clear invalid token
         localStorage.removeItem("token");
+        toast.error("Please login again to continue");
+        setAttendance([]);
+      } else if (response.status === 404) {
+        const errorData = await response.json().catch(() => ({}));
+        const message = errorData.error || "No attendance records found";
+        toast.info(message);
+        setAttendance([]);
+      } else if (response.status === 500) {
+        console.error("Server error fetching attendance:", response.status);
+        toast.error("Failed to fetch attendance. Please try again.");
+        setAttendance([]);
       } else {
         console.error("Failed to fetch attendance:", response.status);
+        toast.error("Failed to fetch attendance. Please try again.");
+        setAttendance([]);
       }
     } catch (error) {
       console.error("Error fetching attendance:", error);
+      toast.error("Failed to fetch attendance. Please try again.");
+      setAttendance([]);
     } finally {
       setLoading(false);
     }
@@ -580,11 +616,11 @@ const EmployeeAttendance = () => {
               {
                 attendance.filter((a) => {
                   const attendanceDate = new Date(a.date);
-                  const weekStart = getWeekDates(new Date()).start;
-                  const weekEnd = getWeekDates(new Date()).end;
+                  const monthStart = getMonthDates(currentMonth).start;
+                  const monthEnd = getMonthDates(currentMonth).end;
                   return (
-                    attendanceDate >= weekStart &&
-                    attendanceDate <= weekEnd &&
+                    attendanceDate >= monthStart &&
+                    attendanceDate <= monthEnd &&
                     a.status === "present"
                   );
                 }).length
@@ -597,11 +633,11 @@ const EmployeeAttendance = () => {
               {
                 attendance.filter((a) => {
                   const attendanceDate = new Date(a.date);
-                  const weekStart = getWeekDates(new Date()).start;
-                  const weekEnd = getWeekDates(new Date()).end;
+                  const monthStart = getMonthDates(currentMonth).start;
+                  const monthEnd = getMonthDates(currentMonth).end;
                   return (
-                    attendanceDate >= weekStart &&
-                    attendanceDate <= weekEnd &&
+                    attendanceDate >= monthStart &&
+                    attendanceDate <= monthEnd &&
                     a.status === "wfh"
                   );
                 }).length
@@ -614,11 +650,11 @@ const EmployeeAttendance = () => {
               {
                 attendance.filter((a) => {
                   const attendanceDate = new Date(a.date);
-                  const weekStart = getWeekDates(new Date()).start;
-                  const weekEnd = getWeekDates(new Date()).end;
+                  const monthStart = getMonthDates(currentMonth).start;
+                  const monthEnd = getMonthDates(currentMonth).end;
                   return (
-                    attendanceDate >= weekStart &&
-                    attendanceDate <= weekEnd &&
+                    attendanceDate >= monthStart &&
+                    attendanceDate <= monthEnd &&
                     a.status === "leave"
                   );
                 }).length
@@ -631,11 +667,11 @@ const EmployeeAttendance = () => {
               {
                 attendance.filter((a) => {
                   const attendanceDate = new Date(a.date);
-                  const weekStart = getWeekDates(new Date()).start;
-                  const weekEnd = getWeekDates(new Date()).end;
+                  const monthStart = getMonthDates(currentMonth).start;
+                  const monthEnd = getMonthDates(currentMonth).end;
                   return (
-                    attendanceDate >= weekStart &&
-                    attendanceDate <= weekEnd &&
+                    attendanceDate >= monthStart &&
+                    attendanceDate <= monthEnd &&
                     a.status === "absent"
                   );
                 }).length
@@ -648,11 +684,11 @@ const EmployeeAttendance = () => {
               {
                 attendance.filter((a) => {
                   const attendanceDate = new Date(a.date);
-                  const weekStart = getWeekDates(new Date()).start;
-                  const weekEnd = getWeekDates(new Date()).end;
+                  const monthStart = getMonthDates(currentMonth).start;
+                  const monthEnd = getMonthDates(currentMonth).end;
                   return (
-                    attendanceDate >= weekStart &&
-                    attendanceDate <= weekEnd &&
+                    attendanceDate >= monthStart &&
+                    attendanceDate <= monthEnd &&
                     a.status === "half_day"
                   );
                 }).length

@@ -5,6 +5,7 @@ import { FaEdit, FaEye, FaTrash } from "react-icons/fa";
 
 const OnboardedEmployees = ({ onRefresh }) => {
   const [onboardedEmployees, setOnboardedEmployees] = useState([]);
+  const [availableManagers, setAvailableManagers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -19,6 +20,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
 
   useEffect(() => {
     fetchOnboardedEmployees();
+    fetchAvailableManagers();
   }, []);
 
   // Ensure form data is properly initialized when modal opens
@@ -48,6 +50,22 @@ const OnboardedEmployees = ({ onRefresh }) => {
       toast.error("Failed to fetch onboarded employees");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAvailableManagers = async () => {
+    try {
+      const response = await axios.get("/hr/managers");
+      setAvailableManagers(response.data.managers || []);
+    } catch (error) {
+      console.error("Error fetching managers:", error);
+      // Fallback to hardcoded managers if API fails
+      setAvailableManagers([
+        { employee_name: "Pradeep", company_email: "pradeep@nxzen.com" },
+        { employee_name: "Vamshi", company_email: "vamshi@company.com" },
+        { employee_name: "Vinod", company_email: "vinod@company.com" },
+        { employee_name: "Rakesh", company_email: "rakesh@company.com" },
+      ]);
     }
   };
 
@@ -341,10 +359,14 @@ const OnboardedEmployees = ({ onRefresh }) => {
                   required
                 >
                   <option value="">Select a manager</option>
-                  <option value="pradeep">Pradeep</option>
-                  <option value="vamshi">Vamshi</option>
-                  <option value="vinod">Vinod</option>
-                  <option value="rakesh">Rakesh</option>
+                  {availableManagers.map((manager) => (
+                    <option
+                      key={manager.employee_name}
+                      value={manager.employee_name}
+                    >
+                      {manager.employee_name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -363,10 +385,14 @@ const OnboardedEmployees = ({ onRefresh }) => {
                   className="input-field"
                 >
                   <option value="">Select a manager (optional)</option>
-                  <option value="pradeep">Pradeep</option>
-                  <option value="vamshi">Vamshi</option>
-                  <option value="vinod">Vinod</option>
-                  <option value="rakesh">Rakesh</option>
+                  {availableManagers.map((manager) => (
+                    <option
+                      key={manager.employee_name}
+                      value={manager.employee_name}
+                    >
+                      {manager.employee_name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -385,10 +411,14 @@ const OnboardedEmployees = ({ onRefresh }) => {
                   className="input-field"
                 >
                   <option value="">Select a manager (optional)</option>
-                  <option value="pradeep">Pradeep</option>
-                  <option value="vamshi">Vamshi</option>
-                  <option value="vinod">Vinod</option>
-                  <option value="rakesh">Rakesh</option>
+                  {availableManagers.map((manager) => (
+                    <option
+                      key={manager.employee_name}
+                      value={manager.employee_name}
+                    >
+                      {manager.employee_name}
+                    </option>
+                  ))}
                 </select>
               </div>
 

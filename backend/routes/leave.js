@@ -59,6 +59,58 @@ const getTotalManagerCount = (leaveRequest) => {
   return count;
 };
 
+// Helper function to get manager's direct reporting manager
+const getManagerDirectManager = async (managerId) => {
+  try {
+    // Get the manager's direct reporting manager from employee_master table
+    const managerResult = await pool.query(
+      `SELECT em.manager_id, em.manager_name, em.company_email
+       FROM employee_master em
+       WHERE em.company_email = (
+         SELECT email FROM users WHERE id = $1
+       )`,
+      [managerId]
+    );
+
+    if (managerResult.rows.length === 0) {
+      console.log("🔍 No direct manager found for manager:", managerId);
+      return null;
+    }
+
+    const manager = managerResult.rows[0];
+
+    if (!manager.manager_id || !manager.manager_name) {
+      console.log("🔍 Manager has no direct reporting manager");
+      return null;
+    }
+
+    // Get the direct manager's details
+    const directManagerResult = await pool.query(
+      `SELECT em.employee_name as manager_name, em.company_email, u.id as user_id
+       FROM employee_master em
+       LEFT JOIN users u ON u.email = em.company_email
+       WHERE em.employee_name = $1 AND em.status = 'active'`,
+      [manager.manager_name]
+    );
+
+    if (directManagerResult.rows.length === 0) {
+      console.log("🔍 Direct manager not found in active employees");
+      return null;
+    }
+
+    const directManager = directManagerResult.rows[0];
+
+    return {
+      manager_id: directManager.user_id,
+      manager_name: directManager.manager_name,
+      email: directManager.company_email,
+    };
+  } catch (error) {
+    console.error("❌ Error getting manager's direct manager:", error);
+    return null;
+  }
+};
+
 // Helper function to calculate leave days
 const calculateLeaveDays = (fromDate, toDate, halfDay) => {
   const start = new Date(fromDate);
@@ -350,7 +402,14 @@ router.post(
         return res.status(400).json({ errors: errors });
       }
 
-      const { leaveType, fromDate, toDate, reason, halfDay = false } = req.body;
+      const {
+        leaveType,
+        fromDate,
+        toDate,
+        reason,
+        halfDay = false,
+        role = "employee",
+      } = req.body;
       const employeeId = req.user.userId;
 
       // Validate and convert dates
@@ -441,11 +500,11 @@ router.post(
       INSERT INTO leave_requests (
         series, employee_id, employee_name, leave_type, leave_balance_before,
         from_date, to_date, half_day, total_leave_days, reason, 
-        status, approval_token,
+        status, role, approval_token,
         manager1_id, manager1_name, manager1_status,
         manager2_id, manager2_name, manager2_status,
         manager3_id, manager3_name, manager3_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
       RETURNING *
     `,
         [
@@ -459,7 +518,10 @@ router.post(
           halfDay,
           totalLeaveDays,
           reason,
-          "pending_manager_approval", // Start with manager approval
+          role === "manager"
+            ? "pending_hr_approval"
+            : "pending_manager_approval", // Managers go directly to HR
+          role,
           approvalToken,
           managers[0]?.manager_id || null,
           managers[0]?.manager_name || null,
@@ -475,47 +537,118 @@ router.post(
 
       const leaveRequest = insertResult.rows[0];
 
-      // Send email notification to PRIMARY MANAGER ONLY (manager1)
-      console.log("🔍 Managers found:", managers);
-      if (managers && managers.length > 0) {
-        // Only send email to the primary manager (first manager in the array)
-        const primaryManager = managers[0];
-        console.log(
-          "📧 Sending email to PRIMARY manager only:",
-          primaryManager.email
-        );
+      // Handle email notifications based on role
+      if (role === "manager") {
+        // For manager requests, send to their direct manager first
+        console.log("📧 Manager leave request - sending to direct manager");
 
-        const emailData = {
-          id: leaveRequest.id,
-          employeeName,
-          employeeEmail: employee.email, // Add employee email for reply-to functionality
-          leaveType,
-          fromDate,
-          toDate,
-          totalDays: totalLeaveDays,
-          reason,
-          approvalToken,
-          totalManagers: managers.length,
-          primaryManagerOnly: true, // Flag to indicate this is primary manager only
-        };
+        const directManager = await getManagerDirectManager(employeeId);
 
-        // Send email ONLY to primary manager
-        sendLeaveRequestToManager(primaryManager.email, emailData)
-          .then((emailResult) => {
-            console.log("📧 Email sent to primary manager:", emailResult);
-          })
-          .catch((emailError) => {
-            console.error(
-              "❌ Email sending to primary manager failed:",
-              emailError
-            );
-          });
+        if (directManager) {
+          console.log(
+            "📧 Sending manager leave request to direct manager:",
+            directManager.email
+          );
 
-        console.log(
-          "📧 Note: Email sent only to primary manager. Optional managers (manager2, manager3) will not receive emails."
-        );
+          const emailData = {
+            id: leaveRequest.id,
+            employeeName,
+            employeeEmail: employee.email,
+            leaveType,
+            fromDate,
+            toDate,
+            totalDays: totalLeaveDays,
+            reason,
+            approvalToken,
+            isManagerRequest: true,
+          };
+
+          // Send email to direct manager for manager requests
+          sendLeaveRequestToManager(directManager.email, emailData)
+            .then((emailResult) => {
+              console.log(
+                "📧 Email sent to direct manager for manager request:",
+                emailResult
+              );
+            })
+            .catch((emailError) => {
+              console.error(
+                "❌ Email sending to direct manager failed:",
+                emailError
+              );
+            });
+        } else {
+          // If no direct manager, send to HR
+          console.log("📧 No direct manager found - sending to HR");
+          const hrEmail = "hr@nxzen.com";
+
+          const emailData = {
+            id: leaveRequest.id,
+            employeeName,
+            employeeEmail: employee.email,
+            leaveType,
+            fromDate,
+            toDate,
+            totalDays: totalLeaveDays,
+            reason,
+            approvalToken,
+            isManagerRequest: true,
+          };
+
+          sendLeaveRequestToManager(hrEmail, emailData)
+            .then((emailResult) => {
+              console.log(
+                "📧 Email sent to HR for manager request:",
+                emailResult
+              );
+            })
+            .catch((emailError) => {
+              console.error("❌ Email sending to HR failed:", emailError);
+            });
+        }
       } else {
-        console.log("❌ No manager found for employee:", employeeId);
+        // For employee requests, send to manager as before
+        console.log("🔍 Managers found:", managers);
+        if (managers && managers.length > 0) {
+          // Only send email to the primary manager (first manager in the array)
+          const primaryManager = managers[0];
+          console.log(
+            "📧 Sending email to PRIMARY manager only:",
+            primaryManager.email
+          );
+
+          const emailData = {
+            id: leaveRequest.id,
+            employeeName,
+            employeeEmail: employee.email, // Add employee email for reply-to functionality
+            leaveType,
+            fromDate,
+            toDate,
+            totalDays: totalLeaveDays,
+            reason,
+            approvalToken,
+            totalManagers: managers.length,
+            primaryManagerOnly: true, // Flag to indicate this is primary manager only
+          };
+
+          // Send email ONLY to primary manager
+          sendLeaveRequestToManager(primaryManager.email, emailData)
+            .then((emailResult) => {
+              console.log("📧 Email sent to primary manager:", emailResult);
+            })
+            .catch((emailError) => {
+              console.error(
+                "❌ Email sending to primary manager failed:",
+                emailError
+              );
+            });
+
+          console.log(
+            "📧 Note: Email sent only to primary manager. Optional managers (manager2, manager3) will not receive emails."
+          );
+        } else {
+          console.log("❌ No manager found for employee:", employeeId);
+        }
       }
 
       res.status(201).json({
@@ -964,28 +1097,44 @@ router.put(
 
       const leaveRequest = leaveRequestResult.rows[0];
 
-      // Check if this manager is assigned to this leave request
-      let managerStatusField = null;
+      // Check if this is a manager leave request
+      if (leaveRequest.role === "manager") {
+        // For manager leave requests, check if this manager is the direct manager
+        const directManager = await getManagerDirectManager(
+          leaveRequest.employee_id
+        );
 
-      if (
-        leaveRequest.manager1_id &&
-        leaveRequest.manager1_name === managerName
-      ) {
+        if (!directManager || directManager.manager_id !== managerId) {
+          return res.status(403).json({
+            error:
+              "You are not the direct manager for this manager leave request",
+          });
+        }
+
+        // For manager requests, we'll use manager1_status field
         managerStatusField = "manager1_status";
-      } else if (
-        leaveRequest.manager2_id &&
-        leaveRequest.manager2_name === managerName
-      ) {
-        managerStatusField = "manager2_status";
-      } else if (
-        leaveRequest.manager3_id &&
-        leaveRequest.manager3_name === managerName
-      ) {
-        managerStatusField = "manager3_status";
       } else {
-        return res.status(403).json({
-          error: "You are not assigned as a manager for this leave request",
-        });
+        // For employee requests, check if this manager is assigned to this leave request
+        if (
+          leaveRequest.manager1_id &&
+          leaveRequest.manager1_name === managerName
+        ) {
+          managerStatusField = "manager1_status";
+        } else if (
+          leaveRequest.manager2_id &&
+          leaveRequest.manager2_name === managerName
+        ) {
+          managerStatusField = "manager2_status";
+        } else if (
+          leaveRequest.manager3_id &&
+          leaveRequest.manager3_name === managerName
+        ) {
+          managerStatusField = "manager3_status";
+        } else {
+          return res.status(403).json({
+            error: "You are not assigned as a manager for this leave request",
+          });
+        }
       }
 
       // Check if this manager has already processed this request
@@ -1029,12 +1178,23 @@ router.put(
         );
       } else if (allManagersApproved) {
         // If all assigned managers approve, move to HR approval
-        finalStatus = "manager_approved";
-        await pool.query(
-          `UPDATE leave_requests SET status = $1, manager_approved_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-          [finalStatus, id]
-        );
-        shouldNotifyHR = true;
+        if (leaveRequest.role === "manager") {
+          // For manager requests, go directly to HR approval
+          finalStatus = "manager_approved";
+          await pool.query(
+            `UPDATE leave_requests SET status = $1, manager_approved_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+            [finalStatus, id]
+          );
+          shouldNotifyHR = true;
+        } else {
+          // For employee requests, move to HR approval
+          finalStatus = "manager_approved";
+          await pool.query(
+            `UPDATE leave_requests SET status = $1, manager_approved_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+            [finalStatus, id]
+          );
+          shouldNotifyHR = true;
+        }
       } else {
         // Update status to show partial approval
         const approvedCount = getApprovedManagerCount(updatedLeaveRequest);

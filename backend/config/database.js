@@ -45,6 +45,9 @@ const initializeTables = async () => {
         emergency_contact_name VARCHAR(100),
         emergency_contact_phone VARCHAR(20),
         emergency_contact_relationship VARCHAR(50),
+        emergency_contact_name2 VARCHAR(100),
+        emergency_contact_phone2 VARCHAR(20),
+        emergency_contact_relationship2 VARCHAR(50),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -602,7 +605,7 @@ const initializeTables = async () => {
       ('HSC Certificate (12th)', 'hsc_certificate', 'education', false, false, 'Higher Secondary Certificate for 12th standard'),
       ('HSC Marksheet (12th)', 'hsc_marksheet', 'education', false, false, 'Higher Secondary Certificate marksheet for 12th standard'),
       ('Graduation Consolidated Marksheet', 'graduation_marksheet', 'education', false, false, 'Graduation consolidated marksheet'),
-      ('Graduation Original/Provisional Certificate', 'graduation_certificate', 'education', true, false, 'Graduation original or provisional certificate'),
+      ('Latest Graduation', 'graduation_certificate', 'education', true, false, 'Latest graduation certificate'),
       ('Post-Graduation Marksheet', 'postgrad_marksheet', 'education', false, false, 'Post-graduation marksheet if applicable'),
       ('Post-Graduation Certificate', 'postgrad_certificate', 'education', false, false, 'Post-graduation certificate if applicable'),
       ('Aadhaar Card', 'aadhaar', 'identity', true, false, 'Aadhaar card for identity verification'),
@@ -985,6 +988,17 @@ const initializeTables = async () => {
       ('allow_attendance_edit_days', '7', 'Number of days in the past for which attendance can be edited'),
       ('manager_edit_attendance_days', '30', 'Number of days in the past for which managers can edit attendance')
       ON CONFLICT (setting_key) DO NOTHING
+    `);
+
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'role'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN role VARCHAR(20) DEFAULT 'employee';
+        END IF;
+      END $$;
     `);
 
     console.log("✅ Database tables initialized successfully");

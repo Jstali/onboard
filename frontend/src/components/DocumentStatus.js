@@ -161,7 +161,7 @@ const DocumentStatus = ({
         hsc_certificate: "HSC Certificate (12th)",
         hsc_marksheet: "HSC Marksheet (12th)",
         graduation_marksheet: "Graduation Consolidated Marksheet",
-        graduation_certificate: "Graduation Original/Provisional Certificate",
+        graduation_certificate: "Latest Graduation",
         postgrad_marksheet: "Post-Graduation Marksheet",
         postgrad_certificate: "Post-Graduation Certificate",
         aadhaar: "Aadhaar Card",

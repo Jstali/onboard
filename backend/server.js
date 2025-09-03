@@ -33,11 +33,11 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS - Very permissive configuration for development
+// CORS - Allow all origins for development
 app.use(
   cors({
-    origin: true, // Allow all origins in development
-    credentials: true,
+    origin: "*",
+    credentials: false,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
     allowedHeaders: [
       "Content-Type",
@@ -57,7 +57,7 @@ app.use(
 // Handle preflight requests
 app.options("*", cors());
 
-// Additional CORS headers for all responses - More permissive for development
+// Additional CORS headers for all responses
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -68,7 +68,7 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Headers",
     "Content-Type, Authorization, X-Requested-With, Accept, Origin"
   );
-  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Credentials", "false");
   res.header("Access-Control-Max-Age", "86400"); // 24 hours
   next();
 });

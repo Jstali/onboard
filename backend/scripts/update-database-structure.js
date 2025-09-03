@@ -27,7 +27,10 @@ const updateDatabaseStructure = async () => {
       ADD COLUMN IF NOT EXISTS address TEXT,
       ADD COLUMN IF NOT EXISTS emergency_contact_name VARCHAR(100),
       ADD COLUMN IF NOT EXISTS emergency_contact_phone VARCHAR(20),
-      ADD COLUMN IF NOT EXISTS emergency_contact_relationship VARCHAR(50)
+      ADD COLUMN IF NOT EXISTS emergency_contact_relationship VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS emergency_contact_name2 VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS emergency_contact_phone2 VARCHAR(20),
+      ADD COLUMN IF NOT EXISTS emergency_contact_relationship2 VARCHAR(50)
     `);
     console.log("✅ Users table updated");
 
@@ -99,6 +102,18 @@ const updateDatabaseStructure = async () => {
       ADD COLUMN IF NOT EXISTS approval_notes TEXT
     `);
     console.log("✅ Leave requests table updated");
+
+    // Add role column to leave_requests table
+    await pool.query(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'leave_requests' AND column_name = 'role'
+        ) THEN
+          ALTER TABLE leave_requests ADD COLUMN role VARCHAR(20) DEFAULT 'employee';
+        END IF;
+      END $$;
+    `);
 
     // Create indexes for better performance
     console.log("📋 Creating performance indexes...");

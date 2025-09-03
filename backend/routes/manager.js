@@ -6,174 +6,443 @@ const { authenticateToken, requireManager } = require("../middleware/auth");
 const router = express.Router();
 
 // Apply authentication to all manager routes
-router.use(authenticateToken, requireManager);
+router.use(authenticateToken);
+router.use(requireManager);
 
-// Get manager dashboard data
+// Get manager's dashboard data
 router.get("/dashboard", async (req, res) => {
   try {
     const managerId = req.user.userId;
 
-    // Get team count
-    const teamCountResult = await pool.query(
+    // Get all employees under this manager with their leave information
+    const result = await pool.query(
       `
-      SELECT COUNT(*) as team_count
+      SELECT 
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        em.employee_id as emp_id,
+        em.department,
+        em.designation,
+        em.type as employment_type,
+        em.status as employee_status,
+        COALESCE(lb.leaves_taken, 0) as leaves_taken,
+        COALESCE(lb.leaves_remaining, 0) as leaves_remaining,
+        COALESCE(lb.total_allocated, 0) as total_allocated
       FROM users u
       JOIN manager_employee_mapping mem ON u.id = mem.employee_id
-      WHERE mem.manager_id = $1 AND mem.is_active = true AND u.role = 'employee'
-    `,
-      [managerId]
-    );
-
-    // Get today's attendance summary
-    const today = new Date().toISOString().split("T")[0];
-    const todayAttendanceResult = await pool.query(
-      `
-      SELECT 
-        COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
-        COUNT(CASE WHEN a.status = 'wfh' THEN 1 END) as wfh_count,
-        COUNT(CASE WHEN a.status = 'leave' THEN 1 END) as leave_count,
-        COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_count,
-        COUNT(a.id) as total_marked
-      FROM attendance a
-      JOIN users u ON a.employee_id = u.id
-      JOIN manager_employee_mapping mem ON u.id = mem.employee_id
-      WHERE mem.manager_id = $1 AND mem.is_active = true AND a.date = $2
-    `,
-      [managerId, today]
-    );
-
-    // Get this week's attendance summary
-    const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 6);
-
-    const weekAttendanceResult = await pool.query(
-      `
-      SELECT 
-        COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
-        COUNT(CASE WHEN a.status = 'wfh' THEN 1 END) as wfh_count,
-        COUNT(CASE WHEN a.status = 'leave' THEN 1 END) as leave_count,
-        COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_count,
-        COUNT(a.id) as total_marked
-      FROM attendance a
-      JOIN users u ON a.employee_id = u.id
-      JOIN manager_employee_mapping mem ON u.id = mem.employee_id
-      WHERE mem.manager_id = $1 AND mem.is_active = true 
-        AND a.date BETWEEN $2 AND $3
-    `,
-      [
-        managerId,
-        startOfWeek.toISOString().split("T")[0],
-        endOfWeek.toISOString().split("T")[0],
-      ]
-    );
-
-    // Get recent attendance activities
-    const recentActivitiesResult = await pool.query(
-      `
-      SELECT 
-        a.date, a.status, a.updated_at,
-        u.first_name, u.last_name, u.email,
-        em.employee_id as emp_id
-      FROM attendance a
-      JOIN users u ON a.employee_id = u.id
-      JOIN manager_employee_mapping mem ON u.id = mem.employee_id
       LEFT JOIN employee_master em ON u.email = em.company_email
-      WHERE mem.manager_id = $1 AND mem.is_active = true
-      ORDER BY a.updated_at DESC
-      LIMIT 10
+      LEFT JOIN leave_balances lb ON u.id = lb.employee_id AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)
+      WHERE mem.manager_id = $1 
+        AND mem.is_active = true 
+        AND u.role = 'employee'
+      ORDER BY u.first_name, u.last_name
     `,
       [managerId]
     );
 
     res.json({
-      dashboard: {
-        team_count: parseInt(teamCountResult.rows[0].team_count),
-        today_attendance: todayAttendanceResult.rows[0],
-        week_attendance: weekAttendanceResult.rows[0],
-        recent_activities: recentActivitiesResult.rows,
-      },
+      employees: result.rows,
+      totalEmployees: result.rows.length,
     });
   } catch (error) {
     console.error("Error fetching manager dashboard:", error);
-    res.status(500).json({ error: "Failed to fetch dashboard data" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// Get manager's team with detailed information
-router.get("/team", async (req, res) => {
+// Get employees under manager with detailed leave information
+router.get("/employees", async (req, res) => {
   try {
     const managerId = req.user.userId;
 
     const result = await pool.query(
       `
       SELECT 
-        u.id, u.email, u.first_name, u.last_name,
-        em.employee_id as emp_id, em.department, em.designation,
-        em.type as employment_type, em.status as employee_status,
-        em.doj as join_date, em.location,
-        mem.mapping_type as manager_type
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        em.employee_id as emp_id,
+        em.department,
+        em.designation,
+        em.type as employment_type,
+        em.status as employee_status,
+        COALESCE(lb.leaves_taken, 0) as leaves_taken,
+        COALESCE(lb.leaves_remaining, 0) as leaves_remaining,
+        COALESCE(lb.total_allocated, 0) as total_allocated,
+        (
+          SELECT json_agg(
+            json_build_object(
+              'leave_type', lr.leave_type,
+              'from_date', lr.from_date,
+              'to_date', lr.to_date,
+              'total_days', lr.total_leave_days,
+              'status', lr.status,
+              'reason', lr.reason
+            )
+          )
+          FROM leave_requests lr 
+          WHERE lr.employee_id = u.id 
+            AND lr.status IN ('approved', 'pending_manager_approval', 'pending_hr_approval')
+            AND lr.from_date >= CURRENT_DATE - INTERVAL '1 year'
+        ) as recent_leaves
       FROM users u
       JOIN manager_employee_mapping mem ON u.id = mem.employee_id
       LEFT JOIN employee_master em ON u.email = em.company_email
-      WHERE mem.manager_id = $1 AND mem.is_active = true AND u.role = 'employee'
+      LEFT JOIN leave_balances lb ON u.id = lb.employee_id AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)
+      WHERE mem.manager_id = $1 
+        AND mem.is_active = true 
+        AND u.role = 'employee'
       ORDER BY u.first_name, u.last_name
     `,
       [managerId]
     );
 
-    res.json({ team: result.rows });
+    res.json({ employees: result.rows });
   } catch (error) {
-    console.error("Error fetching team:", error);
-    res.status(500).json({ error: "Failed to fetch team" });
+    console.error("Error fetching employees:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// Get team attendance for a specific date range
-router.get("/team-attendance", async (req, res) => {
+// Get employee attendance for the last 2 weeks
+router.get("/employee/:employeeId/attendance", async (req, res) => {
   try {
-    const { start_date, end_date, employee_id } = req.query;
+    const { employeeId } = req.params;
+    const managerId = req.user ? req.user.userId : null;
+
+    // Validate manager ID
+    if (!managerId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    // Validate employee ID
+    if (!employeeId || isNaN(employeeId)) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+
+    // Check if employee exists
+    const employeeCheck = await pool.query(
+      "SELECT id FROM users WHERE id = $1",
+      [employeeId]
+    );
+
+    if (employeeCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    // Verify the manager has permission to view this employee's attendance
+    const permissionCheck = await pool.query(
+      `
+      SELECT mem.id FROM manager_employee_mapping mem
+      WHERE mem.employee_id = $1 AND mem.manager_id = $2 AND mem.is_active = true
+    `,
+      [employeeId, managerId]
+    );
+
+    if (permissionCheck.rows.length === 0) {
+      return res.status(403).json({
+        error: "You don't have permission to view this employee's attendance",
+      });
+    }
+
+    // Get attendance for present week and future week only (2 weeks total)
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfNextWeek = new Date(startOfWeek);
+    endOfNextWeek.setDate(startOfWeek.getDate() + 13); // End of next week (Saturday)
+    endOfNextWeek.setHours(23, 59, 59, 999);
+
+    const startDate = startOfWeek.toISOString().split("T")[0];
+    const endDate = endOfNextWeek.toISOString().split("T")[0];
+
+    const result = await pool.query(
+      `
+      SELECT 
+        id, 
+        TO_CHAR(date, 'YYYY-MM-DD') as date, 
+        status, 
+        clock_in_time as check_in_time, 
+        clock_out_time as check_out_time, 
+        reason as notes, 
+        created_at as marked_at, 
+        updated_at
+      FROM attendance 
+      WHERE employee_id = $1 AND date BETWEEN $2 AND $3
+      ORDER BY date DESC
+    `,
+      [employeeId, startDate, endDate]
+    );
+
+    // Get employee details
+    const employeeResult = await pool.query(
+      `
+      SELECT 
+        u.id, u.first_name, u.last_name, u.email,
+        em.employee_id as emp_id, em.department, em.designation
+      FROM users u
+      LEFT JOIN employee_master em ON u.email = em.company_email
+      WHERE u.id = $1
+    `,
+      [employeeId]
+    );
+
+    res.json({
+      attendance: result.rows,
+      employee: employeeResult.rows[0] || null,
+    });
+  } catch (error) {
+    console.error("Error fetching employee attendance:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail,
+    });
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Manager mark/update attendance for employee
+router.post(
+  "/employee/:employeeId/attendance",
+  [
+    body("date").isISO8601().toDate().withMessage("Valid date is required"),
+    body("status")
+      .isIn(["present", "absent", "wfh", "leave", "half_day", "holiday"])
+      .withMessage("Valid status is required"),
+    body("check_in_time")
+      .optional()
+      .custom((value) => {
+        if (value === null || value === undefined || value === "") {
+          return true;
+        }
+        return /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/.test(value);
+      })
+      .withMessage(
+        "Valid check-in time format is required (HH:MM or HH:MM:SS)"
+      ),
+    body("check_out_time")
+      .optional()
+      .custom((value) => {
+        if (value === null || value === undefined || value === "") {
+          return true;
+        }
+        return /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/.test(value);
+      })
+      .withMessage(
+        "Valid check-out time format is required (HH:MM or HH:MM:SS)"
+      ),
+    body("notes").optional().isString().withMessage("Notes must be a string"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { employeeId } = req.params;
+      const { date, status, check_in_time, check_out_time, notes } = req.body;
+      const managerId = req.user.userId;
+
+      // Validate employee ID
+      if (!employeeId || isNaN(employeeId)) {
+        return res.status(400).json({ error: "Invalid employee ID" });
+      }
+
+      // Verify the manager has permission to manage this employee's attendance
+      const permissionCheck = await pool.query(
+        `
+      SELECT mem.id FROM manager_employee_mapping mem
+      WHERE mem.employee_id = $1 AND mem.manager_id = $2 AND mem.is_active = true
+    `,
+        [employeeId, managerId]
+      );
+
+      if (permissionCheck.rows.length === 0) {
+        return res.status(403).json({
+          error:
+            "You don't have permission to manage this employee's attendance",
+        });
+      }
+
+      // Validate that the date is within the allowed range (present week and future week only)
+      const attendanceDate = new Date(date);
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const endOfNextWeek = new Date(startOfWeek);
+      endOfNextWeek.setDate(startOfWeek.getDate() + 13); // End of next week (Saturday)
+      endOfNextWeek.setHours(23, 59, 59, 999);
+
+      if (attendanceDate < startOfWeek) {
+        return res.status(400).json({
+          error:
+            "Managers can only mark attendance for the present week and future week (2 weeks total)",
+        });
+      }
+
+      // Use time strings directly (database columns are now TIME type)
+      const clockInTime = check_in_time || null;
+      const clockOutTime = check_out_time || null;
+
+      // Check if attendance already exists for this date
+      const existingAttendance = await pool.query(
+        "SELECT id FROM attendance WHERE employee_id = $1 AND date = $2",
+        [employeeId, date]
+      );
+
+      if (existingAttendance.rows.length > 0) {
+        // Update existing attendance
+        await pool.query(
+          `
+        UPDATE attendance 
+        SET status = $1, clock_in_time = $2, clock_out_time = $3, reason = $4, 
+            updated_at = CURRENT_TIMESTAMP
+        WHERE employee_id = $5 AND date = $6
+      `,
+          [status, clockInTime, clockOutTime, notes, employeeId, date]
+        );
+
+        res.json({ message: "Employee attendance updated successfully" });
+      } else {
+        // Create new attendance record
+        await pool.query(
+          `
+        INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `,
+          [employeeId, date, status, clockInTime, clockOutTime, notes]
+        );
+
+        res.json({ message: "Employee attendance marked successfully" });
+      }
+    } catch (error) {
+      console.error("Error marking employee attendance:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
+
+// Get employee leave requests for manager approval
+router.get("/leave-requests", async (req, res) => {
+  try {
     const managerId = req.user.userId;
 
-    if (!start_date || !end_date) {
-      return res
-        .status(400)
-        .json({ error: "Start date and end date are required" });
-    }
-
-    let query = `
+    const result = await pool.query(
+      `
       SELECT 
-        a.id, a.employee_id, a.date, a.status, a.check_in_time, a.check_out_time, 
-        a.total_hours, a.notes, a.marked_at, a.updated_at,
-        u.first_name, u.last_name, u.email,
-        em.employee_id as emp_id, em.department
-      FROM attendance a
-      JOIN users u ON a.employee_id = u.id
+        lr.id,
+        lr.series,
+        lr.employee_id,
+        lr.employee_name,
+        lr.leave_type,
+        lr.from_date,
+        lr.to_date,
+        lr.total_leave_days,
+        lr.reason,
+        lr.status,
+        lr.created_at,
+        u.first_name,
+        u.last_name,
+        u.email,
+        em.employee_id as emp_id,
+        em.department
+      FROM leave_requests lr
+      JOIN users u ON lr.employee_id = u.id
       JOIN manager_employee_mapping mem ON u.id = mem.employee_id
       LEFT JOIN employee_master em ON u.email = em.company_email
-      WHERE mem.manager_id = $1 AND mem.is_active = true 
-        AND a.date BETWEEN $2 AND $3
-    `;
-    let params = [managerId, start_date, end_date];
+      WHERE mem.manager_id = $1 
+        AND mem.is_active = true
+        AND lr.status IN ('pending_manager_approval', 'pending_hr_approval', 'approved', 'rejected')
+      ORDER BY lr.created_at DESC
+    `,
+      [managerId]
+    );
 
-    if (employee_id) {
-      query += ` AND a.employee_id = $${params.length + 1}`;
-      params.push(employee_id);
-    }
-
-    query += ` ORDER BY a.date DESC, u.first_name, u.last_name`;
-
-    const result = await pool.query(query, params);
-    res.json({ attendance: result.rows });
+    res.json({ leaveRequests: result.rows });
   } catch (error) {
-    console.error("Error fetching team attendance:", error);
-    res.status(500).json({ error: "Failed to fetch team attendance" });
+    console.error("Error fetching leave requests:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// Get attendance summary for team
-router.get("/attendance-summary", async (req, res) => {
+// Manager approve/reject leave request
+router.put(
+  "/leave-requests/:requestId",
+  [
+    body("action")
+      .isIn(["approve", "reject"])
+      .withMessage("Action must be 'approve' or 'reject'"),
+    body("notes").optional().isString().withMessage("Notes must be a string"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { requestId } = req.params;
+      const { action, notes } = req.body;
+      const managerId = req.user.userId;
+
+      // Validate request ID
+      if (!requestId || isNaN(requestId)) {
+        return res.status(400).json({ error: "Invalid request ID" });
+      }
+
+      // Verify the manager has permission to approve this leave request
+      const permissionCheck = await pool.query(
+        `
+      SELECT lr.id FROM leave_requests lr
+      JOIN users u ON lr.employee_id = u.id
+      JOIN manager_employee_mapping mem ON u.id = mem.employee_id
+      WHERE lr.id = $1 AND mem.manager_id = $2 AND mem.is_active = true
+    `,
+        [requestId, managerId]
+      );
+
+      if (permissionCheck.rows.length === 0) {
+        return res.status(403).json({
+          error: "You don't have permission to approve this leave request",
+        });
+      }
+
+      // Update leave request status
+      const newStatus =
+        action === "approve" ? "pending_hr_approval" : "rejected";
+
+      await pool.query(
+        `
+      UPDATE leave_requests 
+      SET status = $1, manager_approval_notes = $2, manager_approved_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+    `,
+        [newStatus, notes, requestId]
+      );
+
+      res.json({
+        message: `Leave request ${action}d successfully`,
+        status: newStatus,
+      });
+    } catch (error) {
+      console.error("Error updating leave request:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
+
+// Get manager's team attendance summary
+router.get("/team-attendance-summary", async (req, res) => {
   try {
     const { start_date, end_date } = req.query;
     const managerId = req.user.userId;
@@ -182,6 +451,14 @@ router.get("/attendance-summary", async (req, res) => {
       return res
         .status(400)
         .json({ error: "Start date and end date are required" });
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(start_date) || !dateRegex.test(end_date)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid date format. Use YYYY-MM-DD" });
     }
 
     const result = await pool.query(
@@ -194,8 +471,7 @@ router.get("/attendance-summary", async (req, res) => {
         COUNT(CASE WHEN a.status = 'leave' THEN 1 END) as leave_days,
         COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_days,
         COUNT(CASE WHEN a.status = 'half_day' THEN 1 END) as half_days,
-        COUNT(a.id) as total_days,
-        ROUND(AVG(CASE WHEN a.total_hours IS NOT NULL THEN a.total_hours END), 2) as avg_hours
+        COUNT(a.id) as total_days
       FROM users u
       JOIN manager_employee_mapping mem ON u.id = mem.employee_id
       LEFT JOIN employee_master em ON u.email = em.company_email
@@ -209,158 +485,8 @@ router.get("/attendance-summary", async (req, res) => {
 
     res.json({ summary: result.rows });
   } catch (error) {
-    console.error("Error fetching attendance summary:", error);
-    res.status(500).json({ error: "Failed to fetch attendance summary" });
-  }
-});
-
-// Add new employee to manager's team
-router.post(
-  "/add-team-member",
-  [
-    body("employee_id").isInt().withMessage("Valid employee ID is required"),
-    body("mapping_type")
-      .optional()
-      .isIn(["primary", "secondary", "tertiary"])
-      .withMessage("Valid mapping type is required"),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { employee_id, mapping_type = "primary" } = req.body;
-      const managerId = req.user.userId;
-
-      // Check if employee exists and is not already in the team
-      const existingMapping = await pool.query(
-        `
-      SELECT id FROM manager_employee_mapping 
-      WHERE manager_id = $1 AND employee_id = $2 AND mapping_type = $3
-    `,
-        [managerId, employee_id, mapping_type]
-      );
-
-      if (existingMapping.rows.length > 0) {
-        return res
-          .status(400)
-          .json({
-            error: "Employee is already in your team with this mapping type",
-          });
-      }
-
-      // Add employee to team
-      await pool.query(
-        `
-      INSERT INTO manager_employee_mapping (manager_id, employee_id, mapping_type)
-      VALUES ($1, $2, $3)
-    `,
-        [managerId, employee_id, mapping_type]
-      );
-
-      res.json({ message: "Employee added to team successfully" });
-    } catch (error) {
-      console.error("Error adding team member:", error);
-      res.status(500).json({ error: "Failed to add team member" });
-    }
-  }
-);
-
-// Remove employee from manager's team
-router.delete("/remove-team-member/:employeeId", async (req, res) => {
-  try {
-    const { employeeId } = req.params;
-    const managerId = req.user.userId;
-
-    // Check if mapping exists
-    const existingMapping = await pool.query(
-      `
-      SELECT id FROM manager_employee_mapping 
-      WHERE manager_id = $1 AND employee_id = $2
-    `,
-      [managerId, employeeId]
-    );
-
-    if (existingMapping.rows.length === 0) {
-      return res.status(404).json({ error: "Employee not found in your team" });
-    }
-
-    // Remove employee from team (soft delete)
-    await pool.query(
-      `
-      UPDATE manager_employee_mapping 
-      SET is_active = false, updated_at = CURRENT_TIMESTAMP
-      WHERE manager_id = $1 AND employee_id = $2
-    `,
-      [managerId, employeeId]
-    );
-
-    res.json({ message: "Employee removed from team successfully" });
-  } catch (error) {
-    console.error("Error removing team member:", error);
-    res.status(500).json({ error: "Failed to remove team member" });
-  }
-});
-
-// Get available employees to add to team
-router.get("/available-employees", async (req, res) => {
-  try {
-    const managerId = req.user.userId;
-
-    const result = await pool.query(
-      `
-      SELECT 
-        u.id, u.email, u.first_name, u.last_name,
-        em.employee_id as emp_id, em.department, em.designation
-      FROM users u
-      LEFT JOIN employee_master em ON u.email = em.company_email
-      WHERE u.role = 'employee' 
-        AND u.id NOT IN (
-          SELECT employee_id 
-          FROM manager_employee_mapping 
-          WHERE manager_id = $1 AND is_active = true
-        )
-      ORDER BY u.first_name, u.last_name
-    `,
-      [managerId]
-    );
-
-    res.json({ available_employees: result.rows });
-  } catch (error) {
-    console.error("Error fetching available employees:", error);
-    res.status(500).json({ error: "Failed to fetch available employees" });
-  }
-});
-
-// Get manager's own profile
-router.get("/profile", async (req, res) => {
-  try {
-    const managerId = req.user.userId;
-
-    const result = await pool.query(
-      `
-      SELECT 
-        u.id, u.email, u.first_name, u.last_name,
-        em.employee_id as emp_id, em.department, em.designation,
-        em.type as employment_type, em.status as employee_status,
-        em.doj as join_date, em.location
-      FROM users u
-      LEFT JOIN employee_master em ON u.email = em.company_email
-      WHERE u.id = $1
-    `,
-      [managerId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Manager profile not found" });
-    }
-
-    res.json({ profile: result.rows[0] });
-  } catch (error) {
-    console.error("Error fetching manager profile:", error);
-    res.status(500).json({ error: "Failed to fetch profile" });
+    console.error("Error fetching team attendance summary:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

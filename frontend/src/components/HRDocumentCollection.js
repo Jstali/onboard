@@ -336,7 +336,7 @@ const HRDocumentCollection = () => {
             "HSC Certificate (12th)",
             "HSC Marksheet (12th)",
             "Graduation Consolidated Marksheet",
-            "Graduation Original/Provisional Certificate",
+            "Latest Graduation",
             "Aadhaar Card",
             "PAN Card",
           ];
@@ -354,7 +354,7 @@ const HRDocumentCollection = () => {
             "HSC Certificate (12th)",
             "HSC Marksheet (12th)",
             "Graduation Consolidated Marksheet",
-            "Graduation Original/Provisional Certificate",
+            "Latest Graduation",
             "Post-Graduation  Marksheet",
             "Post-Graduation  Certificate",
             "Aadhaar Card",
@@ -374,7 +374,7 @@ const HRDocumentCollection = () => {
             "HSC Certificate (12th)",
             "HSC Marksheet (12th)",
             "Graduation Consolidated Marksheet",
-            "Graduation Original/Provisional Certificate",
+            "Latest Graduation",
             "Aadhaar Card",
             "PAN Card",
           ];

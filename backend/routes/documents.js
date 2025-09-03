@@ -112,7 +112,7 @@ const DOCUMENT_REQUIREMENTS = {
       },
       {
         type: "graduation_certificate",
-        name: "Graduation Original/Provisional Certificate",
+        name: "Latest Graduation",
         required: true,
       },
       {
@@ -182,7 +182,7 @@ const DOCUMENT_REQUIREMENTS = {
       },
       {
         type: "graduation_certificate",
-        name: "Graduation Original/Provisional Certificate",
+        name: "Latest Graduation",
         required: true,
       },
       {
@@ -224,7 +224,7 @@ const DOCUMENT_REQUIREMENTS = {
       },
       {
         type: "graduation_certificate",
-        name: "Graduation Original/Provisional Certificate",
+        name: "Latest Graduation",
         required: true,
       },
       {
@@ -298,7 +298,7 @@ router.get("/requirements", (req, res) => {
       },
       {
         type: "graduation_certificate",
-        name: "Graduation Certificate",
+        name: "Latest Graduation",
         required: true,
       },
       {
@@ -779,7 +779,7 @@ router.get("/validation/:employeeId", authenticateToken, async (req, res) => {
         },
         {
           type: "graduation_certificate",
-          name: "Graduation Certificate",
+          name: "Latest Graduation",
           required: true,
         },
         {

@@ -27,6 +27,11 @@ const OnboardingForm = ({ onSuccess }) => {
       phone: "",
       relationship: "",
     },
+    emergencyContact2: {
+      name: "",
+      phone: "",
+      relationship: "",
+    },
   });
 
   const [loading, setLoading] = useState(false);
@@ -111,11 +116,17 @@ const OnboardingForm = ({ onSuccess }) => {
     if (
       name === "name" ||
       name === "emergencyContact.name" ||
-      name === "emergencyContact.relationship"
+      name === "emergencyContact.relationship" ||
+      name === "emergencyContact2.name" ||
+      name === "emergencyContact2.relationship"
     ) {
       // Remove any numbers and special characters, keep only letters and spaces
       filteredValue = value.replace(/[^a-zA-Z\s]/g, "");
-    } else if (name === "phone" || name === "emergencyContact.phone") {
+    } else if (
+      name === "phone" ||
+      name === "emergencyContact.phone" ||
+      name === "emergencyContact2.phone"
+    ) {
       // Remove any non-digit characters, keep only numbers
       filteredValue = value.replace(/[^0-9]/g, "");
     }
@@ -167,6 +178,48 @@ const OnboardingForm = ({ onSuccess }) => {
     );
     if (relationshipError)
       newErrors["emergencyContact.relationship"] = relationshipError;
+
+    // Validate second emergency contact name
+    const contactName2Error = validateName(formData.emergencyContact2.name);
+    if (contactName2Error)
+      newErrors["emergencyContact2.name"] = contactName2Error;
+
+    // Validate second emergency contact phone
+    const contactPhone2Error = validatePhone(formData.emergencyContact2.phone);
+    if (contactPhone2Error)
+      newErrors["emergencyContact2.phone"] = contactPhone2Error;
+
+    // Validate second relationship
+    const relationship2Error = validateRelationship(
+      formData.emergencyContact2.relationship
+    );
+    if (relationship2Error)
+      newErrors["emergencyContact2.relationship"] = relationship2Error;
+
+    // Validate that all phone numbers are different
+    const phoneNumbers = [
+      formData.phone,
+      formData.emergencyContact.phone,
+      formData.emergencyContact2.phone,
+    ].filter((phone) => phone && phone.trim() !== "");
+
+    const uniquePhoneNumbers = new Set(phoneNumbers);
+    if (uniquePhoneNumbers.size !== phoneNumbers.length) {
+      if (formData.phone === formData.emergencyContact.phone) {
+        newErrors["emergencyContact.phone"] =
+          "Emergency contact phone must be different from your phone";
+      }
+      if (formData.phone === formData.emergencyContact2.phone) {
+        newErrors["emergencyContact2.phone"] =
+          "Second emergency contact phone must be different from your phone";
+      }
+      if (
+        formData.emergencyContact.phone === formData.emergencyContact2.phone
+      ) {
+        newErrors["emergencyContact2.phone"] =
+          "Both emergency contact phone numbers must be different";
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -483,6 +536,83 @@ const OnboardingForm = ({ onSuccess }) => {
               {errors["emergencyContact.relationship"] && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors["emergencyContact.relationship"]}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Second Emergency Contact */}
+        <div>
+          <h4 className="text-md font-medium text-gray-900 mb-3">
+            Additional Emergency Contact
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Name *
+              </label>
+              <input
+                type="text"
+                name="emergencyContact2.name"
+                value={formData.emergencyContact2.name}
+                onChange={handleInputChange}
+                className={`input-field ${
+                  errors["emergencyContact2.name"] ? "border-red-500" : ""
+                }`}
+                placeholder="Enter contact name"
+                required
+              />
+              {errors["emergencyContact2.name"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors["emergencyContact2.name"]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Phone *
+              </label>
+              <input
+                type="tel"
+                name="emergencyContact2.phone"
+                value={formData.emergencyContact2.phone}
+                onChange={handleInputChange}
+                className={`input-field ${
+                  errors["emergencyContact2.phone"] ? "border-red-500" : ""
+                }`}
+                placeholder="Enter 10 digit number"
+                maxLength="10"
+                required
+              />
+              {errors["emergencyContact2.phone"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors["emergencyContact2.phone"]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Relationship *
+              </label>
+              <input
+                type="text"
+                name="emergencyContact2.relationship"
+                value={formData.emergencyContact2.relationship}
+                onChange={handleInputChange}
+                className={`input-field ${
+                  errors["emergencyContact2.relationship"]
+                    ? "border-red-500"
+                    : ""
+                }`}
+                placeholder="e.g., Spouse, Parent (letters only)"
+                required
+              />
+              {errors["emergencyContact2.relationship"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors["emergencyContact2.relationship"]}
                 </p>
               )}
             </div>

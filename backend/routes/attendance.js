@@ -10,8 +10,8 @@ const {
 
 const router = express.Router();
 
-// Apply authentication to all attendance routes (temporarily disabled for testing)
-// router.use(authenticateToken);
+// Apply authentication to all attendance routes
+router.use(authenticateToken);
 
 // Get attendance settings
 router.get("/settings", async (req, res) => {
@@ -26,7 +26,7 @@ router.get("/settings", async (req, res) => {
     res.json({ settings });
   } catch (error) {
     console.error("Error fetching attendance settings:", error);
-    res.status(500).json({ error: "Failed to fetch attendance settings" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -34,12 +34,46 @@ router.get("/settings", async (req, res) => {
 router.get("/my-attendance", async (req, res) => {
   try {
     const { start_date, end_date } = req.query;
-    const userId = req.user.userId;
+
+    // Get user ID from authenticated user
+    const userId = req.user ? req.user.userId : null;
+
+    console.log("🔍 Attendance route - req.user:", req.user);
+    console.log("🔍 Attendance route - userId:", userId);
+
+    // Validate user ID
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
+
+    // Check if user exists
+    const userCheck = await pool.query("SELECT id FROM users WHERE id = $1", [
+      userId,
+    ]);
+
+    if (userCheck.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // If no date range provided, get last 30 days
+    let queryStartDate, queryEndDate;
 
     if (!start_date || !end_date) {
-      return res
-        .status(400)
-        .json({ error: "Start date and end date are required" });
+      const today = new Date();
+      queryEndDate = today.toISOString().split("T")[0];
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      queryStartDate = thirtyDaysAgo.toISOString().split("T")[0];
+    } else {
+      // Validate date format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(start_date) || !dateRegex.test(end_date)) {
+        return res
+          .status(400)
+          .json({ error: "Invalid date format. Use YYYY-MM-DD" });
+      }
+      queryStartDate = start_date;
+      queryEndDate = end_date;
     }
 
     const result = await pool.query(
@@ -57,13 +91,20 @@ router.get("/my-attendance", async (req, res) => {
       WHERE employee_id = $1 AND date BETWEEN $2 AND $3
       ORDER BY date DESC
     `,
-      [userId, start_date, end_date]
+      [userId, queryStartDate, queryEndDate]
     );
 
+    // Return empty array if no records found (instead of 404)
     res.json({ attendance: result.rows });
   } catch (error) {
     console.error("Error fetching employee attendance:", error);
-    res.status(500).json({ error: "Failed to fetch attendance" });
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail,
+    });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -107,7 +148,12 @@ router.post(
       }
 
       const { date, status, check_in_time, check_out_time, notes } = req.body;
-      const userId = req.user.userId;
+      // For testing, use a default user ID if authentication is disabled
+      const userId = req.user ? req.user.userId : 80;
+
+      // Use time strings directly (database columns are now TIME type)
+      const clockInTime = check_in_time || null;
+      const clockOutTime = check_out_time || null;
 
       // Check if attendance already exists for this date
       const existingAttendance = await pool.query(
@@ -124,7 +170,7 @@ router.post(
             updated_at = CURRENT_TIMESTAMP
         WHERE employee_id = $5 AND date = $6
       `,
-          [status, check_in_time, check_out_time, notes, userId, date]
+          [status, clockInTime, clockOutTime, notes, userId, date]
         );
 
         res.json({ message: "Attendance updated successfully" });
@@ -135,14 +181,14 @@ router.post(
         INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason)
         VALUES ($1, $2, $3, $4, $5, $6)
       `,
-          [userId, date, status, check_in_time, check_out_time, notes]
+          [userId, date, status, clockInTime, clockOutTime, notes]
         );
 
         res.json({ message: "Attendance marked successfully" });
       }
     } catch (error) {
       console.error("Error marking attendance:", error);
-      res.status(500).json({ error: "Failed to mark attendance" });
+      res.status(500).json({ error: "Internal Server Error" });
     }
   }
 );
@@ -151,7 +197,8 @@ router.post(
 router.get("/calendar", async (req, res) => {
   try {
     const { month, year } = req.query;
-    const userId = req.user.userId;
+    // For testing, use a default user ID if authentication is disabled
+    const userId = req.user ? req.user.userId : 80;
 
     if (!month || !year) {
       return res.status(400).json({ error: "Month and year are required" });
@@ -204,7 +251,8 @@ router.post(
       }
 
       const { attendance_data } = req.body;
-      const userId = req.user.userId;
+      // For testing, use a default user ID if authentication is disabled
+      const userId = req.user ? req.user.userId : 80;
 
       // Use transaction to ensure all operations succeed or fail together
       const client = await pool.connect();
@@ -213,6 +261,10 @@ router.post(
 
         for (const record of attendance_data) {
           const { date, status, check_in_time, check_out_time, notes } = record;
+
+          // Use time strings directly (database columns are now TIME type)
+          const clockInTime = check_in_time || null;
+          const clockOutTime = check_out_time || null;
 
           // Check if attendance already exists
           const existingAttendance = await client.query(
@@ -229,7 +281,7 @@ router.post(
                 updated_at = CURRENT_TIMESTAMP
             WHERE employee_id = $5 AND date = $6
           `,
-              [status, check_in_time, check_out_time, notes, userId, date]
+              [status, clockInTime, clockOutTime, notes, userId, date]
             );
           } else {
             // Create new
@@ -238,7 +290,7 @@ router.post(
             INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason)
             VALUES ($1, $2, $3, $4, $5, $6)
           `,
-              [userId, date, status, check_in_time, check_out_time, notes]
+              [userId, date, status, clockInTime, clockOutTime, notes]
             );
           }
         }
@@ -264,7 +316,8 @@ router.post(
 // Get employees under the manager
 router.get("/my-team", async (req, res) => {
   try {
-    const managerId = req.user.userId;
+    // For testing, use a default manager ID if authentication is disabled
+    const managerId = req.user ? req.user.userId : 70;
 
     const result = await pool.query(
       `
@@ -292,7 +345,8 @@ router.get("/my-team", async (req, res) => {
 router.get("/team-attendance", async (req, res) => {
   try {
     const { start_date, end_date } = req.query;
-    const managerId = req.user.userId;
+    // For testing, use a default manager ID if authentication is disabled
+    const managerId = req.user ? req.user.userId : 70;
 
     if (!start_date || !end_date) {
       return res
@@ -303,8 +357,8 @@ router.get("/team-attendance", async (req, res) => {
     const result = await pool.query(
       `
       SELECT 
-        a.id, a.employee_id, a.date, a.status, a.check_in_time, a.check_out_time, 
-        a.total_hours, a.notes, a.marked_at, a.updated_at,
+        a.id, a.employee_id, a.date, a.status, a.clock_in_time as check_in_time, a.clock_out_time as check_out_time, 
+        a.total_hours, a.reason as notes, a.created_at as marked_at, a.updated_at,
         u.first_name, u.last_name, u.email,
         em.employee_id as emp_id, em.department
       FROM attendance a
@@ -365,7 +419,8 @@ router.put(
 
       const { attendanceId } = req.params;
       const { status, check_in_time, check_out_time, notes } = req.body;
-      const managerId = req.user.userId;
+      // For testing, use a default manager ID if authentication is disabled
+      const managerId = req.user ? req.user.userId : 70;
 
       // Verify the manager has permission to edit this attendance
       const attendanceCheck = await pool.query(
@@ -388,8 +443,8 @@ router.put(
       await pool.query(
         `
       UPDATE attendance 
-      SET status = $1, check_in_time = $2, check_out_time = $3, notes = $4, 
-          updated_by = $5, updated_at = CURRENT_TIMESTAMP
+      SET status = $1, clock_in_time = $2, clock_out_time = $3, reason = $4, 
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = $6
     `,
         [status, check_in_time, check_out_time, notes, managerId, attendanceId]
@@ -451,7 +506,8 @@ router.post(
         check_out_time,
         notes,
       } = req.body;
-      const managerId = req.user.userId;
+      // For testing, use a default manager ID if authentication is disabled
+      const managerId = req.user ? req.user.userId : 70;
 
       // Verify the manager has permission to add attendance for this employee
       const permissionCheck = await pool.query(
@@ -466,6 +522,24 @@ router.post(
         return res.status(403).json({
           error:
             "You don't have permission to add attendance for this employee",
+        });
+      }
+
+      // Validate that the date is within the allowed range (present week and future week only)
+      const attendanceDate = new Date(date);
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const endOfNextWeek = new Date(startOfWeek);
+      endOfNextWeek.setDate(startOfWeek.getDate() + 13); // End of next week (Saturday)
+      endOfNextWeek.setHours(23, 59, 59, 999);
+
+      if (attendanceDate < startOfWeek) {
+        return res.status(400).json({
+          error:
+            "Managers can only mark attendance for the present week and future week (2 weeks total)",
         });
       }
 
@@ -484,18 +558,10 @@ router.post(
       // Add new attendance record
       await pool.query(
         `
-      INSERT INTO attendance (employee_id, date, status, check_in_time, check_out_time, notes, marked_by)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason)
+      VALUES ($1, $2, $3, $4, $5, $6)
     `,
-        [
-          employee_id,
-          date,
-          status,
-          check_in_time,
-          check_out_time,
-          notes,
-          managerId,
-        ]
+        [employee_id, date, status, check_in_time, check_out_time, notes]
       );
 
       res.json({ message: "Attendance added successfully" });
@@ -510,12 +576,32 @@ router.post(
 router.get("/team-summary", async (req, res) => {
   try {
     const { start_date, end_date } = req.query;
-    const managerId = req.user.userId;
+    // For testing, use a default manager ID if authentication is disabled
+    const managerId = req.user ? req.user.userId : 70;
 
     if (!start_date || !end_date) {
       return res
         .status(400)
         .json({ error: "Start date and end date are required" });
+    }
+
+    // Validate that the date range is within the allowed range (present week and future week only)
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfNextWeek = new Date(startOfWeek);
+    endOfNextWeek.setDate(startOfWeek.getDate() + 13); // End of next week (Saturday)
+    endOfNextWeek.setHours(23, 59, 59, 999);
+
+    if (startDate < startOfWeek || endDate > endOfNextWeek) {
+      return res.status(400).json({
+        error:
+          "Managers can only view attendance data for the present week and future week (2 weeks total)",
+      });
     }
 
     const result = await pool.query(
@@ -556,21 +642,24 @@ router.get("/stats", async (req, res) => {
       return res.status(400).json({ error: "Month and year are required" });
     }
 
-    // Get total employees
+    // Get total employees and managers
     const totalEmployeesResult = await pool.query(
-      "SELECT COUNT(*) as total FROM users WHERE role = 'employee'"
+      "SELECT COUNT(*) as total FROM users WHERE role IN ('employee', 'manager')"
     );
     const totalEmployees = parseInt(totalEmployeesResult.rows[0].total);
 
-    // Get attendance statistics for the month
+    // Get attendance statistics for the month (employees and managers, but not HR)
     const statsResult = await pool.query(
       `
       SELECT 
-        status,
+        a.status,
         COUNT(*) as count
-      FROM attendance 
-      WHERE EXTRACT(MONTH FROM date) = $1 AND EXTRACT(YEAR FROM date) = $2
-      GROUP BY status
+      FROM attendance a
+      JOIN users u ON a.employee_id = u.id
+      WHERE EXTRACT(MONTH FROM a.date) = $1 
+        AND EXTRACT(YEAR FROM a.date) = $2
+        AND u.role IN ('employee', 'manager')
+      GROUP BY a.status
     `,
       [parseInt(month), parseInt(year)]
     );
@@ -639,7 +728,7 @@ router.get("/hr/details", async (req, res) => {
       return res.status(400).json({ error: "Month and year are required" });
     }
 
-    // Get all employees with their attendance for the month
+    // Get all employees and managers with their attendance for the month
     const result = await pool.query(
       `
       SELECT 
@@ -647,6 +736,7 @@ router.get("/hr/details", async (req, res) => {
         u.first_name,
         u.last_name,
         u.email,
+        u.role,
         em.employee_id as emp_id,
         em.department,
         em.designation,
@@ -664,9 +754,9 @@ router.get("/hr/details", async (req, res) => {
       LEFT JOIN attendance a ON u.id = a.employee_id 
         AND EXTRACT(MONTH FROM a.date) = $1 
         AND EXTRACT(YEAR FROM a.date) = $2
-      WHERE u.role = 'employee'
-      GROUP BY u.id, u.first_name, u.last_name, u.email, em.employee_id, em.department, em.designation, em.type, em.status
-      ORDER BY u.first_name, u.last_name
+      WHERE u.role IN ('employee', 'manager')
+      GROUP BY u.id, u.first_name, u.last_name, u.email, u.role, em.employee_id, em.department, em.designation, em.type, em.status
+      ORDER BY u.role, u.first_name, u.last_name
     `,
       [parseInt(month), parseInt(year)]
     );
