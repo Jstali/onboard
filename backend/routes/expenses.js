@@ -1316,6 +1316,8 @@ router.get("/analytics", authenticateToken, async (req, res) => {
         "WHERE EXTRACT(YEAR FROM expense_date) = EXTRACT(YEAR FROM CURRENT_DATE) AND EXTRACT(MONTH FROM expense_date) = EXTRACT(MONTH FROM CURRENT_DATE)";
     } else if (period === "last_30_days") {
       dateFilter = "WHERE expense_date >= CURRENT_DATE - INTERVAL '30 days'";
+    } else if (period === "all_years") {
+      dateFilter = ""; // No date filter - show all data
     }
 
     // Get analytics data

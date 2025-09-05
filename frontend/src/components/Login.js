@@ -107,7 +107,7 @@ const Login = () => {
             <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-white mb-2">
-                 
+                 nxzen
                 </h2>
               </div>
 

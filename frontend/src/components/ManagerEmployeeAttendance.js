@@ -147,7 +147,7 @@ const ManagerEmployeeAttendance = () => {
           color: "bg-green-100 text-green-800",
           text: "Present",
         };
-      case "wfh":
+      case "Work From Home":
         return {
           icon: <FaHome className="text-blue-600" />,
           color: "bg-blue-100 text-blue-800",
@@ -165,7 +165,7 @@ const ManagerEmployeeAttendance = () => {
           color: "bg-gray-100 text-gray-800",
           text: "Absent",
         };
-      case "half_day":
+      case "Half Day":
         return {
           icon: <FaClock className="text-orange-600" />,
           color: "bg-orange-100 text-orange-800",
@@ -317,10 +317,7 @@ const ManagerEmployeeAttendance = () => {
                           Status
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Check In
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Check Out
+                          Hours
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Notes
@@ -331,7 +328,7 @@ const ManagerEmployeeAttendance = () => {
                       {attendance.length === 0 ? (
                         <tr>
                           <td
-                            colSpan="5"
+                            colSpan="4"
                             className="px-6 py-4 text-center text-gray-500"
                           >
                             No attendance records found for the present week and
@@ -359,10 +356,7 @@ const ManagerEmployeeAttendance = () => {
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {formatTime(record.check_in_time)}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {formatTime(record.check_out_time)}
+                                {record.hours ? `${record.hours} Hours` : "-"}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {record.notes || "-"}

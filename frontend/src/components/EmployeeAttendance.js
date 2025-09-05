@@ -22,6 +22,7 @@ const EmployeeAttendance = () => {
   const [settings, setSettings] = useState({});
   const [projectInputs, setProjectInputs] = useState({});
   const [taskInputs, setTaskInputs] = useState({});
+  const [hoursInputs, setHoursInputs] = useState({});
 
   // Get week start (Monday) and end (Sunday)
   const getWeekDates = (date) => {
@@ -77,6 +78,15 @@ const EmployeeAttendance = () => {
         if (contentType && contentType.includes("application/json")) {
           const data = await response.json();
           setAttendance(data.attendance || []);
+
+          // Initialize hours state from fetched data
+          const hoursState = {};
+          (data.attendance || []).forEach((record) => {
+            if (record.hours) {
+              hoursState[record.date] = String(record.hours);
+            }
+          });
+          setHoursInputs(hoursState);
 
           // Data loaded successfully - no popup needed for empty results
         } else {
@@ -162,7 +172,8 @@ const EmployeeAttendance = () => {
     status,
     checkInTime = null,
     checkOutTime = null,
-    notes = ""
+    notes = "",
+    hours = 8
   ) => {
     try {
       const token = localStorage.getItem("token");
@@ -177,24 +188,18 @@ const EmployeeAttendance = () => {
           body: JSON.stringify({
             date,
             status,
-            check_in_time: checkInTime,
-            check_out_time: checkOutTime,
+            checkintime: checkInTime,
+            checkouttime: checkOutTime,
             notes,
+            hours,
           }),
         }
       );
 
       if (response.ok) {
-        toast.success("Attendance marked successfully");
-        // Refresh attendance data
-        const { start, end } =
-          view === "weekly"
-            ? getWeekDates(new Date())
-            : getMonthDates(currentMonth);
-        fetchAttendance(
-          start.toISOString().split("T")[0],
-          end.toISOString().split("T")[0]
-        );
+        toast.success("Attendance updated successfully");
+        // Don't refresh immediately to preserve local state
+        // The data will be refreshed on next page load or manual refresh
       } else {
         const error = await response.json();
         toast.error(error.error || "Failed to mark attendance");
@@ -238,7 +243,7 @@ const EmployeeAttendance = () => {
           icon: <FaCheck className="text-green-600" />,
           color: "bg-green-100 text-green-800",
         };
-      case "wfh":
+      case "Work From Home":
         return {
           icon: <FaHome className="text-blue-600" />,
           color: "bg-blue-100 text-blue-800",
@@ -253,7 +258,7 @@ const EmployeeAttendance = () => {
           icon: <FaTimes className="text-gray-600" />,
           color: "bg-gray-100 text-gray-800",
         };
-      case "half_day":
+      case "Half Day":
         return {
           icon: <FaClock className="text-orange-600" />,
           color: "bg-orange-100 text-orange-800",
@@ -460,6 +465,9 @@ const EmployeeAttendance = () => {
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                           Actions
                         </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Hours
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -499,10 +507,12 @@ const EmployeeAttendance = () => {
                                       .color
                                   }`}
                                 >
-                                  {attendanceRecord.status
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                    attendanceRecord.status.slice(1)}
+                                  {attendanceRecord.status === "Work From Home"
+                                    ? "WFH"
+                                    : attendanceRecord.status
+                                        .charAt(0)
+                                        .toUpperCase() +
+                                      attendanceRecord.status.slice(1)}
                                 </span>
                               ) : (
                                 <span className="text-gray-400 text-sm">
@@ -578,10 +588,50 @@ const EmployeeAttendance = () => {
                               >
                                 <option value="">Select Status</option>
                                 <option value="present">Present</option>
-                                <option value="wfh">WFH</option>
+                                <option value="Work From Home">WFH</option>
                                 <option value="leave">Leave</option>
                                 <option value="absent">Absent</option>
-                                <option value="half_day">Half Day</option>
+                                <option value="Half Day">Half Day</option>
+                              </select>
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap">
+                              <select
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-white"
+                                value={
+                                  hoursInputs[
+                                    date.toISOString().split("T")[0]
+                                  ] || ""
+                                }
+                                onChange={(e) => {
+                                  const dateKey = date
+                                    .toISOString()
+                                    .split("T")[0];
+
+                                  // Update local state immediately
+                                  setHoursInputs((prev) => ({
+                                    ...prev,
+                                    [dateKey]: e.target.value,
+                                  }));
+
+                                  if (e.target.value) {
+                                    // If no status is set yet, default to "present" when hours are selected
+                                    const status =
+                                      attendanceRecord?.status || "present";
+
+                                    markAttendance(
+                                      dateKey,
+                                      status,
+                                      attendanceRecord?.clock_in_time || null,
+                                      attendanceRecord?.clock_out_time || null,
+                                      attendanceRecord?.reason || "",
+                                      parseInt(e.target.value)
+                                    );
+                                  }
+                                }}
+                              >
+                                <option value="">Select Hours</option>
+                                <option value="4">4 Hours</option>
+                                <option value="8">8 Hours</option>
                               </select>
                             </td>
                           </tr>
@@ -628,8 +678,9 @@ const EmployeeAttendance = () => {
                     <div className="text-center bg-white rounded-lg p-4 shadow-sm">
                       <div className="text-3xl font-bold text-blue-600 mb-1">
                         {
-                          attendance.filter((record) => record.status === "wfh")
-                            .length
+                          attendance.filter(
+                            (record) => record.status === "Work From Home"
+                          ).length
                         }
                       </div>
                       <div className="text-sm font-medium text-gray-700">
@@ -664,7 +715,7 @@ const EmployeeAttendance = () => {
                       <div className="text-3xl font-bold text-orange-600 mb-1">
                         {
                           attendance.filter(
-                            (record) => record.status === "half_day"
+                            (record) => record.status === "Half Day"
                           ).length
                         }
                       </div>
@@ -765,10 +816,12 @@ const EmployeeAttendance = () => {
                                       .color
                                   }`}
                                 >
-                                  {attendanceRecord.status
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                    attendanceRecord.status.slice(1)}
+                                  {attendanceRecord.status === "Work From Home"
+                                    ? "WFH"
+                                    : attendanceRecord.status
+                                        .charAt(0)
+                                        .toUpperCase() +
+                                      attendanceRecord.status.slice(1)}
                                 </div>
                               ) : (
                                 <div className="text-xs text-gray-400">
@@ -824,7 +877,7 @@ const EmployeeAttendance = () => {
                             return (
                               attendanceDate >= monthStart &&
                               attendanceDate <= monthEnd &&
-                              a.status === "wfh"
+                              a.status === "Work From Home"
                             );
                           }).length
                         }
@@ -884,7 +937,7 @@ const EmployeeAttendance = () => {
                             return (
                               attendanceDate >= monthStart &&
                               attendanceDate <= monthEnd &&
-                              a.status === "half_day"
+                              a.status === "Half Day"
                             );
                           }).length
                         }

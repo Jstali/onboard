@@ -98,13 +98,13 @@ const ManagerLeaveRequests = () => {
 
   const getStatusDisplay = (status) => {
     switch (status) {
-      case "pending_manager_approval":
+      case "Pending Manager Approval":
         return {
           color: "bg-yellow-100 text-yellow-800",
           text: "Pending for Manager Approval",
           icon: <FaClock className="text-yellow-600" />,
         };
-      case "pending_hr_approval":
+      case "Pending HR Approval":
         return {
           color: "bg-blue-100 text-blue-800",
           text: "Pending for HR Approval",
@@ -136,7 +136,7 @@ const ManagerLeaveRequests = () => {
   };
 
   const canTakeAction = (status) => {
-    return status === "pending_manager_approval";
+    return status === "Pending Manager Approval";
   };
 
   if (loading) {
@@ -196,7 +196,7 @@ const ManagerLeaveRequests = () => {
                 <p className="text-2xl font-semibold text-gray-900">
                   {
                     leaveRequests.filter(
-                      (req) => req.status === "pending_manager_approval"
+                      (req) => req.status === "Pending Manager Approval"
                     ).length
                   }
                 </p>
@@ -214,7 +214,7 @@ const ManagerLeaveRequests = () => {
                 <p className="text-2xl font-semibold text-gray-900">
                   {
                     leaveRequests.filter(
-                      (req) => req.status === "pending_hr_approval"
+                      (req) => req.status === "Pending HR Approval"
                     ).length
                   }
                 </p>

@@ -12,8 +12,6 @@ const EmployeeExpenseRequest = () => {
     currency: "INR",
     description: "",
     expenseDate: "",
-    projectReference: "",
-    clientCode: "",
     taxIncluded: false,
   });
   const [attachments, setAttachments] = useState([]);
@@ -358,36 +356,6 @@ const EmployeeExpenseRequest = () => {
           />
         </div>
 
-        {/* Project Reference and Client Code */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Project Reference
-            </label>
-            <input
-              type="text"
-              name="projectReference"
-              value={formData.projectReference}
-              onChange={handleInputChange}
-              placeholder="Enter project name or reference"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Client Code
-            </label>
-            <input
-              type="text"
-              name="clientCode"
-              value={formData.clientCode}
-              onChange={handleInputChange}
-              placeholder="Enter client code"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
         {/* Tax Included */}
         <div className="flex items-center">
           <input
@@ -458,7 +426,6 @@ const EmployeeExpenseRequest = () => {
                 currency: "INR",
                 description: "",
                 expenseDate: "",
-                clientCode: "",
                 taxIncluded: false,
               });
               setAttachments([]);

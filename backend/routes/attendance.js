@@ -84,6 +84,7 @@ router.get("/my-attendance", async (req, res) => {
         status, 
         clock_in_time as check_in_time, 
         clock_out_time as check_out_time, 
+        hours,
         reason as notes, 
         created_at as marked_at, 
         updated_at
@@ -114,9 +115,16 @@ router.post(
   [
     body("date").isISO8601().toDate().withMessage("Valid date is required"),
     body("status")
-      .isIn(["present", "absent", "wfh", "leave", "half_day", "holiday"])
+      .isIn([
+        "present",
+        "absent",
+        "Work From Home",
+        "leave",
+        "Half Day",
+        "holiday",
+      ])
       .withMessage("Valid status is required"),
-    body("check_in_time")
+    body("checkintime")
       .optional()
       .custom((value) => {
         if (value === null || value === undefined || value === "") {
@@ -127,7 +135,7 @@ router.post(
       .withMessage(
         "Valid check-in time format is required (HH:MM or HH:MM:SS)"
       ),
-    body("check_out_time")
+    body("checkouttime")
       .optional()
       .custom((value) => {
         if (value === null || value === undefined || value === "") {
@@ -139,6 +147,10 @@ router.post(
         "Valid check-out time format is required (HH:MM or HH:MM:SS)"
       ),
     body("notes").optional().isString().withMessage("Notes must be a string"),
+    body("hours")
+      .optional()
+      .isInt({ min: 1, max: 24 })
+      .withMessage("Hours must be between 1 and 24"),
   ],
   async (req, res) => {
     try {
@@ -147,13 +159,14 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { date, status, check_in_time, check_out_time, notes } = req.body;
+      const { date, status, checkintime, checkouttime, notes, hours } =
+        req.body;
       // For testing, use a default user ID if authentication is disabled
       const userId = req.user ? req.user.userId : 80;
 
       // Use time strings directly (database columns are now TIME type)
-      const clockInTime = check_in_time || null;
-      const clockOutTime = check_out_time || null;
+      const clockInTime = checkintime || null;
+      const clockOutTime = checkouttime || null;
 
       // Check if attendance already exists for this date
       const existingAttendance = await pool.query(
@@ -166,11 +179,11 @@ router.post(
         await pool.query(
           `
         UPDATE attendance 
-        SET status = $1, clock_in_time = $2, clock_out_time = $3, reason = $4, 
+        SET status = $1, clock_in_time = $2, clock_out_time = $3, reason = $4, hours = $5,
             updated_at = CURRENT_TIMESTAMP
-        WHERE employee_id = $5 AND date = $6
+        WHERE employee_id = $6 AND date = $7
       `,
-          [status, clockInTime, clockOutTime, notes, userId, date]
+          [status, clockInTime, clockOutTime, notes, hours, userId, date]
         );
 
         res.json({ message: "Attendance updated successfully" });
@@ -178,10 +191,10 @@ router.post(
         // Create new attendance record
         await pool.query(
           `
-        INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason, hours)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
       `,
-          [userId, date, status, clockInTime, clockOutTime, notes]
+          [userId, date, status, clockInTime, clockOutTime, notes, hours]
         );
 
         res.json({ message: "Attendance marked successfully" });
@@ -240,7 +253,14 @@ router.post(
       .toDate()
       .withMessage("Valid date is required"),
     body("attendance_data.*.status")
-      .isIn(["present", "absent", "wfh", "leave", "half_day", "holiday"])
+      .isIn([
+        "present",
+        "absent",
+        "Work From Home",
+        "leave",
+        "Half Day",
+        "holiday",
+      ])
       .withMessage("Valid status is required"),
   ],
   async (req, res) => {
@@ -260,11 +280,12 @@ router.post(
         await client.query("BEGIN");
 
         for (const record of attendance_data) {
-          const { date, status, check_in_time, check_out_time, notes } = record;
+          const { date, status, checkintime, checkouttime, notes, hours } =
+            record;
 
           // Use time strings directly (database columns are now TIME type)
-          const clockInTime = check_in_time || null;
-          const clockOutTime = check_out_time || null;
+          const clockInTime = checkintime || null;
+          const clockOutTime = checkouttime || null;
 
           // Check if attendance already exists
           const existingAttendance = await client.query(
@@ -277,20 +298,20 @@ router.post(
             await client.query(
               `
             UPDATE attendance 
-            SET status = $1, clock_in_time = $2, clock_out_time = $3, reason = $4, 
+            SET status = $1, clock_in_time = $2, clock_out_time = $3, reason = $4, hours = $5,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE employee_id = $5 AND date = $6
+            WHERE employee_id = $6 AND date = $7
           `,
-              [status, clockInTime, clockOutTime, notes, userId, date]
+              [status, clockInTime, clockOutTime, notes, hours, userId, date]
             );
           } else {
             // Create new
             await client.query(
               `
-            INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason, hours)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
           `,
-              [userId, date, status, clockInTime, clockOutTime, notes]
+              [userId, date, status, clockInTime, clockOutTime, notes, hours]
             );
           }
         }
@@ -384,9 +405,16 @@ router.put(
   "/edit-employee-attendance/:attendanceId",
   [
     body("status")
-      .isIn(["present", "absent", "wfh", "leave", "half_day", "holiday"])
+      .isIn([
+        "present",
+        "absent",
+        "Work From Home",
+        "leave",
+        "Half Day",
+        "holiday",
+      ])
       .withMessage("Valid status is required"),
-    body("check_in_time")
+    body("checkintime")
       .optional()
       .custom((value) => {
         if (value === null || value === undefined || value === "") {
@@ -397,7 +425,7 @@ router.put(
       .withMessage(
         "Valid check-in time format is required (HH:MM or HH:MM:SS)"
       ),
-    body("check_out_time")
+    body("checkouttime")
       .optional()
       .custom((value) => {
         if (value === null || value === undefined || value === "") {
@@ -409,6 +437,10 @@ router.put(
         "Valid check-out time format is required (HH:MM or HH:MM:SS)"
       ),
     body("notes").optional().isString().withMessage("Notes must be a string"),
+    body("hours")
+      .optional()
+      .isInt({ min: 1, max: 24 })
+      .withMessage("Hours must be between 1 and 24"),
   ],
   async (req, res) => {
     try {
@@ -418,7 +450,7 @@ router.put(
       }
 
       const { attendanceId } = req.params;
-      const { status, check_in_time, check_out_time, notes } = req.body;
+      const { status, checkintime, checkouttime, notes } = req.body;
       // For testing, use a default manager ID if authentication is disabled
       const managerId = req.user ? req.user.userId : 70;
 
@@ -447,7 +479,7 @@ router.put(
           updated_at = CURRENT_TIMESTAMP
       WHERE id = $6
     `,
-        [status, check_in_time, check_out_time, notes, managerId, attendanceId]
+        [status, checkintime, checkouttime, notes, managerId, attendanceId]
       );
 
       res.json({ message: "Attendance updated successfully" });
@@ -465,9 +497,16 @@ router.post(
     body("employee_id").isInt().withMessage("Valid employee ID is required"),
     body("date").isISO8601().toDate().withMessage("Valid date is required"),
     body("status")
-      .isIn(["present", "absent", "wfh", "leave", "half_day", "holiday"])
+      .isIn([
+        "present",
+        "absent",
+        "Work From Home",
+        "leave",
+        "Half Day",
+        "holiday",
+      ])
       .withMessage("Valid status is required"),
-    body("check_in_time")
+    body("checkintime")
       .optional()
       .custom((value) => {
         if (value === null || value === undefined || value === "") {
@@ -478,7 +517,7 @@ router.post(
       .withMessage(
         "Valid check-in time format is required (HH:MM or HH:MM:SS)"
       ),
-    body("check_out_time")
+    body("checkouttime")
       .optional()
       .custom((value) => {
         if (value === null || value === undefined || value === "") {
@@ -490,6 +529,10 @@ router.post(
         "Valid check-out time format is required (HH:MM or HH:MM:SS)"
       ),
     body("notes").optional().isString().withMessage("Notes must be a string"),
+    body("hours")
+      .optional()
+      .isInt({ min: 1, max: 24 })
+      .withMessage("Hours must be between 1 and 24"),
   ],
   async (req, res) => {
     try {
@@ -502,9 +545,10 @@ router.post(
         employee_id,
         date,
         status,
-        check_in_time,
-        check_out_time,
+        checkintime,
+        checkouttime,
         notes,
+        hours,
       } = req.body;
       // For testing, use a default manager ID if authentication is disabled
       const managerId = req.user ? req.user.userId : 70;
@@ -558,10 +602,10 @@ router.post(
       // Add new attendance record
       await pool.query(
         `
-      INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO attendance (employee_id, date, status, clock_in_time, clock_out_time, reason, hours)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
     `,
-        [employee_id, date, status, check_in_time, check_out_time, notes]
+        [employee_id, date, status, checkintime, checkouttime, notes, hours]
       );
 
       res.json({ message: "Attendance added successfully" });

@@ -169,6 +169,7 @@ router.get("/employee/:employeeId/attendance", async (req, res) => {
         status, 
         clock_in_time as check_in_time, 
         clock_out_time as check_out_time, 
+        hours,
         reason as notes, 
         created_at as marked_at, 
         updated_at
@@ -214,9 +215,16 @@ router.post(
   [
     body("date").isISO8601().toDate().withMessage("Valid date is required"),
     body("status")
-      .isIn(["present", "absent", "wfh", "leave", "half_day", "holiday"])
+      .isIn([
+        "present",
+        "absent",
+        "Work From Home",
+        "leave",
+        "Half Day",
+        "holiday",
+      ])
       .withMessage("Valid status is required"),
-    body("check_in_time")
+    body("checkintime")
       .optional()
       .custom((value) => {
         if (value === null || value === undefined || value === "") {
@@ -227,7 +235,7 @@ router.post(
       .withMessage(
         "Valid check-in time format is required (HH:MM or HH:MM:SS)"
       ),
-    body("check_out_time")
+    body("checkouttime")
       .optional()
       .custom((value) => {
         if (value === null || value === undefined || value === "") {
@@ -248,7 +256,7 @@ router.post(
       }
 
       const { employeeId } = req.params;
-      const { date, status, check_in_time, check_out_time, notes } = req.body;
+      const { date, status, checkintime, checkouttime, notes } = req.body;
       const managerId = req.user.userId;
 
       // Validate employee ID
@@ -291,8 +299,8 @@ router.post(
       }
 
       // Use time strings directly (database columns are now TIME type)
-      const clockInTime = check_in_time || null;
-      const clockOutTime = check_out_time || null;
+      const clockInTime = checkintime || null;
+      const clockOutTime = checkouttime || null;
 
       // Check if attendance already exists for this date
       const existingAttendance = await pool.query(
@@ -419,7 +427,7 @@ router.put(
 
       // Update leave request status
       const newStatus =
-        action === "approve" ? "pending_hr_approval" : "rejected";
+        action === "approve" ? "Pending HR Approval" : "rejected";
 
       await pool.query(
         `

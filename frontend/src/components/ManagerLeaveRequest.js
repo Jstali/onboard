@@ -231,9 +231,9 @@ const ManagerLeaveRequest = () => {
 
   const formatStatus = (status) => {
     switch (status) {
-      case "pending_manager_approval":
+      case "Pending Manager Approval":
         return "Pending for Manager Approval";
-      case "pending_hr_approval":
+      case "Pending HR Approval":
         return "Pending for HR Approval";
       case "manager_approved":
         return "Manager Approved";
@@ -256,9 +256,9 @@ const ManagerLeaveRequest = () => {
         return "text-red-600 bg-red-100";
       case "manager_approved":
         return "text-blue-600 bg-blue-100";
-      case "pending_manager_approval":
+      case "Pending Manager Approval":
         return "text-yellow-600 bg-yellow-100";
-      case "pending_hr_approval":
+      case "Pending HR Approval":
         return "text-purple-600 bg-purple-100";
       default:
         return "text-gray-600 bg-gray-100";

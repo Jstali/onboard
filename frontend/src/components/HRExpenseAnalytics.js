@@ -131,6 +131,8 @@ const HRExpenseAnalytics = () => {
         return "Current Month";
       case "last_30_days":
         return "Last 30 Days";
+      case "all_years":
+        return "All Years";
       default:
         return "Current Year";
     }
@@ -187,6 +189,7 @@ const HRExpenseAnalytics = () => {
             <option value="current_year">Current Year</option>
             <option value="current_month">Current Month</option>
             <option value="last_30_days">Last 30 Days</option>
+            <option value="all_years">All Years</option>
           </select>
           <button
             onClick={exportToExcel}

@@ -519,8 +519,8 @@ router.post(
           totalLeaveDays,
           reason,
           role === "manager"
-            ? "pending_hr_approval"
-            : "pending_manager_approval", // Managers go directly to HR
+            ? "Pending HR Approval"
+            : "Pending Manager Approval", // Managers go directly to HR
           role,
           approvalToken,
           managers[0]?.manager_id || null,
@@ -752,7 +752,7 @@ router.get("/manager/pending", authenticateToken, async (req, res) => {
           lrm.current_manager_name as manager_name
         FROM leave_requests_with_manager lrm
         JOIN users u ON lrm.employee_id = u.id
-        WHERE lrm.status = 'pending_manager_approval' 
+        WHERE lrm.status = 'Pending Manager Approval' 
           AND lrm.current_manager_id = $1
         ORDER BY lrm.created_at ASC
       `,
@@ -776,7 +776,7 @@ router.get("/manager/pending", authenticateToken, async (req, res) => {
       JOIN users u ON lr.employee_id = u.id
       JOIN employee_master em ON em.company_email = u.email
       JOIN departments d ON em.department_id = d.id
-      WHERE lr.status = 'pending_manager_approval' 
+      WHERE lr.status = 'Pending Manager Approval' 
         AND d.id = $1
         AND d.manager_id = $2
       ORDER BY lr.created_at ASC

@@ -21,6 +21,11 @@ const ManagerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [leaveBalances, setLeaveBalances] = useState({});
+  const [showTooltip, setShowTooltip] = useState({
+    employeeId: null,
+    type: null,
+  });
 
   useEffect(() => {
     fetchEmployees();
@@ -59,6 +64,43 @@ const ManagerDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchLeaveBalances = async (employeeId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(
+        `http://localhost:5001/api/leave/balances/${employeeId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setLeaveBalances((prev) => ({
+          ...prev,
+          [employeeId]: data,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching leave balances:", error);
+    }
+  };
+
+  const handleMouseEnter = (employeeId, type) => {
+    setShowTooltip({ employeeId, type });
+    if (!leaveBalances[employeeId]) {
+      fetchLeaveBalances(employeeId);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setShowTooltip({ employeeId: null, type: null });
   };
 
   const handleLogout = () => {
@@ -282,11 +324,67 @@ const ManagerDashboard = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {employee.employment_type || "N/A"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 relative cursor-pointer"
+                        onMouseEnter={() =>
+                          handleMouseEnter(employee.id, "taken")
+                        }
+                        onMouseLeave={handleMouseLeave}
+                      >
                         {employee.leaves_taken || 0}
+                        {showTooltip.employeeId === employee.id &&
+                          showTooltip.type === "taken" && (
+                            <div className="absolute z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg top-full left-1/2 transform -translate-x-1/2 mt-2 min-w-64 whitespace-nowrap">
+                              <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                              <div className="font-semibold mb-2">
+                                Leaves Taken:
+                              </div>
+                              {leaveBalances[
+                                employee.id
+                              ]?.leaveTypeBalances?.map((balance, index) => (
+                                <div
+                                  key={index}
+                                  className="flex justify-between mb-1"
+                                >
+                                  <span>{balance.leave_type}:</span>
+                                  <span className="font-medium">
+                                    {balance.leaves_taken || 0}
+                                  </span>
+                                </div>
+                              )) || <div>Loading...</div>}
+                            </div>
+                          )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 relative cursor-pointer"
+                        onMouseEnter={() =>
+                          handleMouseEnter(employee.id, "remaining")
+                        }
+                        onMouseLeave={handleMouseLeave}
+                      >
                         {employee.leaves_remaining || 0}
+                        {showTooltip.employeeId === employee.id &&
+                          showTooltip.type === "remaining" && (
+                            <div className="absolute z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg top-full left-1/2 transform -translate-x-1/2 mt-2 min-w-64 whitespace-nowrap">
+                              <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                              <div className="font-semibold mb-2">
+                                Leaves Remaining:
+                              </div>
+                              {leaveBalances[
+                                employee.id
+                              ]?.leaveTypeBalances?.map((balance, index) => (
+                                <div
+                                  key={index}
+                                  className="flex justify-between mb-1"
+                                >
+                                  <span>{balance.leave_type}:</span>
+                                  <span className="font-medium">
+                                    {balance.leaves_remaining || 0}
+                                  </span>
+                                </div>
+                              )) || <div>Loading...</div>}
+                            </div>
+                          )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span

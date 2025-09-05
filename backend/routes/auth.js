@@ -200,7 +200,7 @@ router.post(
 
       // Update password
       await pool.query(
-        "UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+        "UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
         [hashedPassword, req.user.userId]
       );
 
