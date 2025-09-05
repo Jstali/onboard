@@ -1080,10 +1080,24 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                             editingEmployee?.form_data?.email;
                           const currentEmployeeCompanyEmail =
                             editingEmployee?.company_email;
-
+                          
                           // Also exclude the current logged-in user
                           const currentLoggedInUserEmail = user?.email;
-
+                          
+                          // Debug logging
+                          console.log("🔍 Manager filter debug:", {
+                            managerName: manager.employee_name,
+                            managerEmail: manager.company_email,
+                            currentEmployeeEmail,
+                            currentEmployeeCompanyEmail,
+                            currentLoggedInUserEmail,
+                            willShow: (
+                              manager.company_email !== currentEmployeeEmail &&
+                              manager.company_email !== currentEmployeeCompanyEmail &&
+                              manager.company_email !== currentLoggedInUserEmail
+                            )
+                          });
+                          
                           return (
                             manager.company_email !== currentEmployeeEmail &&
                             manager.company_email !==
