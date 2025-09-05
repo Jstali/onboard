@@ -128,14 +128,14 @@ fi
 # Run database migration
 echo
 echo "Running database migration..."
-if [ -f "migrations/001_initial_attendance_setup.sql" ]; then
-    echo "Found migration file: migrations/001_initial_attendance_setup.sql"
+if [ -f "migrations/002_complete_database_setup.sql" ]; then
+    echo "Found migration file: migrations/002_complete_database_setup.sql"
     echo "Executing SQL migration..."
     
     # Try psql command first
     if command -v psql &> /dev/null; then
         echo "Using psql command to run migration..."
-        PGPASSWORD="${DB_PASSWORD}" psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" -f migrations/001_initial_attendance_setup.sql
+        PGPASSWORD="${DB_PASSWORD}" psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" -f migrations/002_complete_database_setup.sql
         
         if [ $? -eq 0 ]; then
             echo "✓ Database migration completed successfully using psql"
@@ -156,7 +156,7 @@ if [ -f "migrations/001_initial_attendance_setup.sql" ]; then
               password: process.env.DB_PASSWORD
             });
             
-            const sql = fs.readFileSync('migrations/001_initial_attendance_setup.sql', 'utf8');
+            const sql = fs.readFileSync('migrations/002_complete_database_setup.sql', 'utf8');
             
             pool.query(sql)
               .then(() => {
@@ -166,7 +166,7 @@ if [ -f "migrations/001_initial_attendance_setup.sql" ]; then
               .catch(err => {
                 console.log('✗ Migration failed:', err.message);
                 console.log('You may need to run the migration manually:');
-                console.log('psql -h', process.env.DB_HOST, '-p', process.env.DB_PORT, '-U', process.env.DB_USER, '-d', process.env.DB_NAME, '-f migrations/001_initial_attendance_setup.sql');
+                console.log('psql -h', process.env.DB_HOST, '-p', process.env.DB_PORT, '-U', process.env.DB_USER, '-d', process.env.DB_NAME, '-f migrations/002_complete_database_setup.sql');
                 process.exit(1);
               });
             "
@@ -188,7 +188,7 @@ if [ -f "migrations/001_initial_attendance_setup.sql" ]; then
           password: process.env.DB_PASSWORD
         });
         
-        const sql = fs.readFileSync('migrations/001_initial_attendance_setup.sql', 'utf8');
+        const sql = fs.readFileSync('migrations/002_complete_database_setup.sql', 'utf8');
         
         pool.query(sql)
           .then(() => {
@@ -203,8 +203,8 @@ if [ -f "migrations/001_initial_attendance_setup.sql" ]; then
     fi
 else
     echo "✗ ERROR: Migration file not found!"
-    echo "Please ensure migrations/001_initial_attendance_setup.sql exists"
-    echo "Expected path: $(pwd)/migrations/001_initial_attendance_setup.sql"
+    echo "Please ensure migrations/002_complete_database_setup.sql exists"
+    echo "Expected path: $(pwd)/migrations/002_complete_database_setup.sql"
     exit 1
 fi
 
@@ -236,7 +236,7 @@ echo "✓ Node.js and npm verified"
 echo "✓ Backend dependencies installed"
 echo "✓ Frontend dependencies installed"
 echo "✓ Database connection tested"
-echo "✓ SQL migration (001_initial_attendance_setup.sql) executed"
+echo "✓ SQL migration (002_complete_database_setup.sql) executed - 31 tables created"
 echo "✓ Frontend built for production"
 echo
 echo "========================================"

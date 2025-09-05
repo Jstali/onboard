@@ -154,8 +154,8 @@ if %errorlevel% neq 0 (
 :: Run database migration
 echo.
 echo Running database migration...
-if exist migrations\001_initial_attendance_setup.sql (
-    echo Found migration file: migrations\001_initial_attendance_setup.sql
+if exist migrations\002_complete_database_setup.sql (
+    echo Found migration file: migrations\002_complete_database_setup.sql
     echo Executing SQL migration...
     
     :: Try psql command first
@@ -176,7 +176,7 @@ if exist migrations\001_initial_attendance_setup.sql (
             process.env.PGPASSWORD = password;
             
             try {
-              execSync(`psql -h ${host} -p ${port} -U ${user} -d ${database} -f migrations/001_initial_attendance_setup.sql`, 
+              execSync(`psql -h ${host} -p ${port} -U ${user} -d ${database} -f migrations/002_complete_database_setup.sql`, 
                        { stdio: 'inherit' });
               console.log('✓ Database migration completed successfully using psql');
             } catch (error) {
@@ -187,7 +187,7 @@ if exist migrations\001_initial_attendance_setup.sql (
         ) else (
             :: Use default values with psql
             set PGPASSWORD=your_password
-            psql -h localhost -p 5432 -U postgres -d onboardd -f migrations\001_initial_attendance_setup.sql
+            psql -h localhost -p 5432 -U postgres -d onboardd -f migrations\002_complete_database_setup.sql
         )
         
         if %errorlevel% equ 0 (
@@ -217,7 +217,7 @@ if exist migrations\001_initial_attendance_setup.sql (
       password: process.env.DB_PASSWORD || 'your_password'
     });
     
-    const sql = fs.readFileSync('migrations/001_initial_attendance_setup.sql', 'utf8');
+    const sql = fs.readFileSync('migrations/002_complete_database_setup.sql', 'utf8');
     
     pool.query(sql)
       .then(() => {
@@ -234,8 +234,8 @@ if exist migrations\001_initial_attendance_setup.sql (
     :migration_done
 ) else (
     echo ✗ ERROR: Migration file not found!
-    echo Please ensure migrations\001_initial_attendance_setup.sql exists
-    echo Expected path: %cd%\migrations\001_initial_attendance_setup.sql
+    echo Please ensure migrations\002_complete_database_setup.sql exists
+    echo Expected path: %cd%\migrations\002_complete_database_setup.sql
     pause
     exit /b 1
 )
@@ -269,7 +269,7 @@ echo ✓ Node.js and npm verified
 echo ✓ Backend dependencies installed
 echo ✓ Frontend dependencies installed
 echo ✓ Database connection tested
-echo ✓ SQL migration (001_initial_attendance_setup.sql) executed
+echo ✓ SQL migration (002_complete_database_setup.sql) executed
 echo ✓ Frontend built for production
 echo.
 echo ========================================
