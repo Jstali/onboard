@@ -35,7 +35,9 @@ const DocumentUploadSection = ({
 
   const fetchRequirements = useCallback(async () => {
     try {
-      const response = await axios.get(`/documents/requirements`);
+      const response = await axios.get(
+        `http://localhost:5001/api/documents/requirements`
+      );
       setRequirements(response.data);
 
       // Extract required documents
@@ -61,9 +63,12 @@ const DocumentUploadSection = ({
   const fetchUploadedDocuments = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`/documents/employee/${employeeId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `http://localhost:5001/api/documents/employee/${employeeId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setUploadedDocuments(response.data);
 
       // Calculate uploaded required documents count
@@ -81,7 +86,7 @@ const DocumentUploadSection = ({
 
       // Also fetch validation status
       const validationResponse = await axios.get(
-        `/documents/validation/${employeeId}`,
+        `http://localhost:5001/api/documents/validation/${employeeId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setValidation(validationResponse.data.validation);
@@ -93,9 +98,12 @@ const DocumentUploadSection = ({
   const fetchFormStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`/employee/form-status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `http://localhost:5001/api/employee/form-status`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setFormStatus(response.data.status);
       if (onStatusChange) {
         onStatusChange(response.data.status);
@@ -107,11 +115,14 @@ const DocumentUploadSection = ({
 
   useEffect(() => {
     fetchRequirements();
+  }, [fetchRequirements]);
+
+  useEffect(() => {
     if (employeeId) {
       fetchUploadedDocuments();
       fetchFormStatus();
     }
-  }, [employeeId, fetchRequirements, fetchUploadedDocuments, fetchFormStatus]);
+  }, [employeeId, fetchUploadedDocuments, fetchFormStatus]);
 
   const handleFileUpload = async (documentType, documentCategory, files) => {
     if (!files || files.length === 0) return;
@@ -133,12 +144,16 @@ const DocumentUploadSection = ({
       formData.append("documentCategories", JSON.stringify(documentCategories));
 
       const token = localStorage.getItem("token");
-      await axios.post(`/documents/upload/${employeeId}`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await axios.post(
+        `http://localhost:5001/api/documents/upload/${employeeId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       toast.success("Documents uploaded successfully!");
       fetchUploadedDocuments();
@@ -159,7 +174,7 @@ const DocumentUploadSection = ({
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `/employee/save-draft`,
+        `http://localhost:5001/api/employee/save-draft`,
         {
           employeeId,
           documents: uploadedDocuments,
