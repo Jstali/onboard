@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaCalendarAlt,
   FaTable,
@@ -6,17 +7,21 @@ import {
   FaHome,
   FaTimes,
   FaClock,
+  FaArrowLeft,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext";
 
 const EmployeeAttendance = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [view, setView] = useState("weekly"); // weekly, calendar
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({});
+  const [projectInputs, setProjectInputs] = useState({});
+  const [taskInputs, setTaskInputs] = useState({});
 
   // Get week start (Monday) and end (Sunday)
   const getWeekDates = (date) => {
@@ -73,10 +78,7 @@ const EmployeeAttendance = () => {
           const data = await response.json();
           setAttendance(data.attendance || []);
 
-          // Show friendly message if no records found
-          if (data.attendance && data.attendance.length === 0) {
-            toast.info("No attendance records found for the selected period");
-          }
+          // Data loaded successfully - no popup needed for empty results
         } else {
           console.error("Response is not JSON:", contentType);
           toast.error("Invalid response format from server");
@@ -96,7 +98,7 @@ const EmployeeAttendance = () => {
       } else if (response.status === 404) {
         const errorData = await response.json().catch(() => ({}));
         const message = errorData.error || "No attendance records found";
-        toast.info(message);
+        // Don't show popup for 404 - this is normal when no records exist
         setAttendance([]);
       } else if (response.status === 500) {
         console.error("Server error fetching attendance:", response.status);
@@ -261,7 +263,7 @@ const EmployeeAttendance = () => {
     }
   };
 
-  // Generate week days - Always current week
+  // Generate week days - Only Monday to Friday
   const generateWeekDays = () => {
     const { start } = getWeekDates(new Date());
     const days = [];
@@ -269,10 +271,32 @@ const EmployeeAttendance = () => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(start);
       date.setDate(start.getDate() + i);
-      days.push(date);
+      const dayOfWeek = date.getDay();
+      // Skip Saturday (6) and Sunday (0)
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        days.push(date);
+      }
     }
 
     return days;
+  };
+
+  // Format week range showing only weekdays (Mon-Fri)
+  const formatWeekRange = () => {
+    const weekDays = generateWeekDays();
+    if (weekDays.length === 0) return "";
+
+    const firstDay = weekDays[0];
+    const lastDay = weekDays[weekDays.length - 1];
+
+    const formatDate = (date) => {
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    };
+
+    return `${formatDate(firstDay)} - ${formatDate(lastDay)}`;
   };
 
   // Generate calendar days
@@ -359,343 +383,521 @@ const EmployeeAttendance = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">My Attendance</h2>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setView("weekly")}
-            className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
-              view === "weekly"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            <FaTable />
-            <span>Weekly View</span>
-          </button>
-          <button
-            onClick={() => setView("calendar")}
-            className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
-              view === "calendar"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            <FaCalendarAlt />
-            <span>Calendar View</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Weekly View */}
-      {view === "weekly" && (
-        <div className="bg-white rounded-lg shadow-sm border">
-          {/* Current Week Header */}
-          <div className="flex justify-center items-center p-4 border-b">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Current Week:{" "}
-              {getWeekDates(new Date()).start.toLocaleDateString()} -{" "}
-              {getWeekDates(new Date()).end.toLocaleDateString()}
-            </h3>
-          </div>
-
-          {/* Weekly Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Day
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Check In
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Check Out
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {generateWeekDays().map((date, index) => {
-                  const attendanceRecord = getAttendanceForDate(
-                    date.toISOString().split("T")[0]
-                  );
-                  const isToday =
-                    date.toDateString() === new Date().toDateString();
-                  const isPast = date < new Date().setHours(0, 0, 0, 0);
-
-                  return (
-                    <tr key={index} className={isToday ? "bg-blue-50" : ""}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {date.toLocaleDateString("en-US", { weekday: "short" })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {date.toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {attendanceRecord ? (
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              getStatusDisplay(attendanceRecord.status).color
-                            }`}
-                          >
-                            {attendanceRecord.status.charAt(0).toUpperCase() +
-                              attendanceRecord.status.slice(1)}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">Not marked</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {attendanceRecord?.check_in_time || "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {attendanceRecord?.check_out_time || "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <select
-                            className="border border-gray-300 rounded px-2 py-1 text-xs"
-                            value={attendanceRecord?.status || ""}
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                // Format date as YYYY-MM-DD without timezone issues
-                                const year = date.getFullYear();
-                                const month = String(
-                                  date.getMonth() + 1
-                                ).padStart(2, "0");
-                                const day = String(date.getDate()).padStart(
-                                  2,
-                                  "0"
-                                );
-                                const formattedDate = `${year}-${month}-${day}`;
-                                markAttendance(formattedDate, e.target.value);
-                              }
-                            }}
-                            disabled={false}
-                          >
-                            <option value="">Select Status</option>
-                            <option value="present">Present</option>
-                            <option value="wfh">WFH</option>
-                            <option value="leave">Leave</option>
-                            <option value="absent">Absent</option>
-                            <option value="half_day">Half Day</option>
-                          </select>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Attendance Summary */}
-          <div className="p-4 border-t bg-gray-50">
-            <div className="text-sm text-gray-600">
-              {loading
-                ? "Loading..."
-                : `${
-                    attendance.filter((a) => {
-                      const attendanceDate = new Date(a.date);
-                      const weekStart = getWeekDates(new Date()).start;
-                      const weekEnd = getWeekDates(new Date()).end;
-                      return (
-                        attendanceDate >= weekStart && attendanceDate <= weekEnd
-                      );
-                    }).length
-                  } days marked this week`}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+              >
+                <FaArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </button>
+              <h2 className="text-3xl font-bold text-gray-900">
+                My Attendance
+              </h2>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setView("weekly")}
+                className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+                  view === "weekly"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                <FaTable />
+                <span>Weekly View</span>
+              </button>
+              <button
+                onClick={() => setView("calendar")}
+                className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+                  view === "calendar"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                <FaCalendarAlt />
+                <span>Calendar View</span>
+              </button>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Calendar View */}
-      {view === "calendar" && (
-        <div className="bg-white rounded-lg shadow-sm border">
-          {/* Month Navigation */}
-          <div className="flex justify-between items-center p-4 border-b">
-            <button
-              onClick={goToPreviousMonth}
-              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-            >
-              Previous Month
-            </button>
-            <h3 className="text-lg font-semibold">
-              {currentMonth.toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric",
-              })}
-            </h3>
-            <button
-              onClick={goToNextMonth}
-              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-            >
-              Next Month
-            </button>
-          </div>
+          {/* Weekly View */}
+          {view === "weekly" && (
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+              {/* Current Week Header */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-800 text-center">
+                  Current Week: {formatWeekRange()}
+                </h3>
+              </div>
 
-          {/* Calendar Grid */}
-          <div className="p-4">
-            <div className="grid grid-cols-7 gap-1">
-              {/* Day headers */}
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div
-                  key={day}
-                  className="p-2 text-center text-sm font-medium text-gray-500"
-                >
-                  {day}
+              {/* Weekly Table */}
+              <div className="p-6">
+                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Day
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Project
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Tasks
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {generateWeekDays().map((date, index) => {
+                        const attendanceRecord = getAttendanceForDate(
+                          date.toISOString().split("T")[0]
+                        );
+                        const isToday =
+                          date.toDateString() === new Date().toDateString();
+                        const isPast = date < new Date().setHours(0, 0, 0, 0);
+
+                        return (
+                          <tr
+                            key={index}
+                            className={`hover:bg-gray-50 transition-colors duration-200 ${
+                              isToday
+                                ? "bg-blue-50 border-l-4 border-blue-500"
+                                : ""
+                            }`}
+                          >
+                            <td className="px-6 py-5 whitespace-nowrap text-sm font-semibold text-gray-900">
+                              {date.toLocaleDateString("en-US", {
+                                weekday: "short",
+                              })}
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-700">
+                              {date.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap">
+                              {attendanceRecord ? (
+                                <span
+                                  className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                                    getStatusDisplay(attendanceRecord.status)
+                                      .color
+                                  }`}
+                                >
+                                  {attendanceRecord.status
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                    attendanceRecord.status.slice(1)}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 text-sm">
+                                  Not marked
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap">
+                              <input
+                                type="text"
+                                placeholder="Enter project name"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                value={
+                                  projectInputs[
+                                    date.toISOString().split("T")[0]
+                                  ] || ""
+                                }
+                                onChange={(e) => {
+                                  const dateKey = date
+                                    .toISOString()
+                                    .split("T")[0];
+                                  setProjectInputs((prev) => ({
+                                    ...prev,
+                                    [dateKey]: e.target.value,
+                                  }));
+                                }}
+                              />
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap">
+                              <input
+                                type="text"
+                                placeholder="Describe your tasks"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                value={
+                                  taskInputs[
+                                    date.toISOString().split("T")[0]
+                                  ] || ""
+                                }
+                                onChange={(e) => {
+                                  const dateKey = date
+                                    .toISOString()
+                                    .split("T")[0];
+                                  setTaskInputs((prev) => ({
+                                    ...prev,
+                                    [dateKey]: e.target.value,
+                                  }));
+                                }}
+                              />
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap">
+                              <select
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-white"
+                                value={attendanceRecord?.status || ""}
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    // Format date as YYYY-MM-DD without timezone issues
+                                    const year = date.getFullYear();
+                                    const month = String(
+                                      date.getMonth() + 1
+                                    ).padStart(2, "0");
+                                    const day = String(date.getDate()).padStart(
+                                      2,
+                                      "0"
+                                    );
+                                    const formattedDate = `${year}-${month}-${day}`;
+                                    markAttendance(
+                                      formattedDate,
+                                      e.target.value
+                                    );
+                                  }
+                                }}
+                                disabled={false}
+                              >
+                                <option value="">Select Status</option>
+                                <option value="present">Present</option>
+                                <option value="wfh">WFH</option>
+                                <option value="leave">Leave</option>
+                                <option value="absent">Absent</option>
+                                <option value="half_day">Half Day</option>
+                              </select>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
+              </div>
 
-              {/* Calendar days */}
-              {generateCalendarDays().map(({ date, isCurrentMonth }, index) => {
-                // Format date as YYYY-MM-DD without timezone issues
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, "0");
-                const day = String(date.getDate()).padStart(2, "0");
-                const formattedDate = `${year}-${month}-${day}`;
-                const attendanceRecord = getAttendanceForDate(formattedDate);
-                const isToday =
-                  date.toDateString() === new Date().toDateString();
-                const isPast = date < new Date().setHours(0, 0, 0, 0);
+              {/* Attendance Summary */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-6 border-t border-gray-200">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-6">
+                    {loading
+                      ? "Loading..."
+                      : `${
+                          attendance.filter((a) => {
+                            const attendanceDate = new Date(a.date);
+                            const weekStart = getWeekDates(new Date()).start;
+                            const weekEnd = getWeekDates(new Date()).end;
+                            return (
+                              attendanceDate >= weekStart &&
+                              attendanceDate <= weekEnd
+                            );
+                          }).length
+                        } days marked this week`}
+                  </p>
 
-                return (
-                  <div
-                    key={index}
-                    className={`p-2 min-h-[80px] border border-gray-200 ${
-                      !isCurrentMonth ? "bg-gray-50 text-gray-400" : "bg-white"
-                    } ${isToday ? "ring-2 ring-blue-500" : ""}`}
-                  >
-                    <div className="text-sm font-medium mb-1">
-                      {date.getDate()}
-                    </div>
-                    {isCurrentMonth && (
-                      <div className="space-y-1">
-                        {attendanceRecord ? (
-                          <div
-                            className={`text-xs px-1 py-0.5 rounded ${
-                              getStatusDisplay(attendanceRecord.status).color
-                            }`}
-                          >
-                            {attendanceRecord.status.charAt(0).toUpperCase() +
-                              attendanceRecord.status.slice(1)}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-gray-400">
-                            No attendance
-                          </div>
-                        )}
+                  {/* Week Statistics */}
+                  <div className="grid grid-cols-5 gap-6">
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-green-600 mb-1">
+                        {
+                          attendance.filter(
+                            (record) => record.status === "present"
+                          ).length
+                        }
                       </div>
-                    )}
+                      <div className="text-sm font-medium text-gray-700">
+                        Present
+                      </div>
+                    </div>
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-blue-600 mb-1">
+                        {
+                          attendance.filter((record) => record.status === "wfh")
+                            .length
+                        }
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">
+                        WFH
+                      </div>
+                    </div>
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-red-600 mb-1">
+                        {
+                          attendance.filter(
+                            (record) => record.status === "leave"
+                          ).length
+                        }
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">
+                        Leave
+                      </div>
+                    </div>
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-gray-600 mb-1">
+                        {
+                          attendance.filter(
+                            (record) => record.status === "absent"
+                          ).length
+                        }
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">
+                        Absent
+                      </div>
+                    </div>
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-orange-600 mb-1">
+                        {
+                          attendance.filter(
+                            (record) => record.status === "half_day"
+                          ).length
+                        }
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">
+                        Half Day
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Attendance Summary */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold mb-4">Attendance Summary</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {
-                attendance.filter((a) => {
-                  const attendanceDate = new Date(a.date);
-                  const monthStart = getMonthDates(currentMonth).start;
-                  const monthEnd = getMonthDates(currentMonth).end;
-                  return (
-                    attendanceDate >= monthStart &&
-                    attendanceDate <= monthEnd &&
-                    a.status === "present"
-                  );
-                }).length
-              }
+          {/* Calendar View */}
+          {view === "calendar" && (
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+              {/* Month Navigation */}
+              <div className="flex justify-between items-center p-4 border-b">
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setView("weekly")}
+                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                  >
+                    <FaArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </button>
+                  <button
+                    onClick={goToPreviousMonth}
+                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    Previous Month
+                  </button>
+                </div>
+                <h3 className="text-lg font-semibold">
+                  {currentMonth.toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </h3>
+                <button
+                  onClick={goToNextMonth}
+                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                >
+                  Next Month
+                </button>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="p-4">
+                <div className="grid grid-cols-7 gap-1">
+                  {/* Day headers */}
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                    (day) => (
+                      <div
+                        key={day}
+                        className="p-2 text-center text-sm font-medium text-gray-500"
+                      >
+                        {day}
+                      </div>
+                    )
+                  )}
+
+                  {/* Calendar days */}
+                  {generateCalendarDays().map(
+                    ({ date, isCurrentMonth }, index) => {
+                      // Format date as YYYY-MM-DD without timezone issues
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(
+                        2,
+                        "0"
+                      );
+                      const day = String(date.getDate()).padStart(2, "0");
+                      const formattedDate = `${year}-${month}-${day}`;
+                      const attendanceRecord =
+                        getAttendanceForDate(formattedDate);
+                      const isToday =
+                        date.toDateString() === new Date().toDateString();
+                      const isPast = date < new Date().setHours(0, 0, 0, 0);
+
+                      return (
+                        <div
+                          key={index}
+                          className={`p-2 min-h-[80px] border border-gray-200 ${
+                            !isCurrentMonth
+                              ? "bg-gray-50 text-gray-400"
+                              : "bg-white"
+                          } ${isToday ? "ring-2 ring-blue-500" : ""}`}
+                        >
+                          <div className="text-sm font-medium mb-1">
+                            {date.getDate()}
+                          </div>
+                          {isCurrentMonth && (
+                            <div className="space-y-1">
+                              {attendanceRecord ? (
+                                <div
+                                  className={`text-xs px-1 py-0.5 rounded ${
+                                    getStatusDisplay(attendanceRecord.status)
+                                      .color
+                                  }`}
+                                >
+                                  {attendanceRecord.status
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                    attendanceRecord.status.slice(1)}
+                                </div>
+                              ) : (
+                                <div className="text-xs text-gray-400">
+                                  No attendance
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              </div>
+
+              {/* Attendance Summary for Calendar View */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-6 border-t border-gray-200">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold mb-6 text-gray-800">
+                    Monthly Attendance Summary
+                  </h3>
+
+                  {/* Monthly Statistics */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-green-600 mb-1">
+                        {
+                          attendance.filter((a) => {
+                            const attendanceDate = new Date(a.date);
+                            const monthStart =
+                              getMonthDates(currentMonth).start;
+                            const monthEnd = getMonthDates(currentMonth).end;
+                            return (
+                              attendanceDate >= monthStart &&
+                              attendanceDate <= monthEnd &&
+                              a.status === "present"
+                            );
+                          }).length
+                        }
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">
+                        Present
+                      </div>
+                    </div>
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-blue-600 mb-1">
+                        {
+                          attendance.filter((a) => {
+                            const attendanceDate = new Date(a.date);
+                            const monthStart =
+                              getMonthDates(currentMonth).start;
+                            const monthEnd = getMonthDates(currentMonth).end;
+                            return (
+                              attendanceDate >= monthStart &&
+                              attendanceDate <= monthEnd &&
+                              a.status === "wfh"
+                            );
+                          }).length
+                        }
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">
+                        WFH
+                      </div>
+                    </div>
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-red-600 mb-1">
+                        {
+                          attendance.filter((a) => {
+                            const attendanceDate = new Date(a.date);
+                            const monthStart =
+                              getMonthDates(currentMonth).start;
+                            const monthEnd = getMonthDates(currentMonth).end;
+                            return (
+                              attendanceDate >= monthStart &&
+                              attendanceDate <= monthEnd &&
+                              a.status === "leave"
+                            );
+                          }).length
+                        }
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">
+                        Leave
+                      </div>
+                    </div>
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-gray-600 mb-1">
+                        {
+                          attendance.filter((a) => {
+                            const attendanceDate = new Date(a.date);
+                            const monthStart =
+                              getMonthDates(currentMonth).start;
+                            const monthEnd = getMonthDates(currentMonth).end;
+                            return (
+                              attendanceDate >= monthStart &&
+                              attendanceDate <= monthEnd &&
+                              a.status === "absent"
+                            );
+                          }).length
+                        }
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">
+                        Absent
+                      </div>
+                    </div>
+                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                      <div className="text-3xl font-bold text-orange-600 mb-1">
+                        {
+                          attendance.filter((a) => {
+                            const attendanceDate = new Date(a.date);
+                            const monthStart =
+                              getMonthDates(currentMonth).start;
+                            const monthEnd = getMonthDates(currentMonth).end;
+                            return (
+                              attendanceDate >= monthStart &&
+                              attendanceDate <= monthEnd &&
+                              a.status === "half_day"
+                            );
+                          }).length
+                        }
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">
+                        Half Day
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Present</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">
-              {
-                attendance.filter((a) => {
-                  const attendanceDate = new Date(a.date);
-                  const monthStart = getMonthDates(currentMonth).start;
-                  const monthEnd = getMonthDates(currentMonth).end;
-                  return (
-                    attendanceDate >= monthStart &&
-                    attendanceDate <= monthEnd &&
-                    a.status === "wfh"
-                  );
-                }).length
-              }
-            </div>
-            <div className="text-sm text-gray-600">WFH</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-600">
-              {
-                attendance.filter((a) => {
-                  const attendanceDate = new Date(a.date);
-                  const monthStart = getMonthDates(currentMonth).start;
-                  const monthEnd = getMonthDates(currentMonth).end;
-                  return (
-                    attendanceDate >= monthStart &&
-                    attendanceDate <= monthEnd &&
-                    a.status === "leave"
-                  );
-                }).length
-              }
-            </div>
-            <div className="text-sm text-gray-600">Leave</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-600">
-              {
-                attendance.filter((a) => {
-                  const attendanceDate = new Date(a.date);
-                  const monthStart = getMonthDates(currentMonth).start;
-                  const monthEnd = getMonthDates(currentMonth).end;
-                  return (
-                    attendanceDate >= monthStart &&
-                    attendanceDate <= monthEnd &&
-                    a.status === "absent"
-                  );
-                }).length
-              }
-            </div>
-            <div className="text-sm text-gray-600">Absent</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">
-              {
-                attendance.filter((a) => {
-                  const attendanceDate = new Date(a.date);
-                  const monthStart = getMonthDates(currentMonth).start;
-                  const monthEnd = getMonthDates(currentMonth).end;
-                  return (
-                    attendanceDate >= monthStart &&
-                    attendanceDate <= monthEnd &&
-                    a.status === "half_day"
-                  );
-                }).length
-              }
-            </div>
-            <div className="text-sm text-gray-600">Half Day</div>
-          </div>
+          )}
         </div>
       </div>
     </div>

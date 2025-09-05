@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 
-const EmployeeExpenseHistory = () => {
+const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +95,11 @@ const EmployeeExpenseHistory = () => {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            window.history.back();
+            if (onNavigateToSubmit) {
+              onNavigateToSubmit();
+            } else {
+              window.history.back();
+            }
           }}
           onMouseDown={(e) => e.preventDefault()}
           className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer select-none"

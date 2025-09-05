@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   FaArrowLeft,
   FaClock,
@@ -9,31 +8,35 @@ import {
   FaBed,
   FaCalendarAlt,
   FaCheck,
-  FaTimes,
-  FaEdit,
-  FaPlus,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const ManagerEmployeeAttendance = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { employeeId } = useParams();
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showMarkAttendance, setShowMarkAttendance] = useState(false);
-  const [attendanceForm, setAttendanceForm] = useState({
-    date: "",
-    status: "present",
-    check_in_time: "",
-    check_out_time: "",
-    notes: "",
-  });
 
   useEffect(() => {
     fetchEmployees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (employeeId && employees.length > 0) {
+      const employee = employees.find(
+        (emp) => emp.id.toString() === employeeId
+      );
+      if (employee) {
+        setSelectedEmployee(employee);
+        fetchEmployeeAttendance(employee.id);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employeeId, employees]);
 
   const fetchEmployees = async () => {
     try {
@@ -136,43 +139,6 @@ const ManagerEmployeeAttendance = () => {
     }
   };
 
-  const handleMarkAttendance = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `http://localhost:5001/api/manager/employee/${selectedEmployee.id}/attendance`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(attendanceForm),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        toast.success(data.message);
-        setShowMarkAttendance(false);
-        setAttendanceForm({
-          date: "",
-          status: "present",
-          check_in_time: "",
-          check_out_time: "",
-          notes: "",
-        });
-        fetchEmployeeAttendance(selectedEmployee.id);
-      } else {
-        const error = await response.json();
-        toast.error(error.error || "Failed to mark attendance");
-      }
-    } catch (error) {
-      console.error("Error marking attendance:", error);
-      toast.error("Failed to mark attendance");
-    }
-  };
-
   const getStatusDisplay = (status) => {
     switch (status) {
       case "present":
@@ -195,7 +161,7 @@ const ManagerEmployeeAttendance = () => {
         };
       case "absent":
         return {
-          icon: <FaTimes className="text-gray-600" />,
+          icon: <span className="text-gray-600">✗</span>,
           color: "bg-gray-100 text-gray-800",
           text: "Absent",
         };
@@ -260,7 +226,7 @@ const ManagerEmployeeAttendance = () => {
               }}
               className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center space-x-2"
             >
-              <FaTimes />
+              <span>🚪</span>
               <span>Logout</span>
             </button>
           </div>
@@ -337,13 +303,6 @@ const ManagerEmployeeAttendance = () => {
                         total)
                       </p>
                     </div>
-                    <button
-                      onClick={() => setShowMarkAttendance(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-                    >
-                      <FaPlus />
-                      <span>Mark Attendance</span>
-                    </button>
                   </div>
                 </div>
 
@@ -433,159 +392,6 @@ const ManagerEmployeeAttendance = () => {
           </div>
         </div>
       </div>
-
-      {/* Mark Attendance Modal */}
-      {showMarkAttendance && selectedEmployee && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Mark Attendance - {selectedEmployee.first_name}{" "}
-                  {selectedEmployee.last_name}
-                </h3>
-                <button
-                  onClick={() => setShowMarkAttendance(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    value={attendanceForm.date}
-                    onChange={(e) =>
-                      setAttendanceForm({
-                        ...attendanceForm,
-                        date: e.target.value,
-                      })
-                    }
-                    min={(() => {
-                      const today = new Date();
-                      const startOfWeek = new Date(today);
-                      startOfWeek.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
-                      return startOfWeek.toISOString().split("T")[0];
-                    })()}
-                    max={(() => {
-                      const today = new Date();
-                      const startOfWeek = new Date(today);
-                      startOfWeek.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
-                      const endOfNextWeek = new Date(startOfWeek);
-                      endOfNextWeek.setDate(startOfWeek.getDate() + 13); // End of next week (Saturday)
-                      return endOfNextWeek.toISOString().split("T")[0];
-                    })()}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    required
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Managers can only mark attendance for the present week and
-                    future week (2 weeks total)
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Status
-                  </label>
-                  <select
-                    value={attendanceForm.status}
-                    onChange={(e) =>
-                      setAttendanceForm({
-                        ...attendanceForm,
-                        status: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                  >
-                    <option value="present">Present</option>
-                    <option value="wfh">Work From Home</option>
-                    <option value="leave">Leave</option>
-                    <option value="absent">Absent</option>
-                    <option value="half_day">Half Day</option>
-                    <option value="holiday">Holiday</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Check In Time
-                    </label>
-                    <input
-                      type="time"
-                      value={attendanceForm.check_in_time}
-                      onChange={(e) =>
-                        setAttendanceForm({
-                          ...attendanceForm,
-                          check_in_time: e.target.value,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Check Out Time
-                    </label>
-                    <input
-                      type="time"
-                      value={attendanceForm.check_out_time}
-                      onChange={(e) =>
-                        setAttendanceForm({
-                          ...attendanceForm,
-                          check_out_time: e.target.value,
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Notes
-                  </label>
-                  <textarea
-                    value={attendanceForm.notes}
-                    onChange={(e) =>
-                      setAttendanceForm({
-                        ...attendanceForm,
-                        notes: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    rows="3"
-                    placeholder="Optional notes..."
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    onClick={() => setShowMarkAttendance(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleMarkAttendance}
-                    disabled={!attendanceForm.date}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    Mark Attendance
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

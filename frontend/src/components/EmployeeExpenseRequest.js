@@ -12,9 +12,7 @@ const EmployeeExpenseRequest = () => {
     currency: "INR",
     description: "",
     expenseDate: "",
-    projectReference: "",
     clientCode: "",
-    paymentMode: "",
     taxIncluded: false,
   });
   const [attachments, setAttachments] = useState([]);
@@ -389,40 +387,6 @@ const EmployeeExpenseRequest = () => {
           </div>
         </div>
 
-        {/* Optional Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Project/Client Reference
-            </label>
-            <input
-              type="text"
-              name="projectReference"
-              value={formData.projectReference}
-              onChange={handleInputChange}
-              placeholder="Optional"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Payment Mode
-            </label>
-            <select
-              name="paymentMode"
-              value={formData.paymentMode}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select Payment Mode</option>
-              <option value="Cash">Cash</option>
-              <option value="Card">Card</option>
-              <option value="Online">Online</option>
-              <option value="Reimbursed">Reimbursed</option>
-            </select>
-          </div>
-        </div>
-
         {/* Tax Included */}
         <div className="flex items-center">
           <input
@@ -493,8 +457,7 @@ const EmployeeExpenseRequest = () => {
                 currency: "INR",
                 description: "",
                 expenseDate: "",
-                projectReference: "",
-                paymentMode: "",
+                clientCode: "",
                 taxIncluded: false,
               });
               setAttachments([]);

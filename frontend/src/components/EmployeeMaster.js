@@ -470,15 +470,32 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                       )
                         return;
                       try {
-                        await axios.delete(
+                        console.log(
+                          "🗑️ Attempting to delete employee:",
+                          employee.id
+                        );
+                        console.log(
+                          "🔐 Current axios headers:",
+                          axios.defaults.headers.common
+                        );
+
+                        const response = await axios.delete(
                           `http://localhost:5001/api/hr/master/${employee.id}`
                         );
+
+                        console.log("✅ Delete response:", response.data);
+                        toast.success("Employee deleted successfully!");
                         if (onRefresh) onRefresh();
                       } catch (e) {
-                        console.error(e);
-                        alert(
-                          e.response?.data?.error || "Failed to delete employee"
-                        );
+                        console.error("❌ Delete error:", e);
+                        console.error("❌ Error response:", e.response);
+
+                        const errorMessage =
+                          e.response?.data?.error ||
+                          e.response?.data?.message ||
+                          "Failed to delete employee";
+
+                        toast.error(errorMessage);
                       }
                     }}
                     className="text-red-600 hover:text-red-900"

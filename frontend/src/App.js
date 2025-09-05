@@ -25,6 +25,7 @@ import ManagerLeaveRequests from "./components/ManagerLeaveRequests";
 import ManagerLeaveRequest from "./components/ManagerLeaveRequest";
 import ManagerEmployeeAttendance from "./components/ManagerEmployeeAttendance";
 import Profile from "./components/Profile";
+import CompanyPolicies from "./components/CompanyPolicies";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -131,7 +132,7 @@ function AppRoutes() {
         path="/manager/attendance/:employeeId"
         element={
           <ProtectedRoute role="manager">
-            <ManagerAttendance />
+            <ManagerEmployeeAttendance />
           </ProtectedRoute>
         }
       />
@@ -184,6 +185,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Company Policies Route - Available to all authenticated users */}
+      <Route
+        path="/company-policies"
+        element={
+          <ProtectedRoute>
+            <CompanyPolicies />
           </ProtectedRoute>
         }
       />

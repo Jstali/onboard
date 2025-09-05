@@ -1,13 +1,14 @@
 {
   "files": {
-    "main.css": "/static/css/main.cd8510d2.css",
-    "main.js": "/static/js/main.09045d5e.js",
+    "main.css": "/static/css/main.058592c4.css",
+    "main.js": "/static/js/main.d4185247.js",
+    "static/media/nxzen.png": "/static/media/nxzen.1addc396e915c0b7855c.png",
     "index.html": "/index.html",
-    "main.cd8510d2.css.map": "/static/css/main.cd8510d2.css.map",
-    "main.09045d5e.js.map": "/static/js/main.09045d5e.js.map"
+    "main.058592c4.css.map": "/static/css/main.058592c4.css.map",
+    "main.d4185247.js.map": "/static/js/main.d4185247.js.map"
   },
   "entrypoints": [
-    "static/css/main.cd8510d2.css",
-    "static/js/main.09045d5e.js"
+    "static/css/main.058592c4.css",
+    "static/js/main.d4185247.js"
   ]
 }

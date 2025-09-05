@@ -114,24 +114,6 @@ const EmployeeDashboard = () => {
                 <FaUserEdit className="mr-2" />
                 Profile
               </Link>
-              {isOnboarded && (
-                <>
-                  <a
-                    href="/attendance"
-                    className="flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors duration-200"
-                  >
-                    <FaCalendarAlt className="mr-2" />
-                    Attendance Portal
-                  </a>
-                  <button
-                    onClick={() => setActiveTab("expenses")}
-                    className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
-                  >
-                    <FaReceipt className="mr-2" />
-                    Expenses
-                  </button>
-                </>
-              )}
               <button
                 onClick={handleLogout}
                 className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
@@ -179,32 +161,14 @@ const EmployeeDashboard = () => {
         {/* Expenses Content */}
         {isOnboarded && activeTab === "expenses" && <EmployeeExpenseRequest />}
         {isOnboarded && activeTab === "expense-history" && (
-          <EmployeeExpenseHistory />
+          <EmployeeExpenseHistory
+            onNavigateToSubmit={() => setActiveTab("expenses")}
+          />
         )}
 
         {/* Dashboard Content */}
         {activeTab === "dashboard" && (
           <>
-            {/* Welcome Section */}
-            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                    <FaUserEdit className="w-6 h-6 text-primary-600" />
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Welcome!
-                  </h2>
-                  <p className="text-gray-600">
-                    Complete your onboarding process to get started with the
-                    company.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Onboarding Form or Success Message */}
             {onboardingStatus?.hasForm ? (
               onboardingStatus.status ===
@@ -242,10 +206,7 @@ const EmployeeDashboard = () => {
                   <div className="flex items-center">
                     <FaCalendarAlt className="text-3xl mr-4" />
                     <div>
-                      <h3 className="text-xl font-semibold">Attendance</h3>
-                      <p className="text-blue-100">
-                        Mark attendance and view calendar
-                      </p>
+                      <h3 className="text-xl font-semibold">Book your time</h3>
                     </div>
                   </div>
                 </Link>
@@ -279,17 +240,17 @@ const EmployeeDashboard = () => {
                 </button>
 
                 <Link
-                  to="/profile"
-                  className="bg-purple-600 text-white p-6 rounded-lg shadow-lg hover:bg-purple-700 transition-colors"
+                  to="/company-policies"
+                  className="bg-indigo-600 text-white p-6 rounded-lg shadow-lg hover:bg-indigo-700 transition-colors"
                 >
                   <div className="flex items-center">
-                    <FaUserEdit className="text-3xl mr-4" />
+                    <FaFileAlt className="text-3xl mr-4" />
                     <div>
                       <h3 className="text-xl font-semibold">
-                        Profile Settings
+                        Company Policies
                       </h3>
-                      <p className="text-purple-100">
-                        Manage your account settings
+                      <p className="text-indigo-100">
+                        View company guidelines and policies
                       </p>
                     </div>
                   </div>

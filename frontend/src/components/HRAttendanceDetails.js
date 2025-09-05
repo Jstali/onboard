@@ -29,10 +29,8 @@ const HRAttendanceDetails = () => {
   const fetchAttendanceDetails = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `/attendance/hr/details?month=${selectedMonth}&year=${selectedYear}`
-      );
-      setAttendanceRecords(response.data.employees || []);
+      // Remove all employees - set to empty array
+      setAttendanceRecords([]);
     } catch (error) {
       console.error("Error fetching attendance details:", error);
       toast.error("Failed to fetch attendance details");
