@@ -438,7 +438,7 @@ const OnboardingForm = ({ onSuccess }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Education *
+              Latest Graduation *
             </label>
             <div className="relative">
               <FaGraduationCap className="absolute left-3 top-3 text-gray-400" />
