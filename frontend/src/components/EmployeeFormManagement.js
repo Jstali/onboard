@@ -1009,6 +1009,15 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     type="tel"
                     name="phone"
                     defaultValue={editingEmployee.form_data?.phone || ""}
+                    maxLength="10"
+                    pattern="[0-9]{10}"
+                    placeholder="Enter 10 digit number"
+                    onInput={(e) => {
+                      // Allow only numeric input and limit to 10 digits
+                      e.target.value = e.target.value
+                        .replace(/[^0-9]/g, "")
+                        .slice(0, 10);
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -1227,6 +1236,15 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       defaultValue={
                         editingEmployee.form_data?.emergencyContact?.phone || ""
                       }
+                      maxLength="10"
+                      pattern="[0-9]{10}"
+                      placeholder="Enter 10 digit number"
+                      onInput={(e) => {
+                        // Allow only numeric input and limit to 10 digits
+                        e.target.value = e.target.value
+                          .replace(/[^0-9]/g, "")
+                          .slice(0, 10);
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
@@ -1278,6 +1296,15 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                         editingEmployee.form_data?.emergencyContact2?.phone ||
                         ""
                       }
+                      maxLength="10"
+                      pattern="[0-9]{10}"
+                      placeholder="Enter 10 digit number"
+                      onInput={(e) => {
+                        // Allow only numeric input and limit to 10 digits
+                        e.target.value = e.target.value
+                          .replace(/[^0-9]/g, "")
+                          .slice(0, 10);
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>

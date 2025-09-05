@@ -378,6 +378,13 @@ const OnboardingForm = ({ onSuccess }) => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
+                pattern="[0-9]{10}"
+                onInput={(e) => {
+                  // Allow only numeric input and limit to 10 digits
+                  e.target.value = e.target.value
+                    .replace(/[^0-9]/g, "")
+                    .slice(0, 10);
+                }}
                 className={`input-field pl-10 ${
                   errors.phone ? "border-red-500" : ""
                 }`}
@@ -502,6 +509,13 @@ const OnboardingForm = ({ onSuccess }) => {
                 name="emergencyContact.phone"
                 value={formData.emergencyContact.phone}
                 onChange={handleInputChange}
+                pattern="[0-9]{10}"
+                onInput={(e) => {
+                  // Allow only numeric input and limit to 10 digits
+                  e.target.value = e.target.value
+                    .replace(/[^0-9]/g, "")
+                    .slice(0, 10);
+                }}
                 className={`input-field ${
                   errors["emergencyContact.phone"] ? "border-red-500" : ""
                 }`}
@@ -579,6 +593,13 @@ const OnboardingForm = ({ onSuccess }) => {
                 name="emergencyContact2.phone"
                 value={formData.emergencyContact2.phone}
                 onChange={handleInputChange}
+                pattern="[0-9]{10}"
+                onInput={(e) => {
+                  // Allow only numeric input and limit to 10 digits
+                  e.target.value = e.target.value
+                    .replace(/[^0-9]/g, "")
+                    .slice(0, 10);
+                }}
                 className={`input-field ${
                   errors["emergencyContact2.phone"] ? "border-red-500" : ""
                 }`}
