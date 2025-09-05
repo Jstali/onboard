@@ -4,3 +4,430 @@
 🔍 HR route middleware hit: GET /document-templates
 🔍 Role check - User ID: 1, Role: hr, Required roles: hr
 ✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/auth/me - 2025-09-05T08:01:26.875Z
+🔍 GET /api/auth/me - 2025-09-05T08:01:26.877Z
+🔍 GET /api/hr/employees - 2025-09-05T08:01:26.976Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:26.977Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/master - 2025-09-05T08:01:26.995Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/employees - 2025-09-05T08:01:26.995Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:26.998Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:27.000Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/auth/me - 2025-09-05T08:01:27.684Z
+🔍 GET /api/auth/me - 2025-09-05T08:01:27.686Z
+🔍 GET /api/hr/employees - 2025-09-05T08:01:27.699Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:27.699Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:27.700Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/master - 2025-09-05T08:01:27.702Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:27.703Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:27.703Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/auth/me - 2025-09-05T08:01:27.900Z
+🔍 GET /api/auth/me - 2025-09-05T08:01:27.900Z
+🔍 GET /api/hr/employees - 2025-09-05T08:01:27.916Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:27.917Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:27.917Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/employees - 2025-09-05T08:01:27.918Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:27.919Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:27.919Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.136Z
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.137Z
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.162Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.163Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.167Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.168Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.173Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.175Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.351Z
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.352Z
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.369Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.370Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.371Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.371Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.371Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.373Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.556Z
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.557Z
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.566Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.567Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.568Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.568Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.568Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.568Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.723Z
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.723Z
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.733Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.734Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.735Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.736Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.736Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.737Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.898Z
+🔍 GET /api/auth/me - 2025-09-05T08:01:28.898Z
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.910Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.911Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.911Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.911Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/employees - 2025-09-05T08:01:28.912Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:01:28.913Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/auth/me - 2025-09-05T08:01:29.069Z
+🔍 GET /api/auth/me - 2025-09-05T08:01:29.070Z
+🔍 GET /api/hr/master - 2025-09-05T08:01:29.092Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/employees - 2025-09-05T08:01:29.093Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/master - 2025-09-05T08:01:29.095Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/employees - 2025-09-05T08:01:29.096Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:29.098Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:01:29.103Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/document-collection - 2025-09-05T08:01:30.774Z
+🔍 Document collection request: GET /api/hr/document-collection
+🔍 Request body: {}
+🔍 Request params: {}
+🔍 HR route middleware hit: GET /document-collection
+🔍 GET /api/hr/document-templates - 2025-09-05T08:01:30.775Z
+🔍 HR route middleware hit: GET /document-templates
+🔍 GET /api/hr/master - 2025-09-05T08:01:30.775Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/approved-employee-forms - 2025-09-05T08:01:30.776Z
+🔍 HR route middleware hit: GET /approved-employee-forms
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/master - 2025-09-05T08:01:30.780Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/hr/document-templates - 2025-09-05T08:01:30.781Z
+🔍 HR route middleware hit: GET /document-templates
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/approved-employee-forms - 2025-09-05T08:01:30.783Z
+🔍 HR route middleware hit: GET /approved-employee-forms
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/document-collection - 2025-09-05T08:01:30.784Z
+🔍 Document collection request: GET /api/hr/document-collection
+🔍 Request body: {}
+🔍 Request params: {}
+🔍 HR route middleware hit: GET /document-collection
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/document-collection - 2025-09-05T08:04:44.357Z
+🔍 Document collection request: GET /api/hr/document-collection
+🔍 Request body: {}
+🔍 Request params: {}
+🔍 HR route middleware hit: GET /document-collection
+🔍 GET /api/hr/master - 2025-09-05T08:04:44.389Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/documents/requirements - 2025-09-05T08:04:44.391Z
+🔍 GET /api/hr/approved-employee-forms - 2025-09-05T08:04:44.391Z
+🔍 HR route middleware hit: GET /approved-employee-forms
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/document-collection - 2025-09-05T08:04:54.234Z
+🔍 Document collection request: GET /api/hr/document-collection
+🔍 Request body: {}
+🔍 Request params: {}
+🔍 HR route middleware hit: GET /document-collection
+🔍 GET /api/hr/master - 2025-09-05T08:04:54.236Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/documents/requirements - 2025-09-05T08:04:54.237Z
+🔍 GET /api/hr/approved-employee-forms - 2025-09-05T08:04:54.238Z
+🔍 HR route middleware hit: GET /approved-employee-forms
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/document-collection - 2025-09-05T08:04:58.224Z
+🔍 Document collection request: GET /api/hr/document-collection
+🔍 Request body: {}
+🔍 Request params: {}
+🔍 HR route middleware hit: GET /document-collection
+🔍 GET /api/hr/master - 2025-09-05T08:04:58.227Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/documents/requirements - 2025-09-05T08:04:58.227Z
+🔍 GET /api/hr/approved-employee-forms - 2025-09-05T08:04:58.228Z
+🔍 HR route middleware hit: GET /approved-employee-forms
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/document-collection - 2025-09-05T08:05:10.231Z
+🔍 Document collection request: GET /api/hr/document-collection
+🔍 Request body: {}
+🔍 Request params: {}
+🔍 HR route middleware hit: GET /document-collection
+🔍 GET /api/hr/master - 2025-09-05T08:05:10.233Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/documents/requirements - 2025-09-05T08:05:10.233Z
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/approved-employee-forms - 2025-09-05T08:05:10.235Z
+🔍 HR route middleware hit: GET /approved-employee-forms
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/document-collection - 2025-09-05T08:05:24.244Z
+🔍 Document collection request: GET /api/hr/document-collection
+🔍 Request body: {}
+🔍 Request params: {}
+🔍 HR route middleware hit: GET /document-collection
+🔍 GET /api/hr/master - 2025-09-05T08:05:24.246Z
+🔍 HR route middleware hit: GET /master
+🔍 GET /api/documents/requirements - 2025-09-05T08:05:24.247Z
+🔍 GET /api/hr/approved-employee-forms - 2025-09-05T08:05:24.248Z
+🔍 HR route middleware hit: GET /approved-employee-forms
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/documents/requirements - 2025-09-05T08:05:49.957Z
+🔍 GET /api/auth/me - 2025-09-05T08:06:13.581Z
+🔍 GET /api/auth/me - 2025-09-05T08:06:13.597Z
+🔍 GET /api/hr/employees - 2025-09-05T08:06:13.677Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:06:13.679Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:06:13.687Z
+🔍 HR route middleware hit: GET /employees
+🔍 GET /api/hr/master - 2025-09-05T08:06:13.688Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:06:13.692Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employees - 2025-09-05T08:06:13.695Z
+🔍 HR route middleware hit: GET /employees
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employee-forms - 2025-09-05T08:06:15.027Z
+🔍 HR route middleware hit: GET /employee-forms
+🔍 GET /api/hr/master-managers - 2025-09-05T08:06:15.029Z
+🔍 HR route middleware hit: GET /master-managers
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/master-managers - 2025-09-05T08:06:15.031Z
+🔍 HR route middleware hit: GET /master-managers
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/employee-forms - 2025-09-05T08:06:15.032Z
+🔍 HR route middleware hit: GET /employee-forms
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/master - 2025-09-05T08:06:17.758Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/document-collection - 2025-09-05T08:06:17.760Z
+🔍 Document collection request: GET /api/hr/document-collection
+🔍 Request body: {}
+🔍 Request params: {}
+🔍 HR route middleware hit: GET /document-collection
+🔍 GET /api/hr/approved-employee-forms - 2025-09-05T08:06:17.761Z
+🔍 HR route middleware hit: GET /approved-employee-forms
+🔍 GET /api/documents/requirements - 2025-09-05T08:06:17.762Z
+🔍 GET /api/documents/requirements - 2025-09-05T08:06:17.763Z
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/master - 2025-09-05T08:06:17.764Z
+🔍 HR route middleware hit: GET /master
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/document-collection - 2025-09-05T08:06:17.770Z
+🔍 Document collection request: GET /api/hr/document-collection
+🔍 Request body: {}
+🔍 Request params: {}
+🔍 HR route middleware hit: GET /document-collection
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions
+🔍 GET /api/hr/approved-employee-forms - 2025-09-05T08:06:17.776Z
+🔍 HR route middleware hit: GET /approved-employee-forms
+🔍 Role check - User ID: 1, Role: hr, Required roles: hr
+✅ Access granted - User role 'hr' has required permissions

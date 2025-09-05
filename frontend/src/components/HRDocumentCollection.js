@@ -341,7 +341,9 @@ const HRDocumentCollection = () => {
     // No need to filter by status
 
     // Now all documents shown are from the onboarding form, no need to filter by employment type
-    const requiredDocuments = templates.map(template => template.document_name);
+    const requiredDocuments = templates.map(
+      (template) => template.document_name
+    );
 
     // Create a complete list of required documents for this employment type
     // This ensures we show all required documents even if they don't exist in collection yet
