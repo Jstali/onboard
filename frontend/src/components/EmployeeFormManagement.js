@@ -212,6 +212,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
       toast.success("Employee details updated successfully!");
       setShowEditForm(false);
       setEditingEmployee(null);
+
       // Reset manager selections
       setSelectedManager1("");
       setSelectedManager2("");
@@ -1138,9 +1139,9 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     >
                       <option value="">Select Manager 1</option>
                       {getFilteredManagers(selectedManager1, "Manager 1").map(
-                        (manager) => (
+                        (manager, index) => (
                           <option
-                            key={manager.employee_name}
+                            key={`${manager.employee_name}-${manager.company_email}-${index}`}
                             value={manager.employee_name}
                           >
                             {manager.employee_name} ({manager.company_email})
@@ -1162,9 +1163,9 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     >
                       <option value="">Select Manager 2</option>
                       {getFilteredManagers(selectedManager2, "Manager 2").map(
-                        (manager) => (
+                        (manager, index) => (
                           <option
-                            key={manager.employee_name}
+                            key={`${manager.employee_name}-${manager.company_email}-manager2-${index}`}
                             value={manager.employee_name}
                           >
                             {manager.employee_name} ({manager.company_email})
@@ -1186,9 +1187,9 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     >
                       <option value="">Select Manager 3</option>
                       {getFilteredManagers(selectedManager3, "Manager 3").map(
-                        (manager) => (
+                        (manager, index) => (
                           <option
-                            key={manager.employee_name}
+                            key={`${manager.employee_name}-${manager.company_email}-manager3-${index}`}
                             value={manager.employee_name}
                           >
                             {manager.employee_name} ({manager.company_email})
