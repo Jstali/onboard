@@ -57,25 +57,40 @@ const HRDocumentCollection = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [documentsRes, employeesRes, templatesRes, formsRes] =
+      const [documentsRes, employeesRes, requirementsRes, formsRes] =
         await Promise.all([
           axios.get("/hr/document-collection"),
           axios.get("/hr/master"),
-          axios.get("/hr/document-templates"),
+          axios.get("/documents/requirements"), // Get actual onboarding form documents
           axios.get("/hr/approved-employee-forms"), // Use approved employee forms only
         ]);
 
       console.log("🔍 Document Collection Data:", {
         documents: documentsRes.data.documents?.length || 0,
         employees: employeesRes.data.employees?.length || 0,
-        templates: templatesRes.data.templates?.length || 0,
+        requirements: requirementsRes.data,
         forms: formsRes.data.forms?.length || 0,
         formsData: formsRes.data.forms,
       });
 
+      // Convert requirements to templates format for compatibility
+      const onboardingTemplates = [];
+      Object.entries(requirementsRes.data).forEach(([category, documents]) => {
+        documents.forEach((doc, index) => {
+          onboardingTemplates.push({
+            id: `${category}_${doc.type}`,
+            document_name: doc.name,
+            document_type: doc.type,
+            category: category,
+            is_required: doc.required,
+            is_active: true,
+          });
+        });
+      });
+
       setDocuments(documentsRes.data.documents || []);
       setEmployees(employeesRes.data.employees || []);
-      setTemplates(templatesRes.data.templates || []);
+      setTemplates(onboardingTemplates); // Use only onboarding form documents
       setEmployeeForms(formsRes.data.forms || []);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -325,66 +340,8 @@ const HRDocumentCollection = () => {
     // All employees from approved-employee-forms endpoint are already approved
     // No need to filter by status
 
-    // Filter documents based on employment type requirements
-    const getRequiredDocumentsForType = (type) => {
-      switch (type) {
-        case "Intern":
-          return [
-            "Updated Resume",
-            "SSC Certificate (10th)",
-            "SSC Marksheet (10th)",
-            "HSC Certificate (12th)",
-            "HSC Marksheet (12th)",
-            "Graduation Consolidated Marksheet",
-            "Latest Graduation",
-            "Aadhaar Card",
-            "PAN Card",
-          ];
-        case "Full-Time":
-        case "Manager":
-          return [
-            "Updated Resume",
-            "Offer & Appointment Letter",
-            "Latest Compensation Letter",
-            "Experience & Relieving Letter",
-            "Latest 3 Months Pay Slips",
-            "Form 16 / Form 12B / Taxable Income Statement",
-            "SSC Certificate (10th)",
-            "SSC Marksheet (10th)",
-            "HSC Certificate (12th)",
-            "HSC Marksheet (12th)",
-            "Graduation Consolidated Marksheet",
-            "Latest Graduation",
-            "Post-Graduation  Marksheet",
-            "Post-Graduation  Certificate",
-            "Aadhaar Card",
-            "PAN Card",
-            "Passport",
-          ];
-        case "Contract":
-          return [
-            "Updated Resume",
-            "Offer & Appointment Letter",
-            "Latest Compensation Letter",
-            "Experience & Relieving Letter",
-            "Latest 3 Months Pay Slips",
-            "Form 16 / Form 12B / Taxable Income Statement",
-            "SSC Certificate (10th)",
-            "SSC Marksheet (10th)",
-            "HSC Certificate (12th)",
-            "HSC Marksheet (12th)",
-            "Graduation Consolidated Marksheet",
-            "Latest Graduation",
-            "Aadhaar Card",
-            "PAN Card",
-          ];
-        default:
-          // For unknown types, show all documents
-          return employeeDocuments.map((doc) => doc.document_name);
-      }
-    };
-
-    const requiredDocuments = getRequiredDocumentsForType(employmentType);
+    // Now all documents shown are from the onboarding form, no need to filter by employment type
+    const requiredDocuments = templates.map(template => template.document_name);
 
     // Create a complete list of required documents for this employment type
     // This ensures we show all required documents even if they don't exist in collection yet
@@ -762,7 +719,7 @@ const HRDocumentCollection = () => {
                     style={{ width: "180px", minWidth: "180px" }}
                   >
                     {template.document_name}
-                    {template.document_type === "Required" && "*"}
+                    {template.is_required && "*"}
                   </th>
                 ))}
               </tr>
