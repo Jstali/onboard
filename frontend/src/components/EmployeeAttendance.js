@@ -390,11 +390,11 @@ const EmployeeAttendance = () => {
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/employee/dashboard")}
                 className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
               >
-                <FaArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                <FaHome className="w-4 h-4 mr-2" />
+                Home
               </button>
               <h2 className="text-3xl font-bold text-gray-900">
                 My Attendance
