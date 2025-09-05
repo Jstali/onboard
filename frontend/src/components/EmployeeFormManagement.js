@@ -27,6 +27,11 @@ const EmployeeFormManagement = ({ onRefresh }) => {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [availableManagers, setAvailableManagers] = useState([]);
 
+  // State for tracking selected managers to prevent duplicates
+  const [selectedManager1, setSelectedManager1] = useState("");
+  const [selectedManager2, setSelectedManager2] = useState("");
+  const [selectedManager3, setSelectedManager3] = useState("");
+
   // Helpers for rendering attached files nicely (avoid dumping base64 strings)
   const parseDataUrl = (dataUrl) => {
     if (!dataUrl || typeof dataUrl !== "string")
@@ -97,20 +102,17 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
   const fetchAvailableManagers = async () => {
     try {
-      const response = await axios.get("http://localhost:5001/api/hr/managers");
+      const response = await axios.get(
+        "http://localhost:5001/api/hr/master-managers"
+      );
+      console.log(
+        "🔍 Fetched managers from master table:",
+        response.data.managers
+      );
       setAvailableManagers(response.data.managers || []);
     } catch (error) {
-      console.error("Error fetching managers:", error);
-      // Fallback to hardcoded managers if API fails
-      setAvailableManagers([
-        { employee_name: "Pradeep", company_email: "pradeep@nxzen.com" },
-        {
-          employee_name: "Vinod",
-          company_email: "stalinstalin11112@gmail.com",
-        },
-        { employee_name: "Vamshi", company_email: "vamshi@company.com" },
-        { employee_name: "Rakesh", company_email: "rakesh@company.com" },
-      ]);
+      console.error("Error fetching managers from master table:", error);
+      setAvailableManagers([]);
     }
   };
 
@@ -140,7 +142,65 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
   const handleEditEmployee = (form) => {
     setEditingEmployee(form);
+
+    // Initialize manager selections with current assignments
+    setSelectedManager1(form.assigned_manager || "");
+    setSelectedManager2(form.assigned_manager2 || "");
+    setSelectedManager3(form.assigned_manager3 || "");
+
     setShowEditForm(true);
+  };
+
+  // Helper function to get filtered managers for each dropdown
+  const getFilteredManagers = (
+    excludeCurrentSelection = "",
+    dropdownType = ""
+  ) => {
+    if (!availableManagers) return [];
+
+    return availableManagers.filter((manager) => {
+      // Exclude the current employee from manager list if they are a manager
+      const currentEmployeeEmail = editingEmployee?.form_data?.email;
+      const currentEmployeeCompanyEmail = editingEmployee?.company_email;
+      const currentLoggedInUserEmail = user?.email;
+
+      // Get currently selected manager emails to prevent duplicates
+      const selectedEmails = [
+        selectedManager1,
+        selectedManager2,
+        selectedManager3,
+      ]
+        .filter((name) => name && name !== excludeCurrentSelection)
+        .map((name) => {
+          const found = availableManagers.find((m) => m.employee_name === name);
+          return found?.company_email;
+        })
+        .filter(Boolean);
+
+      const isExcludedDueToDuplicate = selectedEmails.includes(
+        manager.company_email
+      );
+      const isCurrentEmployee =
+        manager.company_email === currentEmployeeEmail ||
+        manager.company_email === currentEmployeeCompanyEmail;
+      const isLoggedInUser = manager.company_email === currentLoggedInUserEmail;
+
+      console.log(`🔍 Manager filter for ${dropdownType}:`, {
+        managerName: manager.employee_name,
+        managerEmail: manager.company_email,
+        currentEmployeeEmail,
+        currentEmployeeCompanyEmail,
+        currentLoggedInUserEmail,
+        selectedEmails,
+        isExcludedDueToDuplicate,
+        isCurrentEmployee,
+        isLoggedInUser,
+        willShow:
+          !isExcludedDueToDuplicate && !isCurrentEmployee && !isLoggedInUser,
+      });
+
+      return !isExcludedDueToDuplicate && !isCurrentEmployee && !isLoggedInUser;
+    });
   };
 
   const handleUpdateEmployee = async (updatedData) => {
@@ -152,6 +212,10 @@ const EmployeeFormManagement = ({ onRefresh }) => {
       toast.success("Employee details updated successfully!");
       setShowEditForm(false);
       setEditingEmployee(null);
+      // Reset manager selections
+      setSelectedManager1("");
+      setSelectedManager2("");
+      setSelectedManager3("");
       fetchEmployeeForms();
       if (onRefresh) onRefresh();
     } catch (error) {
@@ -952,9 +1016,9 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     },
                   },
                   employee_type: formData.get("employment_type"),
-                  manager1: formData.get("manager1"),
-                  manager2: formData.get("manager2"),
-                  manager3: formData.get("manager3"),
+                  manager1: selectedManager1,
+                  manager2: selectedManager2,
+                  manager3: selectedManager3,
                 };
                 handleUpdateEmployee(updatedData);
               }}
@@ -1067,52 +1131,22 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     </label>
                     <select
                       name="manager1"
-                      defaultValue={editingEmployee.assigned_manager || ""}
+                      value={selectedManager1}
+                      onChange={(e) => setSelectedManager1(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
                       <option value="">Select Manager 1</option>
-                      {availableManagers
-                        .filter((manager) => {
-                          // Exclude the current employee from manager list
-                          // Check both personal email and company email
-                          const currentEmployeeEmail =
-                            editingEmployee?.form_data?.email;
-                          const currentEmployeeCompanyEmail =
-                            editingEmployee?.company_email;
-                          
-                          // Also exclude the current logged-in user
-                          const currentLoggedInUserEmail = user?.email;
-                          
-                          // Debug logging
-                          console.log("🔍 Manager filter debug:", {
-                            managerName: manager.employee_name,
-                            managerEmail: manager.company_email,
-                            currentEmployeeEmail,
-                            currentEmployeeCompanyEmail,
-                            currentLoggedInUserEmail,
-                            willShow: (
-                              manager.company_email !== currentEmployeeEmail &&
-                              manager.company_email !== currentEmployeeCompanyEmail &&
-                              manager.company_email !== currentLoggedInUserEmail
-                            )
-                          });
-                          
-                          return (
-                            manager.company_email !== currentEmployeeEmail &&
-                            manager.company_email !==
-                              currentEmployeeCompanyEmail &&
-                            manager.company_email !== currentLoggedInUserEmail
-                          );
-                        })
-                        .map((manager) => (
+                      {getFilteredManagers(selectedManager1, "Manager 1").map(
+                        (manager) => (
                           <option
                             key={manager.employee_name}
                             value={manager.employee_name}
                           >
                             {manager.employee_name} ({manager.company_email})
                           </option>
-                        ))}
+                        )
+                      )}
                     </select>
                   </div>
 
@@ -1122,36 +1156,21 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     </label>
                     <select
                       name="manager2"
-                      defaultValue={editingEmployee.manager2_name || ""}
+                      value={selectedManager2}
+                      onChange={(e) => setSelectedManager2(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select Manager 2</option>
-                      {availableManagers
-                        .filter((manager) => {
-                          // Exclude the current employee from manager list
-                          const currentEmployeeEmail =
-                            editingEmployee?.form_data?.email;
-                          const currentEmployeeCompanyEmail =
-                            editingEmployee?.company_email;
-
-                          // Also exclude the current logged-in user
-                          const currentLoggedInUserEmail = user?.email;
-
-                          return (
-                            manager.company_email !== currentEmployeeEmail &&
-                            manager.company_email !==
-                              currentEmployeeCompanyEmail &&
-                            manager.company_email !== currentLoggedInUserEmail
-                          );
-                        })
-                        .map((manager) => (
+                      {getFilteredManagers(selectedManager2, "Manager 2").map(
+                        (manager) => (
                           <option
                             key={manager.employee_name}
                             value={manager.employee_name}
                           >
                             {manager.employee_name} ({manager.company_email})
                           </option>
-                        ))}
+                        )
+                      )}
                     </select>
                   </div>
 
@@ -1161,36 +1180,21 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     </label>
                     <select
                       name="manager3"
-                      defaultValue={editingEmployee.manager3_name || ""}
+                      value={selectedManager3}
+                      onChange={(e) => setSelectedManager3(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select Manager 3</option>
-                      {availableManagers
-                        .filter((manager) => {
-                          // Exclude the current employee from manager list
-                          const currentEmployeeEmail =
-                            editingEmployee?.form_data?.email;
-                          const currentEmployeeCompanyEmail =
-                            editingEmployee?.company_email;
-
-                          // Also exclude the current logged-in user
-                          const currentLoggedInUserEmail = user?.email;
-
-                          return (
-                            manager.company_email !== currentEmployeeEmail &&
-                            manager.company_email !==
-                              currentEmployeeCompanyEmail &&
-                            manager.company_email !== currentLoggedInUserEmail
-                          );
-                        })
-                        .map((manager) => (
+                      {getFilteredManagers(selectedManager3, "Manager 3").map(
+                        (manager) => (
                           <option
                             key={manager.employee_name}
                             value={manager.employee_name}
                           >
                             {manager.employee_name} ({manager.company_email})
                           </option>
-                        ))}
+                        )
+                      )}
                     </select>
                   </div>
                 </div>
@@ -1363,6 +1367,10 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   onClick={() => {
                     setShowEditForm(false);
                     setEditingEmployee(null);
+                    // Reset manager selections
+                    setSelectedManager1("");
+                    setSelectedManager2("");
+                    setSelectedManager3("");
                   }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
                 >

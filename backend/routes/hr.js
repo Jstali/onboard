@@ -60,7 +60,7 @@ router.put("/document-collection/test", (req, res) => {
   res.json({ message: "Document collection test route working" });
 });
 
-// Get available managers for assignment
+// Get available managers for assignment (from managers table - legacy)
 router.get("/managers", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -79,6 +79,34 @@ router.get("/managers", async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Failed to fetch managers",
+    });
+  }
+});
+
+// Get available managers from Employee Master Table
+router.get("/master-managers", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        employee_name, 
+        company_email,
+        employee_id,
+        type,
+        status
+      FROM employee_master 
+      WHERE status = 'active' AND type = 'Manager'
+      ORDER BY employee_name
+    `);
+
+    res.json({
+      success: true,
+      managers: result.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching managers from master table:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch managers from master table",
     });
   }
 });
