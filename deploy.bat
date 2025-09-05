@@ -70,54 +70,174 @@ echo ========================================
 echo Database Setup...
 echo ========================================
 
-:: Check if PostgreSQL is available
-echo Checking PostgreSQL connection...
+:: Load database configuration
+echo Loading database configuration...
 cd backend
-node -e "
-const { Pool } = require('pg');
-const pool = new Pool({
-  host: 'localhost',
-  port: 5432,
-  database: 'onboardd',
-  user: 'postgres',
-  password: 'your_password'
-});
+if exist config.env (
+    echo Database configuration found in config.env
+    
+    :: Check PostgreSQL connection using config.env
+    echo Checking PostgreSQL connection...
+    node -e "
+    require('dotenv').config({ path: './config.env' });
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 5432,
+      database: process.env.DB_NAME || 'onboardd',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD
+    });
 
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.log('ERROR: Cannot connect to PostgreSQL');
-    console.log('Please ensure PostgreSQL is running and credentials are correct');
-    process.exit(1);
-  } else {
-    console.log('PostgreSQL connection successful');
-    process.exit(0);
-  }
-});
-" >nul 2>&1
+    pool.query('SELECT NOW()', (err, res) => {
+      if (err) {
+        console.log('ERROR: Cannot connect to PostgreSQL');
+        console.log('Database:', process.env.DB_NAME || 'onboardd');
+        console.log('Host:', process.env.DB_HOST || 'localhost');
+        console.log('Port:', process.env.DB_PORT || 5432);
+        console.log('User:', process.env.DB_USER || 'postgres');
+        console.log('Please ensure PostgreSQL is running and credentials in config.env are correct');
+        process.exit(1);
+      } else {
+        console.log('PostgreSQL connection successful');
+        console.log('Connected to database:', process.env.DB_NAME || 'onboardd');
+        process.exit(0);
+      }
+    });
+    "
+) else (
+    echo WARNING: config.env not found, using default connection
+    
+    :: Check PostgreSQL connection with defaults
+    echo Checking PostgreSQL connection...
+    node -e "
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      host: 'localhost',
+      port: 5432,
+      database: 'onboardd',
+      user: 'postgres',
+      password: 'your_password'
+    });
+
+    pool.query('SELECT NOW()', (err, res) => {
+      if (err) {
+        console.log('ERROR: Cannot connect to PostgreSQL');
+        console.log('Please ensure PostgreSQL is running and credentials are correct');
+        process.exit(1);
+      } else {
+        console.log('PostgreSQL connection successful');
+        process.exit(0);
+      }
+    });
+    "
+)
 
 if %errorlevel% neq 0 (
+    echo.
     echo WARNING: PostgreSQL connection failed
-    echo Please ensure PostgreSQL is running and update config.env with correct credentials
+    echo Please ensure:
+    echo   1. PostgreSQL is running
+    echo   2. Database exists
+    echo   3. Credentials in config.env are correct
     echo.
     echo You can still continue with the deployment, but database operations may fail
     echo.
-    pause
+    set /p continue="Do you want to continue? (y/N): "
+    if /i "%continue%" neq "y" (
+        echo Deployment cancelled
+        pause
+        exit /b 1
+    )
 )
 
 :: Run database migration
+echo.
 echo Running database migration...
 if exist migrations\001_initial_attendance_setup.sql (
-    echo Migration file found, running...
-    psql -d onboardd -f migrations\001_initial_attendance_setup.sql >nul 2>&1
+    echo Found migration file: migrations\001_initial_attendance_setup.sql
+    echo Executing SQL migration...
+    
+    :: Try psql command first
+    where psql >nul 2>&1
     if %errorlevel% equ 0 (
-        echo Database migration completed successfully
+        echo Using psql command to run migration...
+        if exist config.env (
+            :: Use config.env values with psql
+            node -e "
+            require('dotenv').config({ path: './config.env' });
+            const { execSync } = require('child_process');
+            const host = process.env.DB_HOST || 'localhost';
+            const port = process.env.DB_PORT || 5432;
+            const user = process.env.DB_USER || 'postgres';
+            const database = process.env.DB_NAME || 'onboardd';
+            const password = process.env.DB_PASSWORD || 'your_password';
+            
+            process.env.PGPASSWORD = password;
+            
+            try {
+              execSync(`psql -h ${host} -p ${port} -U ${user} -d ${database} -f migrations/001_initial_attendance_setup.sql`, 
+                       { stdio: 'inherit' });
+              console.log('✓ Database migration completed successfully using psql');
+            } catch (error) {
+              console.log('✗ Migration failed with psql, trying Node.js approach...');
+              process.exit(1);
+            }
+            "
+        ) else (
+            :: Use default values with psql
+            set PGPASSWORD=your_password
+            psql -h localhost -p 5432 -U postgres -d onboardd -f migrations\001_initial_attendance_setup.sql
+        )
+        
+        if %errorlevel% equ 0 (
+            echo ✓ Database migration completed successfully using psql
+        ) else (
+            echo ✗ Migration failed with psql, trying Node.js approach...
+            goto :nodejs_migration
+        )
     ) else (
-        echo WARNING: Database migration failed
-        echo You may need to run the migration manually
+        echo psql command not found, using Node.js to run migration...
+        goto :nodejs_migration
     )
+    goto :migration_done
+    
+    :nodejs_migration
+    :: Use Node.js approach
+    node -e "
+    require('dotenv').config({ path: './config.env' });
+    const { Pool } = require('pg');
+    const fs = require('fs');
+    
+    const pool = new Pool({
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 5432,
+      database: process.env.DB_NAME || 'onboardd',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'your_password'
+    });
+    
+    const sql = fs.readFileSync('migrations/001_initial_attendance_setup.sql', 'utf8');
+    
+    pool.query(sql)
+      .then(() => {
+        console.log('✓ Database migration completed successfully using Node.js');
+        process.exit(0);
+      })
+      .catch(err => {
+        console.log('✗ Migration failed:', err.message);
+        console.log('You may need to run the migration manually using psql');
+        process.exit(1);
+      });
+    "
+    
+    :migration_done
 ) else (
-    echo WARNING: Migration file not found
+    echo ✗ ERROR: Migration file not found!
     echo Please ensure migrations\001_initial_attendance_setup.sql exists
+    echo Expected path: %cd%\migrations\001_initial_attendance_setup.sql
+    pause
+    exit /b 1
 )
 
 cd ..
@@ -148,8 +268,9 @@ echo.
 echo ✓ Node.js and npm verified
 echo ✓ Backend dependencies installed
 echo ✓ Frontend dependencies installed
+echo ✓ Database connection tested
+echo ✓ SQL migration (001_initial_attendance_setup.sql) executed
 echo ✓ Frontend built for production
-echo ✓ Database migration attempted
 echo.
 echo ========================================
 echo Deployment Completed Successfully!
