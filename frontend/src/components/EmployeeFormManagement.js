@@ -1061,14 +1061,28 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       required
                     >
                       <option value="">Select Manager 1</option>
-                      {availableManagers.map((manager) => (
-                        <option
-                          key={manager.employee_name}
-                          value={manager.employee_name}
-                        >
-                          {manager.employee_name} ({manager.company_email})
-                        </option>
-                      ))}
+                      {availableManagers
+                        .filter((manager) => {
+                          // Exclude the current employee from manager list
+                          // Check both personal email and company email
+                          const currentEmployeeEmail =
+                            editingEmployee?.form_data?.email;
+                          const currentEmployeeCompanyEmail =
+                            editingEmployee?.company_email;
+                          return (
+                            manager.company_email !== currentEmployeeEmail &&
+                            manager.company_email !==
+                              currentEmployeeCompanyEmail
+                          );
+                        })
+                        .map((manager) => (
+                          <option
+                            key={manager.employee_name}
+                            value={manager.employee_name}
+                          >
+                            {manager.employee_name} ({manager.company_email})
+                          </option>
+                        ))}
                     </select>
                   </div>
 
@@ -1082,14 +1096,27 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select Manager 2</option>
-                      {availableManagers.map((manager) => (
-                        <option
-                          key={manager.employee_name}
-                          value={manager.employee_name}
-                        >
-                          {manager.employee_name} ({manager.company_email})
-                        </option>
-                      ))}
+                      {availableManagers
+                        .filter((manager) => {
+                          // Exclude the current employee from manager list
+                          const currentEmployeeEmail =
+                            editingEmployee?.form_data?.email;
+                          const currentEmployeeCompanyEmail =
+                            editingEmployee?.company_email;
+                          return (
+                            manager.company_email !== currentEmployeeEmail &&
+                            manager.company_email !==
+                              currentEmployeeCompanyEmail
+                          );
+                        })
+                        .map((manager) => (
+                          <option
+                            key={manager.employee_name}
+                            value={manager.employee_name}
+                          >
+                            {manager.employee_name} ({manager.company_email})
+                          </option>
+                        ))}
                     </select>
                   </div>
 
@@ -1103,14 +1130,27 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select Manager 3</option>
-                      {availableManagers.map((manager) => (
-                        <option
-                          key={manager.employee_name}
-                          value={manager.employee_name}
-                        >
-                          {manager.employee_name} ({manager.company_email})
-                        </option>
-                      ))}
+                      {availableManagers
+                        .filter((manager) => {
+                          // Exclude the current employee from manager list
+                          const currentEmployeeEmail =
+                            editingEmployee?.form_data?.email;
+                          const currentEmployeeCompanyEmail =
+                            editingEmployee?.company_email;
+                          return (
+                            manager.company_email !== currentEmployeeEmail &&
+                            manager.company_email !==
+                              currentEmployeeCompanyEmail
+                          );
+                        })
+                        .map((manager) => (
+                          <option
+                            key={manager.employee_name}
+                            value={manager.employee_name}
+                          >
+                            {manager.employee_name} ({manager.company_email})
+                          </option>
+                        ))}
                     </select>
                   </div>
                 </div>

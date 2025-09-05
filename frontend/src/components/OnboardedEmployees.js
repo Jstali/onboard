@@ -359,14 +359,21 @@ const OnboardedEmployees = ({ onRefresh }) => {
                   required
                 >
                   <option value="">Select a manager</option>
-                  {availableManagers.map((manager) => (
-                    <option
-                      key={manager.employee_name}
-                      value={manager.employee_name}
-                    >
-                      {manager.employee_name}
-                    </option>
-                  ))}
+                  {availableManagers
+                    .filter((manager) => {
+                      // Exclude the current employee from manager list
+                      // Compare by email since that's more reliable than name
+                      const currentEmployeeEmail = selectedEmployee?.email;
+                      return manager.company_email !== currentEmployeeEmail;
+                    })
+                    .map((manager) => (
+                      <option
+                        key={manager.employee_name}
+                        value={manager.employee_name}
+                      >
+                        {manager.employee_name}
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -385,14 +392,20 @@ const OnboardedEmployees = ({ onRefresh }) => {
                   className="input-field"
                 >
                   <option value="">Select a manager (optional)</option>
-                  {availableManagers.map((manager) => (
-                    <option
-                      key={manager.employee_name}
-                      value={manager.employee_name}
-                    >
-                      {manager.employee_name}
-                    </option>
-                  ))}
+                  {availableManagers
+                    .filter((manager) => {
+                      // Exclude the current employee from manager list
+                      const currentEmployeeEmail = selectedEmployee?.email;
+                      return manager.company_email !== currentEmployeeEmail;
+                    })
+                    .map((manager) => (
+                      <option
+                        key={manager.employee_name}
+                        value={manager.employee_name}
+                      >
+                        {manager.employee_name}
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -411,14 +424,20 @@ const OnboardedEmployees = ({ onRefresh }) => {
                   className="input-field"
                 >
                   <option value="">Select a manager (optional)</option>
-                  {availableManagers.map((manager) => (
-                    <option
-                      key={manager.employee_name}
-                      value={manager.employee_name}
-                    >
-                      {manager.employee_name}
-                    </option>
-                  ))}
+                  {availableManagers
+                    .filter((manager) => {
+                      // Exclude the current employee from manager list
+                      const currentEmployeeEmail = selectedEmployee?.email;
+                      return manager.company_email !== currentEmployeeEmail;
+                    })
+                    .map((manager) => (
+                      <option
+                        key={manager.employee_name}
+                        value={manager.employee_name}
+                      >
+                        {manager.employee_name}
+                      </option>
+                    ))}
                 </select>
               </div>
 

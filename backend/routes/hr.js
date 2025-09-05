@@ -1865,6 +1865,29 @@ router.put(
         manager,
       });
 
+      // Validate that managers are not the same as the employee being assigned
+      const employeeEmailsToCheck = [companyEmail];
+      const managersToCheck = [manager, manager2, manager3].filter(Boolean);
+
+      for (const managerName of managersToCheck) {
+        // Get manager email from managers table
+        const managerResult = await pool.query(
+          "SELECT email FROM managers WHERE manager_name = $1",
+          [managerName]
+        );
+
+        if (managerResult.rows.length > 0) {
+          const managerEmail = managerResult.rows[0].email;
+
+          // Check if manager email matches employee email
+          if (employeeEmailsToCheck.includes(managerEmail)) {
+            return res.status(400).json({
+              error: `Employee cannot be assigned as their own manager. Manager "${managerName}" has the same email as the employee.`,
+            });
+          }
+        }
+      }
+
       // Get onboarded employee details
       const onboardedResult = await pool.query(
         `
@@ -2984,6 +3007,42 @@ router.put(
       const { form_data, employee_type, manager1, manager2, manager3 } =
         req.body;
 
+      // Get the current employee's email to prevent self-assignment
+      const currentEmployeeQuery = await pool.query(
+        "SELECT ef.form_data, oe.company_email FROM employee_forms ef LEFT JOIN onboarded_employees oe ON ef.employee_id = oe.user_id WHERE ef.id = $1",
+        [id]
+      );
+
+      if (currentEmployeeQuery.rows.length > 0) {
+        const currentEmployee = currentEmployeeQuery.rows[0];
+        const currentEmployeeEmails = [
+          currentEmployee.form_data?.email,
+          currentEmployee.company_email,
+        ].filter(Boolean);
+
+        // Validate that managers are not the same as the employee being assigned
+        const managersToCheck = [manager1, manager2, manager3].filter(Boolean);
+
+        for (const managerName of managersToCheck) {
+          // Get manager email from managers table
+          const managerResult = await pool.query(
+            "SELECT email FROM managers WHERE manager_name = $1",
+            [managerName]
+          );
+
+          if (managerResult.rows.length > 0) {
+            const managerEmail = managerResult.rows[0].email;
+
+            // Check if manager email matches employee email
+            if (currentEmployeeEmails.includes(managerEmail)) {
+              return res.status(400).json({
+                error: `Employee cannot be assigned as their own manager. Manager "${managerName}" has the same email as the employee.`,
+              });
+            }
+          }
+        }
+      }
+
       // Validate phone number uniqueness on server side
       const phoneNumbers = [
         form_data.phone,
@@ -3056,12 +3115,39 @@ router.put("/master/:id", async (req, res) => {
 
     // Check if employee exists
     const existingEmployee = await pool.query(
-      "SELECT id FROM employee_master WHERE id = $1",
+      "SELECT id, company_email FROM employee_master WHERE id = $1",
       [id]
     );
 
     if (existingEmployee.rows.length === 0) {
       return res.status(404).json({ error: "Employee not found" });
+    }
+
+    // Validate that managers are not the same as the employee being updated
+    const currentEmployeeEmail =
+      company_email || existingEmployee.rows[0].company_email;
+    const managerIdsToCheck = [manager_id, manager2_id, manager3_id].filter(
+      Boolean
+    );
+
+    for (const managerId of managerIdsToCheck) {
+      // Get manager email from managers table
+      const managerResult = await pool.query(
+        "SELECT email, manager_name FROM managers WHERE manager_id = $1",
+        [managerId]
+      );
+
+      if (managerResult.rows.length > 0) {
+        const managerEmail = managerResult.rows[0].email;
+        const managerName = managerResult.rows[0].manager_name;
+
+        // Check if manager email matches employee email
+        if (managerEmail === currentEmployeeEmail) {
+          return res.status(400).json({
+            error: `Employee cannot be assigned as their own manager. Manager "${managerName}" has the same email as the employee.`,
+          });
+        }
+      }
     }
 
     // Get manager names
