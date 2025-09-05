@@ -366,9 +366,9 @@ const OnboardedEmployees = ({ onRefresh }) => {
                       const currentEmployeeEmail = selectedEmployee?.email;
                       return manager.company_email !== currentEmployeeEmail;
                     })
-                    .map((manager) => (
+                    .map((manager, index) => (
                       <option
-                        key={manager.employee_name}
+                        key={`manager1-${manager.employee_name}-${manager.company_email}-${index}`}
                         value={manager.employee_name}
                       >
                         {manager.employee_name}
@@ -398,9 +398,9 @@ const OnboardedEmployees = ({ onRefresh }) => {
                       const currentEmployeeEmail = selectedEmployee?.email;
                       return manager.company_email !== currentEmployeeEmail;
                     })
-                    .map((manager) => (
+                    .map((manager, index) => (
                       <option
-                        key={manager.employee_name}
+                        key={`manager2-${manager.employee_name}-${manager.company_email}-${index}`}
                         value={manager.employee_name}
                       >
                         {manager.employee_name}
@@ -430,9 +430,9 @@ const OnboardedEmployees = ({ onRefresh }) => {
                       const currentEmployeeEmail = selectedEmployee?.email;
                       return manager.company_email !== currentEmployeeEmail;
                     })
-                    .map((manager) => (
+                    .map((manager, index) => (
                       <option
-                        key={manager.employee_name}
+                        key={`manager3-${manager.employee_name}-${manager.company_email}-${index}`}
                         value={manager.employee_name}
                       >
                         {manager.employee_name}

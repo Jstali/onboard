@@ -46,7 +46,7 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
       case "rejected":
         return "Rejected";
       case "pending_manager_approval":
-        return "Pending Manager Approval";
+        return "Pending for Manager Approval";
       case "manager_approved":
         return "Manager Approved - Pending HR";
       default:

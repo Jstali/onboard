@@ -12,6 +12,7 @@ const EmployeeExpenseRequest = () => {
     currency: "INR",
     description: "",
     expenseDate: "",
+    projectReference: "",
     clientCode: "",
     taxIncluded: false,
   });

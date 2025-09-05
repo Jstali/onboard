@@ -642,13 +642,13 @@ router.get("/stats", async (req, res) => {
       return res.status(400).json({ error: "Month and year are required" });
     }
 
-    // Get total employees and managers
+    // Get total employees that exist in employee_master table
     const totalEmployeesResult = await pool.query(
-      "SELECT COUNT(*) as total FROM users WHERE role IN ('employee', 'manager')"
+      "SELECT COUNT(*) as total FROM employee_master WHERE status = 'active'"
     );
     const totalEmployees = parseInt(totalEmployeesResult.rows[0].total);
 
-    // Get attendance statistics for the month (employees and managers, but not HR)
+    // Get attendance statistics for the month (only for employees in employee_master)
     const statsResult = await pool.query(
       `
       SELECT 
@@ -656,9 +656,10 @@ router.get("/stats", async (req, res) => {
         COUNT(*) as count
       FROM attendance a
       JOIN users u ON a.employee_id = u.id
+      JOIN employee_master em ON u.email = em.company_email
       WHERE EXTRACT(MONTH FROM a.date) = $1 
         AND EXTRACT(YEAR FROM a.date) = $2
-        AND u.role IN ('employee', 'manager')
+        AND em.status = 'active'
       GROUP BY a.status
     `,
       [parseInt(month), parseInt(year)]
@@ -728,7 +729,7 @@ router.get("/hr/details", async (req, res) => {
       return res.status(400).json({ error: "Month and year are required" });
     }
 
-    // Get all employees and managers with their attendance for the month
+    // Get only employees that exist in employee_master table with their attendance for the month
     const result = await pool.query(
       `
       SELECT 
@@ -738,6 +739,7 @@ router.get("/hr/details", async (req, res) => {
         u.email,
         u.role,
         em.employee_id as emp_id,
+        em.employee_name,
         em.department,
         em.designation,
         em.type as employment_type,
@@ -749,14 +751,14 @@ router.get("/hr/details", async (req, res) => {
         COUNT(CASE WHEN a.status = 'half_day' THEN 1 END) as half_days,
         COUNT(CASE WHEN a.status = 'holiday' THEN 1 END) as holiday_days,
         COUNT(a.id) as total_attendance_days
-      FROM users u
-      LEFT JOIN employee_master em ON u.email = em.company_email
+      FROM employee_master em
+      INNER JOIN users u ON u.email = em.company_email
       LEFT JOIN attendance a ON u.id = a.employee_id 
         AND EXTRACT(MONTH FROM a.date) = $1 
         AND EXTRACT(YEAR FROM a.date) = $2
-      WHERE u.role IN ('employee', 'manager')
-      GROUP BY u.id, u.first_name, u.last_name, u.email, u.role, em.employee_id, em.department, em.designation, em.type, em.status
-      ORDER BY u.role, u.first_name, u.last_name
+      WHERE em.status = 'active'
+      GROUP BY u.id, u.first_name, u.last_name, u.email, u.role, em.employee_id, em.employee_name, em.department, em.designation, em.type, em.status
+      ORDER BY em.type, em.employee_name
     `,
       [parseInt(month), parseInt(year)]
     );

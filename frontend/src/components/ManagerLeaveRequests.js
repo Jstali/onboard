@@ -101,13 +101,13 @@ const ManagerLeaveRequests = () => {
       case "pending_manager_approval":
         return {
           color: "bg-yellow-100 text-yellow-800",
-          text: "Pending Manager Approval",
+          text: "Pending for Manager Approval",
           icon: <FaClock className="text-yellow-600" />,
         };
       case "pending_hr_approval":
         return {
           color: "bg-blue-100 text-blue-800",
-          text: "Pending HR Approval",
+          text: "Pending for HR Approval",
           icon: <FaClock className="text-blue-600" />,
         };
       case "approved":

@@ -98,13 +98,7 @@ const Login = () => {
       <div className="flex flex-col md:flex-row max-w-5xl w-full relative z-10">
         {/* Left Section: Logo */}
         <div className="md:w-1/2 flex items-center justify-center p-8">
-          <div className="text-center">
-            <img
-              className="mx-auto max-w-xs md:max-w-md"
-              src={require("../assets/nxzen.png")}
-              alt="Nxzen Logo"
-            />
-          </div>
+          
         </div>
 
         {/* Right Section: Login Form */}
@@ -113,7 +107,7 @@ const Login = () => {
             <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-white mb-2">
-                  Welcome Back
+                 
                 </h2>
               </div>
 

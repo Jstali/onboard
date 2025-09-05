@@ -29,11 +29,17 @@ const HRAttendanceDetails = () => {
   const fetchAttendanceDetails = async () => {
     try {
       setLoading(true);
-      // Remove all employees - set to empty array
-      setAttendanceRecords([]);
+      const response = await axios.get(`/attendance/hr/details`, {
+        params: {
+          month: selectedMonth,
+          year: selectedYear,
+        },
+      });
+      setAttendanceRecords(response.data.employees || []);
     } catch (error) {
       console.error("Error fetching attendance details:", error);
       toast.error("Failed to fetch attendance details");
+      setAttendanceRecords([]);
     } finally {
       setLoading(false);
     }
@@ -115,8 +121,10 @@ const HRAttendanceDetails = () => {
       ];
 
       const csvData = filteredRecords.map((record) => [
-        record.employee_name || "Unknown",
-        record.employee_email || "",
+        record.employee_name ||
+          `${record.first_name} ${record.last_name}` ||
+          "Unknown",
+        record.email || "",
         formatDate(record.date),
         record.status || "",
         formatTime(record.clock_in_time),
@@ -164,11 +172,11 @@ const HRAttendanceDetails = () => {
   };
 
   const filteredRecords = attendanceRecords.filter((record) => {
+    const employeeName =
+      record.employee_name || `${record.first_name} ${record.last_name}`;
     const matchesSearch =
       !searchTerm ||
-      `${record.first_name} ${record.last_name}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+      employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesDepartment =
@@ -336,7 +344,8 @@ const HRAttendanceDetails = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {record.first_name} {record.last_name}
+                          {record.employee_name ||
+                            `${record.first_name} ${record.last_name}`}
                         </div>
                         <div className="text-sm text-gray-500">
                           {record.email}

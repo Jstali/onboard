@@ -1,6 +1,14 @@
-# ONDOARD - Employee Onboarding + Attendance Management System
+# ONBOARD - Employee Onboarding + Attendance Management System
 
 A comprehensive full-stack application for managing employee onboarding, document collection, and attendance tracking with advanced HR management capabilities.
+
+## 🚀 Quick Deployment
+
+**New to this system?** Start here:
+
+- 📋 **[QUICK_START.md](QUICK_START.md)** - 5-minute setup guide
+- 📖 **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete step-by-step instructions
+- 🔧 **[Troubleshooting](#troubleshooting)** - Common issues and solutions
 
 ## 🚀 Features
 

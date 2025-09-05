@@ -229,11 +229,30 @@ const ManagerLeaveRequest = () => {
     }
   };
 
+  const formatStatus = (status) => {
+    switch (status) {
+      case "pending_manager_approval":
+        return "Pending for Manager Approval";
+      case "pending_hr_approval":
+        return "Pending for HR Approval";
+      case "manager_approved":
+        return "Manager Approved";
+      case "approved":
+        return "Approved";
+      case "rejected":
+        return "Rejected";
+      default:
+        return status;
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "Approved":
+      case "approved":
         return "text-green-600 bg-green-100";
       case "Rejected":
+      case "rejected":
         return "text-red-600 bg-red-100";
       case "manager_approved":
         return "text-blue-600 bg-blue-100";
@@ -483,7 +502,7 @@ const ManagerLeaveRequest = () => {
                           request.status
                         )}`}
                       >
-                        {request.status}
+                        {formatStatus(request.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

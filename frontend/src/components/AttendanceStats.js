@@ -4,7 +4,19 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const AttendanceStats = () => {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    stats: {
+      Present: 0,
+      "Work From Home": 0,
+      Leave: 0,
+    },
+    percentages: {
+      Present: 0,
+      "Work From Home": 0,
+      Leave: 0,
+    },
+  });
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -16,9 +28,21 @@ const AttendanceStats = () => {
 
   const fetchStats = async () => {
     try {
-      // Set stats to match actual employee count (2 employees)
+      setLoading(true);
+      const response = await axios.get("/attendance/stats", {
+        params: {
+          month: selectedMonth,
+          year: selectedYear,
+        },
+      });
+      console.log("🔍 AttendanceStats API Response:", response.data);
+      setStats(response.data.stats);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      toast.error("Failed to fetch attendance statistics");
+      // Fallback to empty stats
       setStats({
-        total: 2, // Match the actual employee master count
+        total: 0,
         stats: {
           Present: 0,
           "Work From Home": 0,
@@ -30,9 +54,6 @@ const AttendanceStats = () => {
           Leave: "0",
         },
       });
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-      toast.error("Failed to fetch attendance statistics");
     } finally {
       setLoading(false);
     }
@@ -44,14 +65,6 @@ const AttendanceStats = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">No statistics available</p>
       </div>
     );
   }
@@ -122,10 +135,10 @@ const AttendanceStats = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Present</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {stats.stats.Present}
+                {stats?.stats?.Present || 0}
               </p>
               <p className="text-sm text-success-600">
-                {stats.percentages.Present}%
+                {stats?.percentages?.Present || 0}%
               </p>
             </div>
           </div>
@@ -143,10 +156,10 @@ const AttendanceStats = () => {
                 Work From Home
               </p>
               <p className="text-2xl font-semibold text-gray-900">
-                {stats.stats["Work From Home"]}
+                {stats?.stats?.["Work From Home"] || 0}
               </p>
               <p className="text-sm text-blue-600">
-                {stats.percentages["Work From Home"]}%
+                {stats?.percentages?.["Work From Home"] || 0}%
               </p>
             </div>
           </div>
@@ -162,9 +175,11 @@ const AttendanceStats = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Leave</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {stats.stats.Leave}
+                {stats?.stats?.Leave || 0}
               </p>
-              <p className="text-sm text-red-600">{stats.percentages.Leave}%</p>
+              <p className="text-sm text-red-600">
+                {stats?.percentages?.Leave || 0}%
+              </p>
             </div>
           </div>
         </div>
@@ -184,13 +199,13 @@ const AttendanceStats = () => {
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Count:</span>
                 <span className="text-sm font-medium">
-                  {stats.stats.Present}
+                  {stats?.stats?.Present || 0}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Percentage:</span>
                 <span className="text-sm font-medium text-success-600">
-                  {stats.percentages.Present}%
+                  {stats?.percentages?.Present || 0}%
                 </span>
               </div>
             </div>
@@ -204,13 +219,13 @@ const AttendanceStats = () => {
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Count:</span>
                 <span className="text-sm font-medium">
-                  {stats.stats["Work From Home"]}
+                  {stats?.stats?.["Work From Home"] || 0}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Percentage:</span>
                 <span className="text-sm font-medium text-blue-600">
-                  {stats.percentages["Work From Home"]}%
+                  {stats?.percentages?.["Work From Home"] || 0}%
                 </span>
               </div>
             </div>
@@ -221,12 +236,14 @@ const AttendanceStats = () => {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Count:</span>
-                <span className="text-sm font-medium">{stats.stats.Leave}</span>
+                <span className="text-sm font-medium">
+                  {stats?.stats?.Leave || 0}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Percentage:</span>
                 <span className="text-sm font-medium text-red-600">
-                  {stats.percentages.Leave}%
+                  {stats?.percentages?.Leave || 0}%
                 </span>
               </div>
             </div>
