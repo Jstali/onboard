@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../contexts/AuthContext";
 import {
   FaTrash,
   FaDownload,
@@ -13,6 +14,7 @@ import {
 import DocumentStatus from "./DocumentStatus";
 
 const EmployeeFormManagement = ({ onRefresh }) => {
+  const { user } = useAuth();
   const [employeeForms, setEmployeeForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -1078,10 +1080,15 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                             editingEmployee?.form_data?.email;
                           const currentEmployeeCompanyEmail =
                             editingEmployee?.company_email;
+
+                          // Also exclude the current logged-in user
+                          const currentLoggedInUserEmail = user?.email;
+
                           return (
                             manager.company_email !== currentEmployeeEmail &&
                             manager.company_email !==
-                              currentEmployeeCompanyEmail
+                              currentEmployeeCompanyEmail &&
+                            manager.company_email !== currentLoggedInUserEmail
                           );
                         })
                         .map((manager) => (
@@ -1112,10 +1119,15 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                             editingEmployee?.form_data?.email;
                           const currentEmployeeCompanyEmail =
                             editingEmployee?.company_email;
+
+                          // Also exclude the current logged-in user
+                          const currentLoggedInUserEmail = user?.email;
+
                           return (
                             manager.company_email !== currentEmployeeEmail &&
                             manager.company_email !==
-                              currentEmployeeCompanyEmail
+                              currentEmployeeCompanyEmail &&
+                            manager.company_email !== currentLoggedInUserEmail
                           );
                         })
                         .map((manager) => (
@@ -1146,10 +1158,15 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                             editingEmployee?.form_data?.email;
                           const currentEmployeeCompanyEmail =
                             editingEmployee?.company_email;
+
+                          // Also exclude the current logged-in user
+                          const currentLoggedInUserEmail = user?.email;
+
                           return (
                             manager.company_email !== currentEmployeeEmail &&
                             manager.company_email !==
-                              currentEmployeeCompanyEmail
+                              currentEmployeeCompanyEmail &&
+                            manager.company_email !== currentLoggedInUserEmail
                           );
                         })
                         .map((manager) => (
