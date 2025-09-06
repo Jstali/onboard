@@ -151,7 +151,7 @@ const HRExpenseManagement = () => {
         return "bg-red-100 text-red-800";
       case "Pending Manager Approval":
         return "bg-yellow-100 text-yellow-800";
-      case "manager_approved":
+      case "manager Approved":
         return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -166,7 +166,7 @@ const HRExpenseManagement = () => {
         return "Rejected";
       case "Pending Manager Approval":
         return "Pending for Manager Approval";
-      case "manager_approved":
+      case "manager Approved":
         return "Manager Approved - Pending HR";
       default:
         return status;
@@ -346,11 +346,11 @@ const HRExpenseManagement = () => {
                       </h4>
                       <p className="text-sm text-gray-600">
                         <strong>Approved by:</strong> {expense.hr_name} on{" "}
-                        {formatDate(expense.hr_approved_at)}
+                        {formatDate(expense.hrApprovedAt)}
                       </p>
-                      {expense.hr_approval_notes && (
+                      {expense.hrApprovalNotes && (
                         <p className="text-sm text-gray-600 mt-1">
-                          <strong>Notes:</strong> {expense.hr_approval_notes}
+                          <strong>Notes:</strong> {expense.hrApprovalNotes}
                         </p>
                       )}
                     </div>
@@ -388,7 +388,7 @@ const HRExpenseManagement = () => {
 
                   {/* Approval Actions - Only show for pending requests */}
                   {activeTab === "pending" &&
-                    expense.status === "manager_approved" && (
+                    expense.status === "Manager Approved" && (
                       <div className="flex justify-end space-x-3 pt-4 border-t">
                         <button
                           onClick={() => {
@@ -683,12 +683,12 @@ const HRExpenseManagement = () => {
                     </p>
                     <p className="text-sm">
                       <strong>Approved on:</strong>{" "}
-                      {formatDate(selectedExpense.hr_approved_at)}
+                      {formatDate(selectedExpense.hrApprovedAt)}
                     </p>
-                    {selectedExpense.hr_approval_notes && (
+                    {selectedExpense.hrApprovalNotes && (
                       <p className="text-sm">
                         <strong>Notes:</strong>{" "}
-                        {selectedExpense.hr_approval_notes}
+                        {selectedExpense.hrApprovalNotes}
                       </p>
                     )}
                   </div>
@@ -721,6 +721,97 @@ const HRExpenseManagement = () => {
                   </a>
                 </div>
               )}
+
+              {/* Approval Actions - Only show for pending requests */}
+              {console.log(
+                "Debug - activeTab:",
+                activeTab,
+                "selectedExpense.status:",
+                selectedExpense.status
+              )}
+              {activeTab === "pending" &&
+                selectedExpense.status === "Manager Approved" && (
+                  <div className="mt-6 flex justify-end space-x-3 pt-4 border-t">
+                    <button
+                      onClick={() => {
+                        const notes = prompt("Add approval notes (optional):");
+                        handleApproval(
+                          selectedExpense.id,
+                          "approve",
+                          notes || ""
+                        );
+                        setShowDetailsModal(false);
+                      }}
+                      disabled={processingId === selectedExpense.id}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      {processingId === selectedExpense.id && (
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      )}
+                      {processingId === selectedExpense.id
+                        ? "Processing..."
+                        : "Approve"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const notes = prompt("Add rejection notes (optional):");
+                        handleApproval(
+                          selectedExpense.id,
+                          "reject",
+                          notes || ""
+                        );
+                        setShowDetailsModal(false);
+                      }}
+                      disabled={processingId === selectedExpense.id}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      {processingId === selectedExpense.id && (
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      )}
+                      {processingId === selectedExpense.id
+                        ? "Processing..."
+                        : "Reject"}
+                    </button>
+                  </div>
+                )}
 
               <div className="mt-6 flex justify-end">
                 <button

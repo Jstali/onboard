@@ -83,7 +83,7 @@ const EmployeeCRUD = () => {
         name: `${formData.first_name} ${formData.last_name}`,
         email: formData.email, // Personal email
         type: formData.type,
-        doj: new Date().toISOString(),
+        doj: new Date().toISOString().split('T')[0], // Send only date part (YYYY-MM-DD)
       };
 
       console.log("Sending employee data:", employeeData);

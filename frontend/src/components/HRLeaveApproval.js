@@ -163,7 +163,7 @@ const HRLeaveApproval = () => {
         return "text-green-600 bg-green-100";
       case "Rejected":
         return "text-red-600 bg-red-100";
-      case "manager_approved":
+      case "Manager Approved":
         return "text-blue-600 bg-blue-100";
       case "Pending Manager Approval":
         return "text-yellow-600 bg-yellow-100";
@@ -333,8 +333,8 @@ const HRLeaveApproval = () => {
                                 "No managers assigned"}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {request.manager_approved_at &&
-                                formatDate(request.manager_approved_at)}
+                              {request.managerApprovedAt &&
+                                formatDate(request.managerApprovedAt)}
                             </div>
                           </div>
                         </td>
@@ -513,7 +513,7 @@ const HRLeaveApproval = () => {
                 <p className="text-sm text-gray-600 mb-2">
                   <strong>Employee:</strong> {selectedRequest.employee_name}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">
+                <div className="text-sm text-gray-600 mb-2">
                   <div className="flex items-center">
                     {leaveTypes.find(
                       (t) => t.type_name === selectedRequest.leave_type
@@ -531,7 +531,7 @@ const HRLeaveApproval = () => {
                       <strong>Leave Type:</strong> {selectedRequest.leave_type}
                     </span>
                   </div>
-                </p>
+                </div>
                 <p className="text-sm text-gray-600 mb-2">
                   <strong>From:</strong> {formatDate(selectedRequest.from_date)}
                 </p>
@@ -553,10 +553,10 @@ const HRLeaveApproval = () => {
                   {selectedRequest.manager_approval_status ||
                     "No managers assigned"}
                 </p>
-                {selectedRequest.manager_approval_notes && (
+                {selectedRequest.managerApprovalNotes && (
                   <p className="text-sm text-gray-600 mb-2">
                     <strong>Manager Notes:</strong>{" "}
-                    {selectedRequest.manager_approval_notes}
+                    {selectedRequest.managerApprovalNotes}
                   </p>
                 )}
               </div>

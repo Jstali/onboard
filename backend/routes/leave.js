@@ -830,7 +830,7 @@ router.get("/approve/:id", async (req, res) => {
     // Check if already processed (allow partial approvals to continue)
     if (
       leaveRequest.status === "rejected" ||
-      leaveRequest.status === "hr_approved"
+      leaveRequest.status === "HR Approved"
     ) {
       return res.status(400).json({
         error: "Request already processed",
@@ -900,7 +900,7 @@ router.get("/approve/:id", async (req, res) => {
       );
     } else if (allManagersApproved) {
       // If all assigned managers approve, move to HR approval
-      finalStatus = "manager_approved";
+      finalStatus = "Manager Approved";
       await pool.query(
         `UPDATE leave_requests SET status = $1, manager_approved_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
         [finalStatus, id]
@@ -929,7 +929,7 @@ router.get("/approve/:id", async (req, res) => {
       }
 
       // Return success page for manager approval
-      const isFullApproval = finalStatus === "manager_approved";
+      const isFullApproval = finalStatus === "Manager Approved";
       const title = isFullApproval
         ? "Leave Request Approved!"
         : "Manager Approval Recorded";
@@ -1027,7 +1027,27 @@ router.get("/approve/:id", async (req, res) => {
       `);
     }
   } catch (error) {
-    console.error("Email approval error:", error);
+
+
+    console.error("❌ Email approval error:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail,
+    });
+
+    // Provide more specific error messages
+    let errorMessage = "An error occurred while processing your request.";
+    if (error.code === "23503") {
+      errorMessage =
+        "Invalid leave request reference. The request may have been deleted.";
+    } else if (error.message.includes("token")) {
+      errorMessage = "Invalid or expired approval token.";
+    } else if (error.message.includes("database")) {
+      errorMessage = "Database connection error. Please try again later.";
+    }
+
     res.status(500).send(`
       <!DOCTYPE html>
       <html>
@@ -1036,11 +1056,17 @@ router.get("/approve/:id", async (req, res) => {
         <style>
           body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
           .error { color: #dc3545; font-size: 24px; margin-bottom: 20px; }
+          .info { color: #666; margin-bottom: 30px; }
+          .button { background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
         </style>
       </head>
       <body>
         <div class="error">❌ Error Processing Request</div>
-        <p>An error occurred while processing your request. Please try again or contact support.</p>
+        <div class="info">
+          <p>${errorMessage}</p>
+          <p>Please try again or contact support if the problem persists.</p>
+        </div>
+        <a href="http://localhost:3001/login" class="button">Return to Login</a>
       </body>
       </html>
     `);
@@ -1096,6 +1122,9 @@ router.put(
       }
 
       const leaveRequest = leaveRequestResult.rows[0];
+
+      // Declare managerStatusField variable
+      let managerStatusField = null;
 
       // Check if this is a manager leave request
       if (leaveRequest.role === "manager") {
@@ -1180,7 +1209,7 @@ router.put(
         // If all assigned managers approve, move to HR approval
         if (leaveRequest.role === "manager") {
           // For manager requests, go directly to HR approval
-          finalStatus = "manager_approved";
+          finalStatus = "Manager Approved";
           await pool.query(
             `UPDATE leave_requests SET status = $1, manager_approved_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
             [finalStatus, id]
@@ -1188,7 +1217,7 @@ router.put(
           shouldNotifyHR = true;
         } else {
           // For employee requests, move to HR approval
-          finalStatus = "manager_approved";
+          finalStatus = "Manager Approved";
           await pool.query(
             `UPDATE leave_requests SET status = $1, manager_approved_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
             [finalStatus, id]
@@ -1298,7 +1327,7 @@ router.get("/hr/pending", authenticateToken, async (req, res) => {
         END as manager_approval_status
       FROM leave_requests lr
       JOIN users u ON lr.employee_id = u.id
-      WHERE lr.status = 'manager_approved'
+      WHERE lr.status = 'Manager Approved'
       ORDER BY lr.manager_approved_at ASC
     `);
 
@@ -1439,12 +1468,51 @@ router.put(
               [totalDays, leaveRequest.employee_id, currentYear]
             );
 
-            // Skip leave type balance update for now to avoid database schema issues
+            // Update leave type balance
             console.log(
-              "🔍 Skipping leave type balance update for:",
-              leaveRequest.leave_type,
-              "(schema compatibility issue)"
+              "🔍 Updating leave type balance for:",
+              leaveRequest.leave_type
             );
+
+            // Map leave types to database values
+            let dbLeaveType = leaveRequest.leave_type;
+            if (leaveRequest.leave_type === "Earned/Annual Leave") {
+              dbLeaveType = "annual";
+            } else if (leaveRequest.leave_type === "Sick Leave") {
+              dbLeaveType = "sick";
+            } else if (leaveRequest.leave_type === "Casual Leave") {
+              dbLeaveType = "casual";
+            } else if (leaveRequest.leave_type === "Maternity Leave") {
+              dbLeaveType = "maternity";
+            } else if (leaveRequest.leave_type === "Paternity Leave") {
+              dbLeaveType = "paternity";
+            }
+
+            // Check if leave type balance exists
+            const leaveTypeBalanceResult = await client.query(
+              `SELECT * FROM leave_type_balances WHERE employee_id = $1 AND year = $2 AND leave_type = $3`,
+              [leaveRequest.employee_id, currentYear, dbLeaveType]
+            );
+
+            if (leaveTypeBalanceResult.rows.length > 0) {
+              // Update existing leave type balance
+              await client.query(
+                `UPDATE leave_type_balances 
+                 SET 
+                   leaves_taken = leaves_taken + $1,
+                   leaves_remaining = leaves_remaining - $1,
+                   updated_at = CURRENT_TIMESTAMP
+                 WHERE employee_id = $2 AND year = $3 AND leave_type = $4`,
+                [totalDays, leaveRequest.employee_id, currentYear, dbLeaveType]
+              );
+              console.log("✅ Updated leave type balance for:", dbLeaveType);
+            } else {
+              console.log(
+                "⚠️ No leave type balance found for:",
+                dbLeaveType,
+                "- skipping type-specific update"
+              );
+            }
           }
 
           console.log("✅ Leave balance updated successfully");
@@ -1476,7 +1544,7 @@ router.put(
             attendanceValues.push(
               `(${leaveRequest.employee_id}, '${
                 d.toISOString().split("T")[0]
-              }', 'Leave', 'Approved leave: ${leaveRequest.reason}')`
+              }', 'leave', 'Approved leave: ${leaveRequest.reason}')`
             );
           }
         } else {
@@ -1484,7 +1552,7 @@ router.put(
           attendanceValues.push(
             `(${leaveRequest.employee_id}, '${
               fromDate.toISOString().split("T")[0]
-            }', 'Leave', 'Approved leave: ${leaveRequest.reason}')`
+            }', 'leave', 'Approved leave: ${leaveRequest.reason}')`
           );
         }
 

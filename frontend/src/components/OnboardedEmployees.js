@@ -55,17 +55,12 @@ const OnboardedEmployees = ({ onRefresh }) => {
 
   const fetchAvailableManagers = async () => {
     try {
-      const response = await axios.get("/hr/managers");
+      const response = await axios.get("/hr/master-managers");
       setAvailableManagers(response.data.managers || []);
     } catch (error) {
       console.error("Error fetching managers:", error);
-      // Fallback to hardcoded managers if API fails
-      setAvailableManagers([
-        { employee_name: "Pradeep", company_email: "pradeep@nxzen.com" },
-        { employee_name: "Vamshi", company_email: "vamshi@company.com" },
-        { employee_name: "Vinod", company_email: "vinod@company.com" },
-        { employee_name: "Rakesh", company_email: "rakesh@company.com" },
-      ]);
+      // Fallback to empty array if API fails - no hardcoded managers
+      setAvailableManagers([]);
     }
   };
 

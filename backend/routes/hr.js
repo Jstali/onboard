@@ -362,30 +362,19 @@ router.post(
   }
 );
 
-// Get all employees with comprehensive details
+// Get all employees with comprehensive details - from employee_master table
 router.get("/employees", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT 
-        u.id, 
-        u.email, 
-        u.first_name,
-        u.last_name,
-        u.phone,
-        u.address,
-        u.emergency_contact_name,
-        u.emergency_contact_phone,
-        u.emergency_contact_relationship,
-        u.emergency_contact_name2,
-        u.emergency_contact_phone2,
-        u.emergency_contact_relationship2,
-        u.created_at, 
-        ef.type, 
-        ef.status as form_status,
-        ef.submitted_at,
-        ef.form_data,
-        COALESCE(ef.status, 'no_form') as status,
-        em.employee_id as assigned_employee_id,
+        em.id,
+        em.employee_id,
+        em.employee_name as first_name,
+        '' as last_name,
+        em.company_email as email,
+        em.type,
+        em.status,
+        em.doj as created_at,
         em.manager_id,
         em.manager_name as assigned_manager,
         em.manager2_id,
@@ -396,13 +385,19 @@ router.get("/employees", async (req, res) => {
         em.designation,
         em.salary_band,
         em.location,
-        COALESCE(ef.type, em.role, 'Not Assigned') as assigned_job_role
-      FROM users u
-      LEFT JOIN employee_forms ef ON u.id = ef.employee_id
-      LEFT JOIN employee_master em ON u.email = em.company_email
-      WHERE u.role = 'employee' 
-        AND ef.id IS NOT NULL
-      ORDER BY u.created_at DESC
+        em.role as assigned_job_role,
+        u.phone,
+        u.address,
+        u.emergency_contact_name,
+        u.emergency_contact_phone,
+        u.emergency_contact_relationship,
+        u.emergency_contact_name2,
+        u.emergency_contact_phone2,
+        u.emergency_contact_relationship2
+      FROM employee_master em
+      LEFT JOIN users u ON em.company_email = u.email
+      WHERE em.status = 'active'
+      ORDER BY em.created_at DESC
     `);
 
     res.json({ employees: result.rows });
@@ -659,7 +654,7 @@ router.post("/sync-document-collection", async (req, res) => {
               OR (ed.document_type = 'hsc_certificate' AND dc.document_name LIKE '%HSC%Certificate%')
               OR (ed.document_type = 'hsc_marksheet' AND dc.document_name LIKE '%HSC%Marksheet%')
               OR (ed.document_type = 'graduation_marksheet' AND dc.document_name LIKE '%Graduation%Marksheet%')
-              OR (ed.document_type = 'graduation_certificate' AND dc.document_name LIKE '%Graduation%Certificate%')
+              OR (ed.document_type = 'graduation_certificate' AND (dc.document_name LIKE '%Graduation%Certificate%' OR dc.document_name LIKE '%Latest%Graduation%'))
               OR (ed.document_type = 'postgrad_marksheet' AND dc.document_name LIKE '%Post-Graduation%Marksheet%')
               OR (ed.document_type = 'postgrad_certificate' AND dc.document_name LIKE '%Post-Graduation%Certificate%')
               OR (ed.document_type = 'aadhaar' AND dc.document_name LIKE '%Aadhaar%')
@@ -3399,7 +3394,7 @@ router.get("/document-collection", async (req, res) => {
               OR (ed.document_type = 'hsc_certificate' AND dc.document_name LIKE '%HSC%Certificate%')
               OR (ed.document_type = 'hsc_marksheet' AND dc.document_name LIKE '%HSC%Marksheet%')
               OR (ed.document_type = 'graduation_marksheet' AND dc.document_name LIKE '%Graduation%Marksheet%')
-              OR (ed.document_type = 'graduation_certificate' AND dc.document_name LIKE '%Graduation%Certificate%')
+              OR (ed.document_type = 'graduation_certificate' AND (dc.document_name LIKE '%Graduation%Certificate%' OR dc.document_name LIKE '%Latest%Graduation%'))
               OR (ed.document_type = 'postgrad_marksheet' AND dc.document_name LIKE '%Post-Graduation%Marksheet%')
               OR (ed.document_type = 'postgrad_certificate' AND dc.document_name LIKE '%Post-Graduation%Certificate%')
               OR (ed.document_type = 'aadhaar' AND dc.document_name LIKE '%Aadhaar%')
@@ -3447,7 +3442,7 @@ router.get("/document-collection/employee/:employeeId", async (req, res) => {
               OR (ed.document_type = 'hsc_certificate' AND dc.document_name LIKE '%HSC%Certificate%')
               OR (ed.document_type = 'hsc_marksheet' AND dc.document_name LIKE '%HSC%Marksheet%')
               OR (ed.document_type = 'graduation_marksheet' AND dc.document_name LIKE '%Graduation%Marksheet%')
-              OR (ed.document_type = 'graduation_certificate' AND dc.document_name LIKE '%Graduation%Certificate%')
+              OR (ed.document_type = 'graduation_certificate' AND (dc.document_name LIKE '%Graduation%Certificate%' OR dc.document_name LIKE '%Latest%Graduation%'))
               OR (ed.document_type = 'postgrad_marksheet' AND dc.document_name LIKE '%Post-Graduation%Marksheet%')
               OR (ed.document_type = 'postgrad_certificate' AND dc.document_name LIKE '%Post-Graduation%Certificate%')
               OR (ed.document_type = 'aadhaar' AND dc.document_name LIKE '%Aadhaar%')

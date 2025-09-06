@@ -149,8 +149,8 @@ router.post(
     body("notes").optional().isString().withMessage("Notes must be a string"),
     body("hours")
       .optional()
-      .isInt({ min: 1, max: 24 })
-      .withMessage("Hours must be between 1 and 24"),
+      .isInt({ min: 0, max: 24 })
+      .withMessage("Hours must be between 0 and 24"),
   ],
   async (req, res) => {
     try {
@@ -369,34 +369,89 @@ router.get("/team-attendance", async (req, res) => {
     // For testing, use a default manager ID if authentication is disabled
     const managerId = req.user ? req.user.userId : 70;
 
+    console.log(
+      "🔍 Team attendance request - Manager ID:",
+      managerId,
+      "Dates:",
+      start_date,
+      "to",
+      end_date
+    );
+
     if (!start_date || !end_date) {
       return res
         .status(400)
         .json({ error: "Start date and end date are required" });
     }
 
+    // First check if manager has any team members
+    const teamCheck = await pool.query(
+      `SELECT COUNT(*) as count FROM manager_employee_mapping WHERE manager_id = $1 AND is_active = true`,
+      [managerId]
+    );
+    console.log(
+      "🔍 Team members count for manager",
+      managerId,
+      ":",
+      teamCheck.rows[0].count
+    );
+
+    // First get team member IDs
+    const teamMembers = await pool.query(
+      `SELECT employee_id FROM manager_employee_mapping WHERE manager_id = $1 AND is_active = true`,
+      [managerId]
+    );
+
+    if (teamMembers.rows.length === 0) {
+      console.log("🔍 No team members found for manager", managerId);
+      return res.json({ attendance: [] });
+    }
+
+    const teamMemberIds = teamMembers.rows.map((row) => row.employee_id);
+    console.log("🔍 Team member IDs:", teamMemberIds);
+
     const result = await pool.query(
       `
       SELECT 
         a.id, a.employee_id, a.date, a.status, a.clock_in_time as check_in_time, a.clock_out_time as check_out_time, 
-        a.total_hours, a.reason as notes, a.created_at as marked_at, a.updated_at,
+        a.hours as total_hours, a.reason as notes, a.created_at as marked_at, a.updated_at,
         u.first_name, u.last_name, u.email,
         em.employee_id as emp_id, em.department
       FROM attendance a
       JOIN users u ON a.employee_id = u.id
-      JOIN manager_employee_mapping mem ON u.id = mem.employee_id
       LEFT JOIN employee_master em ON u.email = em.company_email
-      WHERE mem.manager_id = $1 AND mem.is_active = true 
-        AND a.date BETWEEN $2 AND $3
+      WHERE a.employee_id = ANY($1) AND a.date BETWEEN $2 AND $3
       ORDER BY a.date DESC, u.first_name, u.last_name
     `,
-      [managerId, start_date, end_date]
+      [teamMemberIds, start_date, end_date]
     );
 
+    console.log("🔍 Team attendance query result count:", result.rows.length);
     res.json({ attendance: result.rows });
   } catch (error) {
-    console.error("Error fetching team attendance:", error);
-    res.status(500).json({ error: "Failed to fetch team attendance" });
+    console.error("❌ Error fetching team attendance:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail,
+    });
+
+    // Provide more specific error messages
+    let errorMessage = "Failed to fetch team attendance";
+    if (error.code === "42703") {
+      errorMessage = "Database schema error. Please contact support.";
+    } else if (error.message.includes("permission")) {
+      errorMessage = "You don't have permission to view team attendance.";
+    } else if (error.message.includes("connection")) {
+      errorMessage = "Database connection error. Please try again later.";
+    }
+
+    res.status(500).json({
+      error: errorMessage,
+      details: error.message,
+      code: error.code || "UNKNOWN_ERROR",
+    });
   }
 });
 
@@ -439,8 +494,8 @@ router.put(
     body("notes").optional().isString().withMessage("Notes must be a string"),
     body("hours")
       .optional()
-      .isInt({ min: 1, max: 24 })
-      .withMessage("Hours must be between 1 and 24"),
+      .isInt({ min: 0, max: 24 })
+      .withMessage("Hours must be between 0 and 24"),
   ],
   async (req, res) => {
     try {
@@ -531,8 +586,8 @@ router.post(
     body("notes").optional().isString().withMessage("Notes must be a string"),
     body("hours")
       .optional()
-      .isInt({ min: 1, max: 24 })
-      .withMessage("Hours must be between 1 and 24"),
+      .isInt({ min: 0, max: 24 })
+      .withMessage("Hours must be between 0 and 24"),
   ],
   async (req, res) => {
     try {
@@ -654,10 +709,10 @@ router.get("/team-summary", async (req, res) => {
         u.id, u.first_name, u.last_name, u.email,
         em.employee_id as emp_id, em.department,
         COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_days,
-        COUNT(CASE WHEN a.status = 'wfh' THEN 1 END) as wfh_days,
+        COUNT(CASE WHEN a.status = 'Work From Home' THEN 1 END) as wfh_days,
         COUNT(CASE WHEN a.status = 'leave' THEN 1 END) as leave_days,
         COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_days,
-        COUNT(CASE WHEN a.status = 'half_day' THEN 1 END) as half_days,
+        COUNT(CASE WHEN a.status = 'Half Day' THEN 1 END) as half_days,
         COUNT(a.id) as total_days
       FROM users u
       JOIN manager_employee_mapping mem ON u.id = mem.employee_id
@@ -735,9 +790,9 @@ router.get("/stats", async (req, res) => {
     const statusMapping = {
       present: "Present",
       absent: "Absent",
-      wfh: "Work From Home",
+      "Work From Home": "Work From Home",
       leave: "Leave",
-      half_day: "Half Day",
+      "Half Day": "Half Day",
       holiday: "Holiday",
     };
 
@@ -789,10 +844,10 @@ router.get("/hr/details", async (req, res) => {
         em.type as employment_type,
         em.status as employee_status,
         COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_days,
-        COUNT(CASE WHEN a.status = 'wfh' THEN 1 END) as wfh_days,
+        COUNT(CASE WHEN a.status = 'Work From Home' THEN 1 END) as wfh_days,
         COUNT(CASE WHEN a.status = 'leave' THEN 1 END) as leave_days,
         COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_days,
-        COUNT(CASE WHEN a.status = 'half_day' THEN 1 END) as half_days,
+        COUNT(CASE WHEN a.status = 'Half Day' THEN 1 END) as half_days,
         COUNT(CASE WHEN a.status = 'holiday' THEN 1 END) as holiday_days,
         COUNT(a.id) as total_attendance_days
       FROM employee_master em

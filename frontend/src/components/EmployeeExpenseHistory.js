@@ -32,7 +32,7 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
         return "bg-red-100 text-red-800";
       case "Pending Manager Approval":
         return "bg-yellow-100 text-yellow-800";
-      case "manager_approved":
+      case "manager Approved":
         return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -47,7 +47,7 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
         return "Rejected";
       case "Pending Manager Approval":
         return "Pending for Manager Approval";
-      case "manager_approved":
+      case "manager Approved":
         return "Manager Approved - Pending HR";
       default:
         return status;
@@ -284,12 +284,12 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="text-sm text-gray-900 mb-1">
-                      {expense.hr_name} - {formatDate(expense.hr_approved_at)}
+                      {expense.hr_name} - {formatDate(expense.hrApprovedAt)}
                     </div>
-                    {expense.hr_approval_notes && (
+                    {expense.hrApprovalNotes && (
                       <div className="text-sm text-gray-600">
                         <span className="font-medium">Notes:</span>{" "}
-                        {expense.hr_approval_notes}
+                        {expense.hrApprovalNotes}
                       </div>
                     )}
                   </div>

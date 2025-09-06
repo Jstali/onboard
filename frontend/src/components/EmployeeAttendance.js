@@ -173,7 +173,7 @@ const EmployeeAttendance = () => {
     checkInTime = null,
     checkOutTime = null,
     notes = "",
-    hours = 8
+    hours = null
   ) => {
     try {
       const token = localStorage.getItem("token");
@@ -198,8 +198,21 @@ const EmployeeAttendance = () => {
 
       if (response.ok) {
         toast.success("Attendance updated successfully");
-        // Don't refresh immediately to preserve local state
-        // The data will be refreshed on next page load or manual refresh
+        // Refresh attendance data to show updated status
+        if (view === "weekly") {
+          const today = new Date();
+          const { start, end } = getWeekDates(today);
+          fetchAttendance(
+            start.toISOString().split("T")[0],
+            end.toISOString().split("T")[0]
+          );
+        } else if (view === "calendar") {
+          const { start, end } = getMonthDates(currentMonth);
+          fetchAttendance(
+            start.toISOString().split("T")[0],
+            end.toISOString().split("T")[0]
+          );
+        }
       } else {
         const error = await response.json();
         toast.error(error.error || "Failed to mark attendance");
@@ -578,9 +591,15 @@ const EmployeeAttendance = () => {
                                       "0"
                                     );
                                     const formattedDate = `${year}-${month}-${day}`;
+
+                                    // Mark attendance without automatically setting hours
                                     markAttendance(
                                       formattedDate,
-                                      e.target.value
+                                      e.target.value,
+                                      null,
+                                      null,
+                                      "",
+                                      null // Don't set default hours
                                     );
                                   }
                                 }}
@@ -613,23 +632,53 @@ const EmployeeAttendance = () => {
                                     [dateKey]: e.target.value,
                                   }));
 
-                                  if (e.target.value) {
-                                    // If no status is set yet, default to "present" when hours are selected
-                                    const status =
-                                      attendanceRecord?.status || "present";
+                                  if (
+                                    e.target.value &&
+                                    attendanceRecord?.status
+                                  ) {
+                                    // Only update hours if a status is already set
+                                    const status = attendanceRecord.status;
 
-                                    markAttendance(
-                                      dateKey,
-                                      status,
-                                      attendanceRecord?.clock_in_time || null,
-                                      attendanceRecord?.clock_out_time || null,
-                                      attendanceRecord?.reason || "",
-                                      parseInt(e.target.value)
-                                    );
+                                    // Only allow hours selection for certain statuses
+                                    if (
+                                      status === "absent" ||
+                                      status === "leave"
+                                    ) {
+                                      // Reset hours to 0 for absent/leave
+                                      setHoursInputs((prev) => ({
+                                        ...prev,
+                                        [dateKey]: "0",
+                                      }));
+                                      markAttendance(
+                                        dateKey,
+                                        status,
+                                        attendanceRecord?.clock_in_time || null,
+                                        attendanceRecord?.clock_out_time ||
+                                          null,
+                                        attendanceRecord?.reason || "",
+                                        0
+                                      );
+                                    } else {
+                                      // Allow hours selection for present/WFH/Half Day
+                                      markAttendance(
+                                        dateKey,
+                                        status,
+                                        attendanceRecord?.clock_in_time || null,
+                                        attendanceRecord?.clock_out_time ||
+                                          null,
+                                        attendanceRecord?.reason || "",
+                                        parseInt(e.target.value)
+                                      );
+                                    }
                                   }
                                 }}
+                                disabled={
+                                  attendanceRecord?.status === "absent" ||
+                                  attendanceRecord?.status === "leave"
+                                }
                               >
                                 <option value="">Select Hours</option>
+                                <option value="0">0 Hours</option>
                                 <option value="4">4 Hours</option>
                                 <option value="8">8 Hours</option>
                               </select>

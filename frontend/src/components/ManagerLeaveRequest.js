@@ -235,7 +235,7 @@ const ManagerLeaveRequest = () => {
         return "Pending for Manager Approval";
       case "Pending HR Approval":
         return "Pending for HR Approval";
-      case "manager_approved":
+      case "Manager Approved":
         return "Manager Approved";
       case "approved":
         return "Approved";
@@ -254,7 +254,7 @@ const ManagerLeaveRequest = () => {
       case "Rejected":
       case "rejected":
         return "text-red-600 bg-red-100";
-      case "manager_approved":
+      case "Manager Approved":
         return "text-blue-600 bg-blue-100";
       case "Pending Manager Approval":
         return "text-yellow-600 bg-yellow-100";

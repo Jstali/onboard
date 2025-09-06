@@ -731,7 +731,7 @@ router.put(
         );
       } else if (allManagersApproved) {
         // If all assigned managers approve, move to HR approval
-        finalStatus = "manager_approved";
+        finalStatus = "Manager Approved";
         await pool.query(
           `UPDATE expenses SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
           [finalStatus, id]
@@ -825,7 +825,7 @@ router.get("/hr/pending", authenticateToken, async (req, res) => {
         END as manager_approval_status
       FROM expenses e
       JOIN users u ON e.employee_id = u.id
-      WHERE e.status = 'manager_approved'
+      WHERE e.status = 'Manager Approved'
       ORDER BY e.created_at ASC
     `);
 
@@ -1085,7 +1085,7 @@ router.get("/approve/:id", async (req, res) => {
       if (
         expense.status === "approved" ||
         expense.status === "rejected" ||
-        expense.status === "manager_approved"
+        expense.status === "manager Approved"
       ) {
         return res.status(400).json({
           error: "Request already processed",
@@ -1148,7 +1148,7 @@ router.get("/approve/:id", async (req, res) => {
 
       if (allManagersApproved) {
         // If all assigned managers approve, move to HR approval
-        finalStatus = "manager_approved";
+        finalStatus = "Manager Approved";
         await pool.query(
           "UPDATE expenses SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
           [finalStatus, id]
@@ -1268,7 +1268,7 @@ router.get("/approve/:id", async (req, res) => {
                   <p class="text-gray-600 text-sm mt-2">
                       ${
                         action === "approve"
-                          ? finalStatus === "manager_approved"
+                          ? finalStatus === "Manager Approved"
                             ? "The request has been forwarded to HR for final approval."
                             : "Waiting for other managers to approve."
                           : "The employee has been notified of the rejection."

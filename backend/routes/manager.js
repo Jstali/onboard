@@ -432,7 +432,7 @@ router.put(
       await pool.query(
         `
       UPDATE leave_requests 
-      SET status = $1, manager_approval_notes = $2, manager_approved_at = CURRENT_TIMESTAMP
+      SET status = $1, managerApprovalNotes = $2, managerApprovedAt = CURRENT_TIMESTAMP
       WHERE id = $3
     `,
         [newStatus, notes, requestId]
@@ -475,10 +475,10 @@ router.get("/team-attendance-summary", async (req, res) => {
         u.id, u.first_name, u.last_name, u.email,
         em.employee_id as emp_id, em.department,
         COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_days,
-        COUNT(CASE WHEN a.status = 'wfh' THEN 1 END) as wfh_days,
+        COUNT(CASE WHEN a.status = 'Work From Home' THEN 1 END) as wfh_days,
         COUNT(CASE WHEN a.status = 'leave' THEN 1 END) as leave_days,
         COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_days,
-        COUNT(CASE WHEN a.status = 'half_day' THEN 1 END) as half_days,
+        COUNT(CASE WHEN a.status = 'Half Day' THEN 1 END) as half_days,
         COUNT(a.id) as total_days
       FROM users u
       JOIN manager_employee_mapping mem ON u.id = mem.employee_id

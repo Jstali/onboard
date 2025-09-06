@@ -635,13 +635,20 @@ router.delete(
   }
 );
 
-// Get available managers for department assignment
+// Get available managers for department assignment - only from employee_master table
 router.get("/managers", [authenticateToken, checkHRRole], async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT manager_id, manager_name, email, department, designation
-      FROM managers 
-      WHERE status = 'active'
+      SELECT DISTINCT 
+        manager_id, 
+        manager_name, 
+        company_email as email, 
+        department, 
+        designation
+      FROM employee_master 
+      WHERE manager_id IS NOT NULL 
+        AND manager_name IS NOT NULL
+        AND status = 'active'
       ORDER BY manager_name
     `);
 
@@ -652,24 +659,30 @@ router.get("/managers", [authenticateToken, checkHRRole], async (req, res) => {
   }
 });
 
-// Get all managers (including assigned ones)
+// Get all managers (including assigned ones) - only from employee_master table
 router.get(
   "/managers/all",
   [authenticateToken, checkHRRole],
   async (req, res) => {
     try {
       const result = await pool.query(`
-      SELECT u.id, u.first_name, u.last_name, u.email, d.name as department_name
-      FROM users u
-      LEFT JOIN departments d ON u.id = d.manager_id
-      WHERE u.role IN ('manager', 'hr')
-      ORDER BY u.first_name, u.last_name
+      SELECT DISTINCT 
+        em.manager_id as id,
+        em.manager_name as first_name,
+        '' as last_name,
+        em.company_email as email,
+        d.name as department_name
+      FROM employee_master em
+      LEFT JOIN departments d ON em.manager_id = d.manager_id
+      WHERE em.manager_id IS NOT NULL 
+        AND em.manager_name IS NOT NULL
+      ORDER BY em.manager_name
     `);
 
       // Format the response
       const managers = result.rows.map((manager) => ({
         ...manager,
-        full_name: `${manager.first_name} ${manager.last_name}`,
+        full_name: manager.first_name,
         is_assigned: !!manager.department_name,
       }));
 
