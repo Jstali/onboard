@@ -65,24 +65,24 @@ const ManagerExpenseApproval = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-64 bg-brand-pearl">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-brand-pearl flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         {/* Main Card */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="bg-brand-pearl rounded-xl shadow-lg border border-brand-black/10 overflow-hidden">
           {/* Card Header */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-200">
+          <div className="bg-gradient-to-r from-brand-green/10 to-brand-violet/10 px-8 py-6 border-b border-brand-black/10">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl font-bold text-brand-black mb-2">
                 Pending Expense Approvals
               </h2>
-              <p className="text-gray-600">
+              <p className="text-brand-black/70">
                 Review and approve expense requests from your team members.
               </p>
             </div>
@@ -91,10 +91,10 @@ const ManagerExpenseApproval = () => {
           {/* Card Content */}
           <div className="p-8">
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="mb-6 p-4 bg-brand-red/20 border border-brand-red/40 rounded-lg">
                 <div className="flex items-center">
                   <svg
-                    className="w-5 h-5 text-red-400 mr-2"
+                    className="w-5 h-5 text-brand-red mr-2"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -104,16 +104,16 @@ const ManagerExpenseApproval = () => {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-red-800 font-medium">{error}</span>
+                  <span className="text-brand-black font-medium">{error}</span>
                 </div>
               </div>
             )}
 
             {expenses.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-brand-green/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <svg
-                    className="w-10 h-10 text-green-600"
+                    className="w-10 h-10 text-brand-green"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -126,10 +126,10 @@ const ManagerExpenseApproval = () => {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-brand-black mb-2">
                   No pending expense requests
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-brand-black/70">
                   All expense requests have been processed.
                 </p>
               </div>
@@ -138,34 +138,34 @@ const ManagerExpenseApproval = () => {
                 {expenses.map((expense) => (
                   <div
                     key={expense.id}
-                    className="bg-gray-50 rounded-lg p-6 border border-gray-200"
+                    className="bg-brand-pearl/50 rounded-lg p-6 border border-brand-black/10"
                   >
                     {/* Expense Header */}
                     <div className="flex justify-between items-start mb-6">
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">
+                        <h3 className="text-lg font-bold text-brand-black mb-1">
                           {expense.expense_category} - {expense.expense_type}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-brand-black/70">
                           Series: {expense.series} • Submitted:{" "}
                           {formatDate(expense.created_at)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-green-600">
+                        <p className="text-xl font-bold text-brand-green">
                           {formatCurrency(expense.amount, expense.currency)}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-brand-black/70">
                           {formatDate(expense.expense_date)}
                         </p>
                       </div>
                     </div>
 
                     {/* Request Details */}
-                    <div className="bg-white rounded-lg p-6 mb-6">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                    <div className="bg-brand-pearl rounded-lg p-6 mb-6 border border-brand-black/10">
+                      <h4 className="font-semibold text-brand-black mb-4 flex items-center">
                         <svg
-                          className="w-5 h-5 text-blue-600 mr-2"
+                          className="w-5 h-5 text-brand-green mr-2"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -180,35 +180,35 @@ const ManagerExpenseApproval = () => {
                         Request Details
                       </h4>
                       <div className="space-y-3">
-                        <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                          <span className="text-gray-600 font-medium">
+                        <div className="flex justify-between items-center py-2 border-b border-brand-black/10">
+                          <span className="text-brand-black/70 font-medium">
                             Employee
                           </span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-brand-black">
                             {expense.employee_name}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                          <span className="text-gray-600 font-medium">
+                        <div className="flex justify-between items-center py-2 border-b border-brand-black/10">
+                          <span className="text-brand-black/70 font-medium">
                             Category
                           </span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-brand-black">
                             {expense.expense_category}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                          <span className="text-gray-600 font-medium">
+                        <div className="flex justify-between items-center py-2 border-b border-brand-black/10">
+                          <span className="text-brand-black/70 font-medium">
                             Amount
                           </span>
-                          <span className="font-bold text-green-600 text-lg">
+                          <span className="font-bold text-brand-green text-lg">
                             {formatCurrency(expense.amount, expense.currency)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center py-2">
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-brand-black/70 font-medium">
                             Manager
                           </span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-brand-black">
                             {user?.name || "Current User"}
                           </span>
                         </div>
@@ -218,11 +218,13 @@ const ManagerExpenseApproval = () => {
                     {/* Description */}
                     {expense.description && (
                       <div className="mb-6">
-                        <h4 className="font-semibold text-gray-900 mb-3">
+                        <h4 className="font-semibold text-brand-black mb-3">
                           Description
                         </h4>
-                        <div className="bg-white rounded-lg p-4 border border-gray-200">
-                          <p className="text-gray-700">{expense.description}</p>
+                        <div className="bg-brand-pearl rounded-lg p-4 border border-brand-black/10">
+                          <p className="text-brand-black/70">
+                            {expense.description}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -230,14 +232,14 @@ const ManagerExpenseApproval = () => {
                     {/* Attachment */}
                     {expense.attachment_url && (
                       <div className="mb-6">
-                        <h4 className="font-semibold text-gray-900 mb-3">
+                        <h4 className="font-semibold text-brand-black mb-3">
                           Attachment
                         </h4>
                         <a
                           href={`http://localhost:5001${expense.attachment_url}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors duration-200"
+                          className="inline-flex items-center px-4 py-2 bg-brand-green/10 text-brand-green rounded-lg border border-brand-green/20 hover:bg-brand-green/20 transition-colors duration-200"
                         >
                           <svg
                             className="w-4 h-4 mr-2"
@@ -258,7 +260,7 @@ const ManagerExpenseApproval = () => {
                     )}
 
                     {/* Approval Actions */}
-                    <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                    <div className="flex justify-end space-x-4 pt-4 border-t border-brand-black/10">
                       <button
                         onClick={() => {
                           const notes = prompt(
@@ -267,12 +269,12 @@ const ManagerExpenseApproval = () => {
                           handleApproval(expense.id, "approve", notes || "");
                         }}
                         disabled={processingId === expense.id}
-                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
+                        className="px-6 py-3 bg-brand-green text-brand-black rounded-lg hover:bg-hover-primary focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
                       >
                         {processingId === expense.id ? (
                           <div className="flex items-center">
                             <svg
-                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-black"
                               fill="none"
                               viewBox="0 0 24 24"
                             >
@@ -319,12 +321,12 @@ const ManagerExpenseApproval = () => {
                           handleApproval(expense.id, "reject", notes || "");
                         }}
                         disabled={processingId === expense.id}
-                        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
+                        className="px-6 py-3 bg-brand-red text-brand-black rounded-lg hover:bg-hover-danger focus:outline-none focus:ring-2 focus:ring-brand-red focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
                       >
                         {processingId === expense.id ? (
                           <div className="flex items-center">
                             <svg
-                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-black"
                               fill="none"
                               viewBox="0 0 24 24"
                             >

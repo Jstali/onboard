@@ -110,22 +110,23 @@ const OnboardedEmployees = ({ onRefresh }) => {
   };
 
   const getStatusBadge = (status) => {
+    const base = "px-2 py-1 text-xs font-medium rounded-full";
     switch (status) {
       case "pending_assignment":
         return (
-          <span className="px-2 py-1 text-xs font-medium bg-warning-100 text-warning-800 rounded-full">
+          <span className={`${base} bg-brand-yellow text-brand-black`}>
             Pending Assignment
           </span>
         );
       case "assigned":
         return (
-          <span className="px-2 py-1 text-xs font-medium bg-success-100 text-success-800 rounded-full">
+          <span className={`${base} bg-brand-green text-brand-black`}>
             Assigned
           </span>
         );
       default:
         return (
-          <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+          <span className={`${base} bg-brand-pearl text-brand-black`}>
             {status || "Unknown"}
           </span>
         );
@@ -145,77 +146,82 @@ const OnboardedEmployees = ({ onRefresh }) => {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-brand-pearl p-6 rounded-lg">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-brand-black mb-2">
           Onboarded Employees
         </h2>
-        <p className="text-gray-600">
+        <p className="text-brand-black/70">
           Employees approved and waiting for HR to assign name, company email,
           and manager.
         </p>
       </div>
 
       {onboardedEmployees.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="text-gray-400 text-6xl mb-4">📋</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="text-center py-8 bg-brand-pearl rounded-lg border border-brand-black/10">
+          <div className="text-brand-green text-6xl mb-4">📋</div>
+          <h3 className="text-lg font-medium text-brand-black mb-2">
             No Onboarded Employees
           </h3>
-          <p className="text-gray-500">
+          <p className="text-brand-black/60">
             Approved employees will appear here for HR to assign details.
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto bg-brand-pearl shadow-md rounded-lg border border-brand-black/10">
+          <table className="min-w-full">
+            <thead className="bg-brand-pearl border-b border-brand-black/10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Employee
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Submitted
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {onboardedEmployees.map((employee) => (
-                <tr key={employee.id} className="hover:bg-gray-50">
+            <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
+              {onboardedEmployees.map((employee, index) => (
+                <tr
+                  key={employee.id}
+                  className={`${
+                    index % 2 === 0 ? "bg-brand-pearl" : "bg-ui-secondary"
+                  } hover:bg-ui-secondary`}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-brand-black">
                         {employee.user_email}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-brand-black/70">
                         {employee.form_data?.name || "Name not available"}
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-brand-blue text-brand-black">
                       {employee.employee_type || "Not Specified"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(employee.status)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black/70">
                     {formatDate(employee.submitted_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => handleAssignDetails(employee)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      className="text-brand-violet hover:text-brand-green mr-3"
                       title="Assign Details"
                     >
                       <FaEdit className="inline-block" />
@@ -225,7 +231,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
                         setSelectedEmployee(employee);
                         setShowViewModal(true);
                       }}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      className="text-brand-blue hover:text-brand-green mr-3"
                       title="View Details"
                     >
                       <FaEye className="inline-block" />
@@ -247,7 +253,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
                           );
                         }
                       }}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-brand-red hover:text-hover-danger"
                       title="Delete"
                     >
                       <FaTrash className="inline-block" />
@@ -262,25 +268,25 @@ const OnboardedEmployees = ({ onRefresh }) => {
 
       {/* Assignment Modal */}
       {showAssignmentModal && selectedEmployee && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-brand-black">
                 Assign Employee Details
               </h3>
               <button
                 onClick={() => setShowAssignmentModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-brand-black/60 hover:text-brand-black"
               >
                 ×
               </button>
             </div>
 
             <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-brand-black/70 mb-2">
                 <strong>Employee:</strong> {selectedEmployee.user_email}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-brand-black/70">
                 <strong>Type:</strong> {selectedEmployee.employee_type}
               </p>
             </div>
@@ -293,7 +299,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
               className="space-y-4"
             >
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-brand-black">
                   Employee Name *
                 </label>
                 <input
@@ -305,14 +311,14 @@ const OnboardedEmployees = ({ onRefresh }) => {
                       name: e.target.value,
                     }))
                   }
-                  className="input-field"
+                  className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                   placeholder="Enter employee name"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-brand-black">
                   Company Email *
                 </label>
                 <input
@@ -324,14 +330,14 @@ const OnboardedEmployees = ({ onRefresh }) => {
                       companyEmail: e.target.value,
                     }))
                   }
-                  className="input-field"
+                  className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                   placeholder="employee@company.com"
                   required
                 />
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-800">
+              <div className="bg-brand-pearl border border-brand-blue/30 rounded-lg p-3">
+                <p className="text-sm text-brand-black">
                   <strong>Note:</strong> Employee ID will be automatically
                   generated as a unique 6-digit number when you submit this
                   form.
@@ -339,7 +345,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-brand-black">
                   Manager 1 *
                 </label>
                 <select
@@ -350,7 +356,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
                       manager: e.target.value,
                     }))
                   }
-                  className="input-field"
+                  className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                   required
                 >
                   <option value="">Select a manager</option>
@@ -373,7 +379,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-brand-black">
                   Manager 2 (Optional)
                 </label>
                 <select
@@ -384,7 +390,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
                       manager2: e.target.value,
                     }))
                   }
-                  className="input-field"
+                  className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                 >
                   <option value="">Select a manager (optional)</option>
                   {availableManagers
@@ -405,7 +411,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-brand-black">
                   Manager 3 (Optional)
                 </label>
                 <select
@@ -416,7 +422,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
                       manager3: e.target.value,
                     }))
                   }
-                  className="input-field"
+                  className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                 >
                   <option value="">Select a manager (optional)</option>
                   {availableManagers
@@ -440,11 +446,14 @@ const OnboardedEmployees = ({ onRefresh }) => {
                 <button
                   type="button"
                   onClick={() => setShowAssignmentModal(false)}
-                  className="btn-secondary"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary shadow"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-success">
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-lg hover:bg-hover-primary shadow"
+                >
                   Assign Details
                 </button>
               </div>
@@ -454,15 +463,15 @@ const OnboardedEmployees = ({ onRefresh }) => {
       )}
 
       {showViewModal && selectedEmployee && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-3xl shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/10 w-11/12 max-w-3xl shadow-lg rounded-lg bg-brand-pearl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-brand-black">
                 Employee Details
               </h3>
               <button
                 onClick={() => setShowViewModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-brand-black/60 hover:text-brand-black"
               >
                 ×
               </button>
@@ -470,30 +479,30 @@ const OnboardedEmployees = ({ onRefresh }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-brand-black/70">
                   <strong>Email:</strong> {selectedEmployee.user_email}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-brand-black/70">
                   <strong>Company Email:</strong>{" "}
                   {selectedEmployee.company_email || "—"}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-brand-black/70">
                   <strong>Type:</strong> {selectedEmployee.employee_type || "—"}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-brand-black/70">
                   <strong>Status:</strong> {selectedEmployee.status}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-brand-black/70">
                   <strong>Submitted:</strong>{" "}
                   {formatDate(selectedEmployee.submitted_at)}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-brand-black/70">
                   <strong>Manager:</strong>{" "}
                   {selectedEmployee.manager_name || "Not assigned"}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-brand-black/70">
                   <strong>Notes:</strong> {selectedEmployee.notes || "—"}
                 </p>
               </div>
@@ -501,10 +510,10 @@ const OnboardedEmployees = ({ onRefresh }) => {
 
             {selectedEmployee.form_data && (
               <div className="mt-4">
-                <h4 className="text-md font-medium text-gray-900 mb-2">
+                <h4 className="text-md font-medium text-brand-black mb-2">
                   Form Summary
                 </h4>
-                <div className="bg-gray-50 rounded p-3 text-sm text-gray-700 space-y-1">
+                <div className="bg-brand-pearl border border-brand-black/10 rounded p-3 text-sm text-brand-black space-y-1">
                   {selectedEmployee.form_data.name && (
                     <p>
                       <strong>Name:</strong> {selectedEmployee.form_data.name}
@@ -540,7 +549,7 @@ const OnboardedEmployees = ({ onRefresh }) => {
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowViewModal(false)}
-                className="btn-secondary"
+                className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary shadow"
               >
                 Close
               </button>

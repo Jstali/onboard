@@ -1,0 +1,190 @@
+# =============================================================================
+# NXZEN EMPLOYEE MANAGEMENT SYSTEM - PRODUCTION DOCKER COMPOSE
+# =============================================================================
+# Production deployment configuration for server 149.102.158.71
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: nxzen_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_DB: onboardxdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: MySecurePass#2025
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./backend/database_tables.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+    ports:
+      - "127.0.0.1:5432:5432"  # Only accessible from localhost
+    networks:
+      - nxzen_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d onboardxdb"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Redis for sessions and caching
+  redis:
+    image: redis:7-alpine
+    container_name: nxzen_redis_prod
+    restart: always
+    command: redis-server --requirepass nxzen_redis_password_2024 --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data_prod:/data
+    ports:
+      - "127.0.0.1:6379:6379"  # Only accessible from localhost
+    networks:
+      - nxzen_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nxzen_backend_prod
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=onboardxdb
+      - DB_USER=postgres
+      - DB_PASSWORD=MySecurePass#2025
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=nxzen_redis_password_2024
+      - JWT_SECRET=nxzen_jwt_secret_key_production_2024_secure
+      - PORT=2026
+      - HOST=0.0.0.0
+      - CORS_ORIGIN=https://149.102.158.71:2025,https://nxzen.com
+      - FRONTEND_URL=https://149.102.158.71:2025
+      - BACKEND_URL=https://149.102.158.71:2026/api
+      - LOG_LEVEL=info
+      - ENABLE_MONITORING=true
+    volumes:
+      - backend_uploads_prod:/app/uploads
+      - backend_logs_prod:/app/logs
+      - backend_backups_prod:/app/backups
+    ports:
+      - "127.0.0.1:2026:2026"  # Only accessible from localhost
+    networks:
+      - nxzen_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2026/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nxzen_frontend_prod
+    restart: always
+    ports:
+      - "2025:80"
+      - "2026:443"
+    networks:
+      - nxzen_network
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Database Backup Service
+  backup:
+    image: postgres:15-alpine
+    container_name: nxzen_backup_prod
+    restart: "no"
+    environment:
+      PGPASSWORD: MySecurePass#2025
+    volumes:
+      - backend_backups_prod:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    networks:
+      - nxzen_network
+    depends_on:
+      - postgres
+    command: /bin/sh -c "while true; do sleep 86400; /backup.sh; done"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+
+# Networks
+networks:
+  nxzen_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volumes
+volumes:
+  postgres_data_prod:
+    driver: local
+  redis_data_prod:
+    driver: local
+  backend_uploads_prod:
+    driver: local
+  backend_logs_prod:
+    driver: local
+  backend_backups_prod:
+    driver: local

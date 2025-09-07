@@ -19,8 +19,7 @@ import { format } from "date-fns";
 import OnboardingForm from "./OnboardingForm";
 import OnboardingStatus from "./OnboardingStatus";
 import DocumentStatus from "./DocumentStatus";
-import EmployeeExpenseRequest from "./EmployeeExpenseRequest";
-import EmployeeExpenseHistory from "./EmployeeExpenseHistory";
+import EmployeeExpensePortal from "./EmployeeExpensePortal";
 import { Link } from "react-router-dom";
 
 const EmployeeDashboard = () => {
@@ -163,31 +162,35 @@ const EmployeeDashboard = () => {
     switch (status) {
       case "present":
         return {
-          icon: <FaCheck className="text-green-600" />,
-          color: "bg-green-100 text-green-800",
+          icon: <FaCheck className="text-deep-space-black" />,
+          color: "bg-lumen-green text-deep-space-black",
         };
       case "absent":
         return {
-          icon: <FaTimes className="text-red-600" />,
-          color: "bg-red-100 text-red-800",
+          icon: <FaTimes className="text-white" />,
+          color: "bg-brand-coral text-white",
         };
       case "Work From Home":
         return {
-          icon: <FaHome className="text-blue-600" />,
-          color: "bg-blue-100 text-blue-800",
+          icon: <FaHome className="text-white" />,
+          color: "bg-neon-violet text-white",
         };
       case "leave":
         return {
-          icon: <FaClock className="text-yellow-600" />,
-          color: "bg-yellow-100 text-yellow-800",
+          icon: <FaClock className="text-white" />,
+          color: "bg-neon-violet text-white",
         };
       case "Half Day":
         return {
-          icon: <FaClock className="text-orange-600" />,
-          color: "bg-orange-100 text-orange-800",
+          icon: <FaClock className="text-white" />,
+          color: "bg-neon-violet text-white",
         };
       default:
-        return { icon: null, color: "bg-gray-100 text-gray-800" };
+        return {
+          icon: null,
+          color:
+            "bg-iridescent-pearl text-deep-space-black border border-gray-300",
+        };
     }
   };
 
@@ -200,46 +203,49 @@ const EmployeeDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-iridescent-pearl flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-lumen-green mx-auto mb-4"></div>
+          <p className="text-deep-space-black/70">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-iridescent-pearl">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-iridescent-pearl shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               {/* Logo */}
               <div className="flex items-center space-x-3 cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105">
-                <img
-                  src={require("../assets/nxzen.png")}
-                  alt="nxzen Logo"
-                  className="w-10 h-10 object-contain transition-transform duration-300 hover:rotate-12"
-                />
-                <div className="text-black font-semibold text-lg transition-colors duration-300 hover:text-primary-600">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg bg-lumen-green">
+                  <span className="text-xl font-bold text-deep-space-black">
+                    N
+                  </span>
+                </div>
+                <div className="text-deep-space-black font-bold text-xl transition-colors duration-300 hover:text-lumen-green">
                   NXZEN
                 </div>
               </div>
               <div className="border-l border-gray-300 h-8"></div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-deep-space-black">
                 Employee Portal
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <Link
                 to="/profile"
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                className="text-deep-space-black/70 hover:text-lumen-green font-medium transition-all duration-300 px-4 py-2 rounded-lg hover:bg-white/80 flex items-center"
               >
                 <FaUserEdit className="mr-2" />
                 Profile
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                className="text-deep-space-black/70 hover:text-brand-coral font-medium transition-all duration-300 px-4 py-2 rounded-lg hover:bg-brand-coral/10 flex items-center"
               >
                 <FaSignOutAlt className="mr-2" />
                 Logout
@@ -250,42 +256,11 @@ const EmployeeDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {/* Expenses Tab Navigation */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Expense Portal - Full screen with tabs */}
         {isOnboarded && activeTab === "expenses" && (
-          <div className="mb-6">
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveTab("expenses")}
-                  className="whitespace-nowrap py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600"
-                >
-                  <FaReceipt className="inline mr-2" />
-                  Submit Expense
-                </button>
-                <button
-                  onClick={() => setActiveTab("expense-history")}
-                  className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  <FaHistory className="inline mr-2" />
-                  Expense History
-                </button>
-                <button
-                  onClick={() => setActiveTab("dashboard")}
-                  className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  ← Back to Dashboard
-                </button>
-              </nav>
-            </div>
-          </div>
-        )}
-
-        {/* Expenses Content */}
-        {isOnboarded && activeTab === "expenses" && <EmployeeExpenseRequest />}
-        {isOnboarded && activeTab === "expense-history" && (
-          <EmployeeExpenseHistory
-            onNavigateToSubmit={() => setActiveTab("expenses")}
+          <EmployeeExpensePortal
+            onBackToDashboard={() => setActiveTab("dashboard")}
           />
         )}
 
@@ -293,207 +268,269 @@ const EmployeeDashboard = () => {
         {activeTab === "dashboard" && (
           <>
             {/* Onboarding Form or Success Message */}
-            {onboardingStatus?.hasForm ? (
-              onboardingStatus.status ===
-              "approved" ? null : onboardingStatus.status === "submitted" ? (
-                <div className="bg-warning-50 border border-warning-200 rounded-lg p-6">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center mr-4">
-                      <div className="w-4 h-4 bg-warning-600 rounded-full animate-pulse"></div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-warning-800">
-                        Form Submitted Successfully!
-                      </h3>
-                      <p className="text-warning-700 mt-1">
-                        Your onboarding form has been submitted and is awaiting
-                        HR approval. You will be notified once it's approved.
-                      </p>
+            <div className="bg-white rounded-2xl p-6 mb-8 border border-gray-200">
+              {onboardingStatus?.hasForm ? (
+                onboardingStatus.status ===
+                "approved" ? null : onboardingStatus.status === "submitted" ? (
+                  <div className="bg-white rounded-lg p-6 mb-8 border-l-4 border-brand-yellow">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-brand-yellow/20 rounded-xl flex items-center justify-center mr-4">
+                        <div className="w-6 h-6 bg-brand-yellow rounded-full animate-pulse"></div>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-deep-space-black">
+                          Form Submitted Successfully!
+                        </h3>
+                        <p className="text-deep-space-black/70 mt-1">
+                          Your onboarding form has been submitted and is
+                          awaiting HR approval. You will be notified once it's
+                          approved.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="animate-fade-in">
+                    <OnboardingForm onSuccess={checkOnboardingStatus} />
+                  </div>
+                )
               ) : (
-                <OnboardingForm onSuccess={checkOnboardingStatus} />
-              )
-            ) : (
-              <OnboardingForm onSuccess={checkOnboardingStatus} />
-            )}
+                <div className="animate-fade-in">
+                  <OnboardingForm onSuccess={checkOnboardingStatus} />
+                </div>
+              )}
+            </div>
 
             {/* Quick Actions - Only show when onboarding is approved */}
             {onboardingStatus?.status === "approved" ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <Link
-                    to="/employee/attendance"
-                    className="bg-blue-600 text-white p-6 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <div className="flex items-center">
-                      <FaCalendarAlt className="text-3xl mr-4" />
-                      <div>
-                        <h3 className="text-xl font-semibold">
-                          Book your time
-                        </h3>
+                <div className="bg-white rounded-2xl p-6 mb-8 border border-gray-200">
+                  <h2 className="text-2xl font-bold text-deep-space-black mb-6 text-center">
+                    Quick Actions
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Link
+                      to="/employee/attendance"
+                      className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center border-2 border-deep-space-black">
+                          <FaCalendarAlt className="text-2xl text-deep-space-black" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-semibold text-deep-space-black">
+                            Book your time
+                          </h3>
+                          <p className="text-sm text-deep-space-black/70">
+                            Track attendance
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
 
-                  <Link
-                    to="/leave-request"
-                    className="bg-green-600 text-white p-6 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
-                  >
-                    <div className="flex items-center">
-                      <FaCalendarPlus className="text-3xl mr-4" />
-                      <div>
-                        <h3 className="text-xl font-semibold">Leave Request</h3>
+                    <Link
+                      to="/leave-request"
+                      className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-neon-violet">
+                          <FaCalendarPlus className="text-2xl text-white" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-semibold text-deep-space-black">
+                            Leave Request
+                          </h3>
+                          <p className="text-sm text-deep-space-black/70">
+                            Request time off
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
 
-                  <button
-                    onClick={() => setActiveTab("expenses")}
-                    className="bg-orange-600 text-white p-6 rounded-lg shadow-lg hover:bg-orange-700 transition-colors text-left"
-                  >
-                    <div className="flex items-center">
-                      <FaReceipt className="text-3xl mr-4" />
-                      <div>
-                        <h3 className="text-xl font-semibold">
-                          Expense Request
-                        </h3>
+                    <button
+                      onClick={() => setActiveTab("expenses")}
+                      className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer text-left w-full"
+                    >
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-lumen-green">
+                          <FaReceipt className="text-2xl text-deep-space-black" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-semibold text-deep-space-black">
+                            Expense Request
+                          </h3>
+                          <p className="text-sm text-deep-space-black/70">
+                            Submit expenses
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
 
-                  <Link
-                    to="/company-policies"
-                    className="bg-indigo-600 text-white p-6 rounded-lg shadow-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    <div className="flex items-center">
-                      <FaFileAlt className="text-3xl mr-4" />
-                      <div>
-                        <h3 className="text-xl font-semibold">
-                          Company Policies
-                        </h3>
+                    <Link
+                      to="/company-policies"
+                      className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center border-2 border-deep-space-black">
+                          <FaFileAlt className="text-2xl text-deep-space-black" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-semibold text-deep-space-black">
+                            Company Policies
+                          </h3>
+                          <p className="text-sm text-deep-space-black/70">
+                            View policies
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Weekly Attendance Summary */}
-                <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-xl font-semibold text-gray-900">
-                        This Week's Attendance
-                      </h3>
-                      <div className="text-sm text-gray-600">
-                        {formatWeekRange()}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                  <div className="animate-slide-in">
+                    <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">
+                      <div>
+                        <h3 className="text-xl font-bold text-deep-space-black">
+                          This Week's Attendance
+                        </h3>
+                        <p className="text-sm text-deep-space-black/70 mt-1">
+                          {formatWeekRange()}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={fetchAttendance}
+                          className="px-4 py-2 bg-lumen-green text-deep-space-black rounded-lg hover:bg-neon-violet transition-colors duration-200 disabled:opacity-50"
+                          disabled={attendanceLoading}
+                        >
+                          {attendanceLoading ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-deep-space-black"></div>
+                          ) : (
+                            "Refresh"
+                          )}
+                        </button>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="overflow-x-auto">
-                    {attendanceLoading ? (
-                      <div className="flex justify-center items-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                      </div>
-                    ) : (
-                      <table className="min-w-full bg-white">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                              Day
-                            </th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                              Date
-                            </th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                              Status
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {generateWeekDays().map((date, index) => {
-                            const attendanceRecord = getAttendanceForDate(
-                              date.toISOString().split("T")[0]
-                            );
-                            const isToday =
-                              date.toDateString() === new Date().toDateString();
-
-                            return (
-                              <tr
-                                key={index}
-                                className={`hover:bg-gray-50 transition-colors duration-200 ${
-                                  isToday
-                                    ? "bg-blue-50 border-l-4 border-blue-500"
-                                    : ""
-                                }`}
-                              >
-                                <td className="px-6 py-5 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                  {date.toLocaleDateString("en-US", {
-                                    weekday: "short",
-                                  })}
-                                </td>
-                                <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-700">
-                                  {date.toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
-                                </td>
-                                <td className="px-6 py-5 whitespace-nowrap">
-                                  {attendanceRecord ? (
-                                    <span
-                                      className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                                        getStatusDisplay(
-                                          attendanceRecord.status
-                                        ).color
-                                      }`}
-                                    >
-                                      {
-                                        getStatusDisplay(
-                                          attendanceRecord.status
-                                        ).icon
-                                      }
-                                      <span className="ml-2">
-                                        {attendanceRecord.status ===
-                                        "Work From Home"
-                                          ? "Work From Home"
-                                          : attendanceRecord.status
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                            attendanceRecord.status.slice(1)}
-                                      </span>
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                                      No Record
-                                    </span>
-                                  )}
-                                </td>
+                    <div className="overflow-x-auto">
+                      {attendanceLoading ? (
+                        <div className="flex justify-center items-center py-12 bg-white">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lumen-green"></div>
+                        </div>
+                      ) : (
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                          <table className="w-full bg-white">
+                            <thead className="bg-white">
+                              <tr>
+                                <th className="text-left py-4 px-6 font-semibold text-deep-space-black bg-white">
+                                  Day
+                                </th>
+                                <th className="text-left py-4 px-6 font-semibold text-deep-space-black bg-white">
+                                  Date
+                                </th>
+                                <th className="text-left py-4 px-6 font-semibold text-deep-space-black bg-white">
+                                  Status
+                                </th>
                               </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    )}
+                            </thead>
+                            <tbody className="divide-y divide-gray-200 bg-white">
+                              {generateWeekDays().map((date, index) => {
+                                const attendanceRecord = getAttendanceForDate(
+                                  date.toISOString().split("T")[0]
+                                );
+                                const isToday =
+                                  date.toDateString() ===
+                                  new Date().toDateString();
+
+                                return (
+                                  <tr
+                                    key={index}
+                                    className={`hover:bg-gray-50 transition-colors duration-200 ${
+                                      isToday
+                                        ? "bg-lumen-green/10 border-l-4 border-lumen-green"
+                                        : index % 2 === 0
+                                        ? "bg-white"
+                                        : "bg-gray-50"
+                                    }`}
+                                  >
+                                    <td className="px-6 py-4 whitespace-nowrap bg-inherit">
+                                      <span className="font-semibold text-deep-space-black">
+                                        {date.toLocaleDateString("en-US", {
+                                          weekday: "short",
+                                        })}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap bg-inherit">
+                                      <span className="text-deep-space-black/70">
+                                        {date.toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
+                                        })}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap bg-inherit">
+                                      {attendanceRecord ? (
+                                        <span
+                                          className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
+                                            getStatusDisplay(
+                                              attendanceRecord.status
+                                            ).color
+                                          }`}
+                                        >
+                                          {
+                                            getStatusDisplay(
+                                              attendanceRecord.status
+                                            ).icon
+                                          }
+                                          <span className="ml-2">
+                                            {attendanceRecord.status ===
+                                            "Work From Home"
+                                              ? "Work From Home"
+                                              : attendanceRecord.status
+                                                  .charAt(0)
+                                                  .toUpperCase() +
+                                                attendanceRecord.status.slice(
+                                                  1
+                                                )}
+                                          </span>
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-iridescent-pearl text-deep-space-black border border-gray-300">
+                                          No Record
+                                        </span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </>
             ) : onboardingStatus?.hasForm &&
               onboardingStatus?.status !== "approved" ? (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-4">
-                    <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-800">
-                      Employee Features Pending Approval
-                    </h3>
-                    <p className="text-gray-600 mt-1">
-                      Your onboarding form is being reviewed. Once approved by
-                      HR, you'll have access to attendance, leave requests, and
-                      expense management features.
-                    </p>
+              <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                <div className="bg-white rounded-lg p-6 border-l-4 border-gray-300">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-deep-space-black/10 rounded-xl flex items-center justify-center mr-4">
+                      <div className="w-6 h-6 bg-deep-space-black/40 rounded-full"></div>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-deep-space-black">
+                        Employee Features Pending Approval
+                      </h3>
+                      <p className="text-deep-space-black/70 mt-1">
+                        Your onboarding form is being reviewed. Once approved by
+                        HR, you'll have access to attendance, leave requests,
+                        and expense management features.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

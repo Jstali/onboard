@@ -112,13 +112,13 @@ const HRLeaveManagement = () => {
 
     switch (status) {
       case "Approved":
-        return `${baseClasses} bg-green-100 text-green-800 border border-green-200`;
+        return `${baseClasses} bg-brand-green text-brand-black border border-brand-green/40`;
       case "Rejected":
-        return `${baseClasses} bg-red-100 text-red-800 border border-red-200`;
+        return `${baseClasses} bg-brand-red text-brand-black border border-brand-red/40`;
       case "Pending":
-        return `${baseClasses} bg-yellow-100 text-yellow-800 border border-yellow-200`;
+        return `${baseClasses} bg-brand-yellow text-brand-black border border-brand-yellow/40`;
       default:
-        return `${baseClasses} bg-gray-100 text-gray-800 border border-gray-200`;
+        return `${baseClasses} bg-brand-pearl text-brand-black border border-brand-black/10`;
     }
   };
 
@@ -129,13 +129,13 @@ const HRLeaveManagement = () => {
 
     switch (type) {
       case "approve":
-        return `${baseClasses} bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg`;
+        return `${baseClasses} bg-brand-green hover:bg-hover-primary text-brand-black shadow`;
       case "reject":
-        return `${baseClasses} bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg`;
+        return `${baseClasses} bg-brand-red hover:bg-hover-danger text-brand-black shadow`;
       case "change":
-        return `${baseClasses} bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg`;
+        return `${baseClasses} bg-brand-violet hover:bg-hover-secondary text-brand-black shadow`;
       default:
-        return `${baseClasses} bg-gray-500 hover:bg-gray-600 text-white shadow-md hover:shadow-lg`;
+        return `${baseClasses} bg-brand-pearl border border-brand-black/20 text-brand-black shadow`;
     }
   };
 
@@ -166,10 +166,10 @@ const HRLeaveManagement = () => {
   // Check authentication first
   if (!token || !user || user.role !== "hr") {
     return (
-      <div className="flex items-center justify-center min-h-96">
+      <div className="flex items-center justify-center min-h-96 bg-brand-pearl">
         <div className="text-center">
-          <div className="text-2xl text-red-500 mb-4">🔒 Access Denied</div>
-          <div className="text-gray-600">
+          <div className="text-2xl text-brand-red mb-4">🔒 Access Denied</div>
+          <div className="text-brand-black/70">
             You must be logged in as HR to access this page.
           </div>
         </div>
@@ -179,83 +179,83 @@ const HRLeaveManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center min-h-96 bg-brand-pearl">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
+    <div className="bg-brand-pearl rounded-xl shadow-md p-6 border border-brand-black/10">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <h1 className="text-3xl font-bold text-brand-black mb-2">
           Leave Management
         </h1>
-        <p className="text-gray-600">
+        <p className="text-brand-black/70">
           Manage and approve employee leave requests
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <div className="text-2xl font-bold text-blue-600">
+        <div className="bg-brand-pearl p-4 rounded-lg border border-brand-black/10 shadow-sm">
+          <div className="text-2xl font-bold text-brand-yellow">
             {leaveRequests.filter((r) => r.status === "Pending").length}
           </div>
-          <div className="text-sm text-blue-600">Pending</div>
+          <div className="text-sm text-brand-black">Pending</div>
         </div>
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <div className="text-2xl font-bold text-green-600">
+        <div className="bg-brand-pearl p-4 rounded-lg border border-brand-black/10 shadow-sm">
+          <div className="text-2xl font-bold text-brand-green">
             {leaveRequests.filter((r) => r.status === "Approved").length}
           </div>
-          <div className="text-sm text-green-600">Approved</div>
+          <div className="text-sm text-brand-black">Approved</div>
         </div>
-        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-          <div className="text-2xl font-bold text-red-600">
+        <div className="bg-brand-pearl p-4 rounded-lg border border-brand-black/10 shadow-sm">
+          <div className="text-2xl font-bold text-brand-red">
             {leaveRequests.filter((r) => r.status === "Rejected").length}
           </div>
-          <div className="text-sm text-red-600">Rejected</div>
+          <div className="text-sm text-brand-black">Rejected</div>
         </div>
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-gray-600">
+        <div className="bg-brand-pearl p-4 rounded-lg border border-brand-black/10 shadow-sm">
+          <div className="text-2xl font-bold text-brand-black/70">
             {leaveRequests.length}
           </div>
-          <div className="text-sm text-gray-600">Total</div>
+          <div className="text-sm text-brand-black">Total</div>
         </div>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full bg-white rounded-xl overflow-hidden shadow-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+        <table className="w-full bg-brand-pearl rounded-xl overflow-hidden shadow-md border border-brand-black/10">
+          <thead className="bg-brand-pearl border-b border-brand-black/10">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Employee
               </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Leave Details
               </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Reason
               </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Manager
               </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-brand-black/10">
             {leaveRequests.length === 0 ? (
               <tr>
                 <td
                   colSpan="6"
-                  className="px-6 py-12 text-center text-gray-500"
+                  className="px-6 py-12 text-center text-brand-black/60"
                 >
                   <div className="flex flex-col items-center">
                     <div className="text-4xl mb-2">📋</div>
@@ -272,23 +272,23 @@ const HRLeaveManagement = () => {
               leaveRequests.map((request) => (
                 <tr
                   key={request.id}
-                  className="hover:bg-gray-50 transition-colors duration-150"
+                  className="hover:bg-ui-secondary transition-colors duration-150"
                 >
                   {/* Employee Info */}
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-sm font-medium text-blue-600">
+                        <div className="h-10 w-10 rounded-full bg-brand-green/20 flex items-center justify-center">
+                          <span className="text-sm font-medium text-brand-green">
                             {request.employee_name?.charAt(0) || "E"}
                           </span>
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-brand-black">
                           {request.employee_name || "N/A"}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-brand-black/70">
                           ID: {request.employee_id || "N/A"}
                         </div>
                       </div>
@@ -297,18 +297,18 @@ const HRLeaveManagement = () => {
 
                   {/* Leave Details */}
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      <div className="font-medium text-blue-600 mb-1">
+                    <div className="text-sm text-brand-black">
+                      <div className="font-medium text-brand-blue mb-1">
                         {request.leave_type || "N/A"}
                       </div>
-                      <div className="text-gray-600">
+                      <div className="text-brand-black/70">
                         {formatDate(request.start_date)}
                         {request.end_date &&
                         request.end_date !== request.start_date
                           ? ` - ${formatDate(request.end_date)}`
                           : ""}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-brand-black/60 mt-1">
                         {calculateTotalDays(
                           request.start_date,
                           request.end_date
@@ -321,7 +321,7 @@ const HRLeaveManagement = () => {
                   {/* Reason */}
                   <td className="px-6 py-4">
                     <div className="max-w-xs">
-                      <div className="text-sm text-gray-900 line-clamp-2">
+                      <div className="text-sm text-brand-black line-clamp-2">
                         {request.reason || "No reason provided"}
                       </div>
                     </div>
@@ -329,7 +329,7 @@ const HRLeaveManagement = () => {
 
                   {/* Manager */}
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-brand-black">
                       {request.manager_name || "Not Assigned"}
                     </div>
                   </td>
@@ -396,7 +396,7 @@ const HRLeaveManagement = () => {
       </div>
 
       {/* Footer */}
-      <div className="mt-6 text-center text-sm text-gray-500">
+      <div className="mt-6 text-center text-sm text-brand-black/70">
         Showing {leaveRequests.length} leave request
         {leaveRequests.length !== 1 ? "s" : ""}
       </div>

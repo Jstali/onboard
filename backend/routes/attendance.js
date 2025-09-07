@@ -149,7 +149,16 @@ router.post(
     body("notes").optional().isString().withMessage("Notes must be a string"),
     body("hours")
       .optional()
-      .isInt({ min: 0, max: 24 })
+      .custom((value) => {
+        if (value === null || value === undefined || value === "") {
+          return true;
+        }
+        return (
+          Number.isInteger(Number(value)) &&
+          Number(value) >= 0 &&
+          Number(value) <= 24
+        );
+      })
       .withMessage("Hours must be between 0 and 24"),
   ],
   async (req, res) => {
@@ -494,7 +503,16 @@ router.put(
     body("notes").optional().isString().withMessage("Notes must be a string"),
     body("hours")
       .optional()
-      .isInt({ min: 0, max: 24 })
+      .custom((value) => {
+        if (value === null || value === undefined || value === "") {
+          return true;
+        }
+        return (
+          Number.isInteger(Number(value)) &&
+          Number(value) >= 0 &&
+          Number(value) <= 24
+        );
+      })
       .withMessage("Hours must be between 0 and 24"),
   ],
   async (req, res) => {
@@ -586,7 +604,16 @@ router.post(
     body("notes").optional().isString().withMessage("Notes must be a string"),
     body("hours")
       .optional()
-      .isInt({ min: 0, max: 24 })
+      .custom((value) => {
+        if (value === null || value === undefined || value === "") {
+          return true;
+        }
+        return (
+          Number.isInteger(Number(value)) &&
+          Number(value) >= 0 &&
+          Number(value) <= 24
+        );
+      })
       .withMessage("Hours must be between 0 and 24"),
   ],
   async (req, res) => {

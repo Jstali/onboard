@@ -208,28 +208,28 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="App">
+        <div className="page-container">
           <AppRoutes />
           <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,
               style: {
-                background: "#363636",
-                color: "#fff",
+                background: "#030304", // DEEP SPACE BLACK
+                color: "#F6F2F4", // IRIDESCENT PEARL
               },
               success: {
                 duration: 3000,
                 iconTheme: {
-                  primary: "#22c55e",
-                  secondary: "#fff",
+                  primary: "#8DE971", // LUMEN GREEN
+                  secondary: "#030304", // DEEP SPACE BLACK
                 },
               },
               error: {
                 duration: 5000,
                 iconTheme: {
-                  primary: "#ef4444",
-                  secondary: "#fff",
+                  primary: "#FF7276", // CORAL
+                  secondary: "#F6F2F4", // IRIDESCENT PEARL
                 },
               },
             }}

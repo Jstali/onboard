@@ -89,180 +89,189 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Starry background effect */}
-      <div className="absolute inset-0">
-        <div className="stars"></div>
-      </div>
+    <div className="login-container">
+      <div className="stars"></div> {/* Starry background */}
+      <div className="relative z-10 w-full max-w-md mx-4">
+        <div className="login-card animate-scale-in">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center shadow-2xl gradient-tertiary">
+              <span className="text-3xl font-bold text-blue-950">N</span>
+            </div>
+            <h1 className="heading-1 text-blue-100">Welcome Back</h1>
+            <p className="body-small text-blue-300">
+              Sign in to your Future Foresight portal
+            </p>
+          </div>
 
-      <div className="flex flex-col md:flex-row max-w-5xl w-full relative z-10">
-        {/* Left Section: Logo */}
-        <div className="md:w-1/2 flex items-center justify-center p-8">
-          
-        </div>
+          {!showPasswordChange ? (
+            // Login Form
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="space-y-5">
+                <div className="form-group">
+                  <label className="form-label text-blue-100">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300" />
+                    <input
+                      type="email"
+                      required
+                      className="input-field pl-12 bg-purple-400/20 border-purple-300 focus:border-blue-400 focus:ring-blue-400 text-blue-100 placeholder-blue-300"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-        {/* Right Section: Login Form */}
-        <div className="md:w-1/2 flex items-center justify-center p-8">
-          <div className="w-full max-w-md">
-            <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-white mb-2">
-                 nxzen
-                </h2>
+                <div className="form-group">
+                  <label className="form-label text-blue-100">Password</label>
+                  <div className="relative">
+                    <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      className="input-field pl-12 pr-12 bg-purple-400/20 border-purple-300 focus:border-blue-400 focus:ring-blue-400 text-blue-100 placeholder-blue-300"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-300 hover:text-blue-400 transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {!showPasswordChange ? (
-                // Login Form
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                  <div className="space-y-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full text-lg shadow-2xl"
+                style={{
+                  background: loading ? "rgba(141, 233, 113, 0.7)" : "",
+                }}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-3 border-blue-950 mr-3"></div>
+                    Signing in...
+                  </div>
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="text-blue-400 hover:text-blue-500 font-medium text-sm transition-colors bg-transparent border-none cursor-pointer"
+                  onClick={() => console.log("Forgot password clicked")}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            </form>
+          ) : (
+            // Password Change Form
+            <>
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 mx-auto mb-4 bg-green-400 rounded-2xl flex items-center justify-center shadow-lg">
+                  <FaCheck className="text-2xl text-blue-950" />
+                </div>
+                <h2 className="heading-3 text-blue-100">Set New Password</h2>
+                <p className="body-small text-blue-300 mb-2">
+                  Welcome! Please set your new password to continue
+                </p>
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 font-medium text-sm">
+                  {resetData?.email}
+                </div>
+              </div>
+
+              <form className="space-y-6" onSubmit={handlePasswordChange}>
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <label className="form-label text-blue-100">
+                      New Password
+                    </label>
                     <div className="relative">
+                      <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pearl-300" />
                       <input
-                        type="email"
+                        type={showNewPassword ? "text" : "password"}
                         required
-                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        required
-                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent pr-12"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        className="input-field pl-10 pr-10 bg-violet-400/20 border-violet-300 text-pearl-100 placeholder-pearl-300"
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        minLength={6}
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-pearl-300 hover:text-lumen-400 transition-colors"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
                       >
-                        {showPassword ? (
-                          <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                        ) : (
-                          <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                        )}
+                        {showNewPassword ? <FaEyeSlash /> : <FaEye />}
                       </button>
                     </div>
                   </div>
 
+                  <div className="form-group">
+                    <label className="form-label text-pearl-100">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pearl-300" />
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        required
+                        className="input-field pl-10 pr-10 bg-violet-400/20 border-violet-300 text-pearl-100 placeholder-pearl-300"
+                        placeholder="Confirm new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-pearl-300 hover:text-lumen-400 transition-colors"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={goBackToLogin}
+                    className="btn-secondary flex-1"
+                  >
+                    Back to Login
+                  </button>
                   <button
                     type="submit"
-                    disabled={loading}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={passwordChangeLoading}
+                    className="btn-primary flex-1"
                   >
-                    {loading ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>
+                    {passwordChangeLoading ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-space-950 mr-2"></div>
+                        Setting...
+                      </div>
                     ) : (
-                      "Sign in"
+                      "Set Password"
                     )}
                   </button>
-
-                  <div className="text-center">
-                    <a
-                      href="#"
-                      className="text-white hover:text-green-400 text-sm transition-colors"
-                    >
-                      Forgot password?
-                    </a>
-                  </div>
-                </form>
-              ) : (
-                // Password Change Form
-                <>
-                  <div className="text-center mb-6">
-                    <div className="mx-auto h-12 w-12 bg-green-600 rounded-full flex items-center justify-center mb-4">
-                      <FaCheck className="h-8 w-8 text-white" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">
-                      Set New Password
-                    </h2>
-                    <p className="text-gray-400 text-sm">
-                      Welcome! Please set your new password to continue
-                    </p>
-                    <p className="text-green-400 font-medium text-sm mt-1">
-                      {resetData?.email}
-                    </p>
-                  </div>
-
-                  <form className="space-y-6" onSubmit={handlePasswordChange}>
-                    <div className="space-y-4">
-                      <div className="relative">
-                        <input
-                          type={showNewPassword ? "text" : "password"}
-                          required
-                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent pr-12"
-                          placeholder="New Password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          minLength={6}
-                        />
-                        <button
-                          type="button"
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                        >
-                          {showNewPassword ? (
-                            <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                          ) : (
-                            <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                          )}
-                        </button>
-                      </div>
-
-                      <div className="relative">
-                        <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          required
-                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent pr-12"
-                          placeholder="Confirm New Password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          minLength={6}
-                        />
-                        <button
-                          type="button"
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                        >
-                          {showConfirmPassword ? (
-                            <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                          ) : (
-                            <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-3">
-                      <button
-                        type="button"
-                        onClick={goBackToLogin}
-                        className="flex-1 px-4 py-3 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-                      >
-                        Back to Login
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={passwordChangeLoading}
-                        className="flex-1 px-4 py-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {passwordChangeLoading ? (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>
-                        ) : (
-                          "Set Password"
-                        )}
-                      </button>
-                    </div>
-                  </form>
-                </>
-              )}
-            </div>
-          </div>
+                </div>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </div>

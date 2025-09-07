@@ -1,0 +1,105 @@
+/* Base Styles */
+body {
+  @apply bg-brand-pearl text-brand-black font-sans;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-bold text-brand-black;
+}
+
+h1 { @apply text-4xl; }
+h2 { @apply text-3xl; }
+h3 { @apply text-2xl; }
+h4 { @apply text-xl; }
+h5 { @apply text-lg; }
+h6 { @apply text-base; }
+
+.body-large { @apply text-lg; }
+.body-medium { @apply text-base; }
+.body-small { @apply text-sm; }
+.caption { @apply text-xs; }
+
+/* Buttons */
+.btn-primary {
+  @apply bg-brand-green text-brand-black font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-hover-primary focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-opacity-75 transition-all duration-200 ease-in-out;
+}
+
+.btn-secondary {
+  @apply bg-brand-violet text-brand-black font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-hover-secondary focus:outline-none focus:ring-2 focus:ring-brand-violet focus:ring-opacity-75 transition-all duration-200 ease-in-out;
+}
+
+.btn-outline {
+  @apply border border-brand-green text-brand-green font-semibold py-3 px-6 rounded-lg hover:bg-brand-pearl focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-opacity-75 transition-all duration-200 ease-in-out;
+}
+
+/* Form Elements */
+.form-group {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-brand-black mb-2;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 border border-brand-black/20 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green transition-all duration-200 ease-in-out bg-brand-pearl;
+}
+
+.input-field:focus {
+  @apply ring-brand-green border-brand-green;
+}
+
+/* Cards and Containers */
+.card {
+  @apply bg-brand-pearl rounded-xl shadow-lg p-8 border border-brand-black/10;
+}
+
+.login-container {
+  @apply min-h-screen flex items-center justify-center bg-brand-black relative overflow-hidden;
+}
+
+.login-card {
+  @apply bg-brand-pearl/95 backdrop-blur-sm rounded-2xl shadow-2xl p-10 border border-brand-black/20;
+}
+
+/* Animations */
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Gradients */
+.gradient-tertiary {
+  background: linear-gradient(135deg, theme('colors.orange.500'), theme('colors.blue.500'), theme('colors.purple.500'));
+}
+
+/* Utility Classes for specific components */
+.text-gradient-lumen-violet {
+  background: linear-gradient(to right, theme('colors.brand.green'), theme('colors.brand.violet'));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

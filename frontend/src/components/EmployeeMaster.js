@@ -262,17 +262,17 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
   const totalPages = Math.ceil(employees.length / employeesPerPage);
 
   return (
-    <div>
+    <div className="min-h-screen bg-brand-pearl p-8">
       {/* Header with Action Buttons */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2 className="text-2xl font-semibold text-brand-black">
           Employee Master Table
         </h2>
         <div className="flex space-x-3">
           <div className="flex space-x-2">
             <button
               onClick={handleDownloadExcel}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+              className="bg-brand-green text-brand-black px-4 py-2 rounded-lg hover:bg-hover-primary transition-colors flex items-center shadow-md"
               title="Download employee data as Excel"
             >
               <FaDownload className="mr-2" />
@@ -280,7 +280,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
             </button>
             <button
               onClick={handleDownloadCSV}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center"
+              className="bg-brand-green text-brand-black px-4 py-2 rounded-lg hover:bg-hover-primary transition-colors flex items-center shadow-md"
               title="Download employee data as CSV"
             >
               <FaDownload className="mr-2" />
@@ -289,7 +289,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
           </div>
           <button
             onClick={() => setShowUploadModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+            className="bg-brand-violet text-brand-black px-4 py-2 rounded-lg hover:bg-hover-secondary transition-colors flex items-center shadow-md"
             title="Upload employee data from Excel or CSV"
           >
             <FaUpload className="mr-2" />
@@ -297,7 +297,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
           </button>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="btn-primary flex items-center"
+            className="bg-brand-green text-brand-black px-4 py-2 rounded-lg hover:bg-hover-primary transition-colors flex items-center shadow-md"
           >
             {showAddForm ? (
               <>
@@ -316,8 +316,10 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
 
       {/* Add Employee Form */}
       {showAddForm && (
-        <div className="mb-8">
-          <React.Suspense fallback={<div>Loading form...</div>}>
+        <div className="mb-8 bg-brand-pearl rounded-lg p-6 shadow-md border border-brand-black/10">
+          <React.Suspense
+            fallback={<div className="text-brand-black">Loading form...</div>}
+          >
             <ManualEmployeeAdd
               onSuccess={handleEmployeeAdded}
               onClose={() => setShowAddForm(false)}
@@ -327,43 +329,46 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
       )}
 
       {/* Employee Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto bg-brand-pearl rounded-lg shadow-md border border-brand-black/10">
+        <table className="min-w-full divide-y divide-brand-black/10">
+          <thead className="bg-brand-pearl">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Employee ID
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Employee Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Company Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Date of Joining
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Managers
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
             {currentEmployees.map((employee) => (
-              <tr key={employee.id} className="hover:bg-gray-50">
+              <tr
+                key={employee.id}
+                className="hover:bg-ui-secondary transition-colors"
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <FaIdCard className="w-4 h-4 text-gray-400 mr-2" />
-                    <span className="text-sm font-medium text-gray-900">
+                    <FaIdCard className="w-4 h-4 text-brand-green mr-2" />
+                    <span className="text-sm font-medium text-brand-black">
                       {employee.employee_id}
                     </span>
                   </div>
@@ -371,12 +376,12 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-8 w-8">
-                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <FaUser className="h-4 w-4 text-primary-600" />
+                      <div className="h-8 w-8 rounded-full bg-brand-green/20 flex items-center justify-center">
+                        <FaUser className="h-4 w-4 text-brand-green" />
                       </div>
                     </div>
                     <div className="ml-3">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-brand-black">
                         {employee.employee_name}
                       </div>
                     </div>
@@ -384,44 +389,44 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <FaEnvelope className="w-4 h-4 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-900">
+                    <FaEnvelope className="w-4 h-4 text-brand-green mr-2" />
+                    <span className="text-sm text-brand-black">
                       {employee.company_email}
                     </span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-800 rounded-full">
+                  <span className="px-3 py-1 text-xs font-medium bg-brand-green/20 text-brand-black rounded-full">
                     {employee.type}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <FaCalendarAlt className="w-4 h-4 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-900">
+                    <FaCalendarAlt className="w-4 h-4 text-brand-green mr-2" />
+                    <span className="text-sm text-brand-black">
                       {new Date(employee.doj).toLocaleDateString()}
                     </span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
+                  <div className="text-sm text-brand-black">
                     {employee.manager_name && (
                       <div className="mb-1">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-blue/20 text-brand-blue">
                           {employee.manager_name}
                         </span>
                       </div>
                     )}
                     {employee.manager2_name && (
                       <div className="mb-1">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-green/20 text-brand-green">
                           {employee.manager2_name}
                         </span>
                       </div>
                     )}
                     {employee.manager3_name && (
                       <div>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-violet/20 text-brand-violet">
                           {employee.manager3_name}
                         </span>
                       </div>
@@ -429,7 +434,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                     {!employee.manager_name &&
                       !employee.manager2_name &&
                       !employee.manager3_name && (
-                        <span className="text-gray-500 italic">
+                        <span className="text-brand-black/50 italic">
                           No Managers
                         </span>
                       )}
@@ -437,72 +442,74 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    className={`px-3 py-1 text-xs font-medium rounded-full ${
                       employee.status === "active"
-                        ? "bg-success-100 text-success-800"
-                        : "bg-gray-100 text-gray-800"
+                        ? "bg-brand-green text-brand-black"
+                        : "bg-brand-black/10 text-brand-black/60"
                     }`}
                   >
                     {employee.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => handleViewEmployee(employee)}
-                    className="text-blue-600 hover:text-blue-900 mr-3"
-                    title="View"
-                  >
-                    <FaEye className="inline" />
-                  </button>
-                  <button
-                    onClick={() => handleEditEmployee(employee)}
-                    className="text-green-600 hover:text-green-900 mr-3"
-                    title="Edit"
-                  >
-                    <FaEdit className="inline" />
-                  </button>
-                  <button
-                    onClick={async () => {
-                      if (
-                        !window.confirm(
-                          `Delete ${employee.employee_name} from master?`
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => handleViewEmployee(employee)}
+                      className="text-brand-green hover:text-state-hover transition-colors p-1 rounded"
+                      title="View"
+                    >
+                      <FaEye className="inline w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleEditEmployee(employee)}
+                      className="text-brand-blue hover:text-brand-violet transition-colors p-1 rounded"
+                      title="Edit"
+                    >
+                      <FaEdit className="inline w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (
+                          !window.confirm(
+                            `Delete ${employee.employee_name} from master?`
+                          )
                         )
-                      )
-                        return;
-                      try {
-                        console.log(
-                          "🗑️ Attempting to delete employee:",
-                          employee.id
-                        );
-                        console.log(
-                          "🔐 Current axios headers:",
-                          axios.defaults.headers.common
-                        );
+                          return;
+                        try {
+                          console.log(
+                            "🗑️ Attempting to delete employee:",
+                            employee.id
+                          );
+                          console.log(
+                            "🔐 Current axios headers:",
+                            axios.defaults.headers.common
+                          );
 
-                        const response = await axios.delete(
-                          `http://localhost:5001/api/hr/master/${employee.id}`
-                        );
+                          const response = await axios.delete(
+                            `http://localhost:5001/api/hr/master/${employee.id}`
+                          );
 
-                        console.log("✅ Delete response:", response.data);
-                        toast.success("Employee deleted successfully!");
-                        if (onRefresh) onRefresh();
-                      } catch (e) {
-                        console.error("❌ Delete error:", e);
-                        console.error("❌ Error response:", e.response);
+                          console.log("✅ Delete response:", response.data);
+                          toast.success("Employee deleted successfully!");
+                          if (onRefresh) onRefresh();
+                        } catch (e) {
+                          console.error("❌ Delete error:", e);
+                          console.error("❌ Error response:", e.response);
 
-                        const errorMessage =
-                          e.response?.data?.error ||
-                          e.response?.data?.message ||
-                          "Failed to delete employee";
+                          const errorMessage =
+                            e.response?.data?.error ||
+                            e.response?.data?.message ||
+                            "Failed to delete employee";
 
-                        toast.error(errorMessage);
-                      }
-                    }}
-                    className="text-red-600 hover:text-red-900"
-                    title="Delete"
-                  >
-                    <FaTrash className="inline" />
-                  </button>
+                          toast.error(errorMessage);
+                        }
+                      }}
+                      className="text-brand-red hover:text-hover-danger transition-colors p-1 rounded"
+                      title="Delete"
+                    >
+                      <FaTrash className="inline w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -510,13 +517,13 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
         </table>
 
         {currentEmployees.length === 0 && (
-          <div className="text-center py-8">
-            <div className="text-gray-500">
-              <FaUser className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-lg font-medium">
+          <div className="text-center py-12 bg-brand-pearl">
+            <div className="text-brand-black/60">
+              <FaUser className="mx-auto h-12 w-12 text-brand-green mb-4" />
+              <p className="text-lg font-medium text-brand-black">
                 No employees in master table
               </p>
-              <p className="text-sm">
+              <p className="text-sm text-brand-black/60">
                 Employees will appear here after their onboarding forms are
                 approved.
               </p>
@@ -526,26 +533,26 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
 
         {/* Pagination */}
         {employees.length > 0 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="bg-brand-pearl px-4 py-3 flex items-center justify-between border-t border-brand-black/10 sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center px-4 py-2 border border-brand-black/20 text-sm font-medium rounded-md text-brand-black bg-brand-pearl hover:bg-ui-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-brand-black/20 text-sm font-medium rounded-md text-brand-black bg-brand-pearl hover:bg-ui-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
               </button>
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-brand-black">
                   Showing{" "}
                   <span className="font-medium">
                     {indexOfFirstEmployee + 1}
@@ -566,7 +573,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   <button
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-brand-black/20 bg-brand-pearl text-sm font-medium text-brand-black hover:bg-ui-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="sr-only">Previous</span>
                     <svg
@@ -592,8 +599,8 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                         onClick={() => setCurrentPage(pageNumber)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                           pageNumber === currentPage
-                            ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                            : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                            ? "z-10 bg-brand-green border-brand-green text-brand-black"
+                            : "bg-brand-pearl border-brand-black/20 text-brand-black hover:bg-ui-secondary"
                         }`}
                       >
                         {pageNumber}
@@ -604,7 +611,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   <button
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-brand-black/20 bg-brand-pearl text-sm font-medium text-brand-black hover:bg-ui-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="sr-only">Next</span>
                     <svg
@@ -630,10 +637,10 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
 
       {/* Edit Employee Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-6 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Edit Employee
               </h3>
               <form
@@ -644,7 +651,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
               >
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Employee Name
                     </label>
                     <input
@@ -652,13 +659,13 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                       name="employee_name"
                       value={editFormData.employee_name || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Company Email
                     </label>
                     <input
@@ -666,20 +673,20 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                       name="company_email"
                       value={editFormData.company_email || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Employment Type
                     </label>
                     <select
                       name="type"
                       value={editFormData.type || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                       required
                     >
                       <option value="">Select Type</option>
@@ -691,7 +698,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Date of Joining
                     </label>
                     <input
@@ -699,19 +706,19 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                       name="doj"
                       value={editFormData.doj || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Status
                     </label>
                     <select
                       name="status"
                       value={editFormData.status || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                       required
                     >
                       <option value="active">Active</option>
@@ -720,7 +727,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Department
                     </label>
                     <input
@@ -728,12 +735,12 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                       name="department"
                       value={editFormData.department || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Designation
                     </label>
                     <input
@@ -741,12 +748,12 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                       name="designation"
                       value={editFormData.designation || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Location
                     </label>
                     <input
@@ -754,19 +761,19 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                       name="location"
                       value={editFormData.location || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Manager 1 (Optional)
                     </label>
                     <select
                       name="manager_id"
                       value={editFormData.manager_id || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     >
                       <option value="">Select Manager 1</option>
                       {managers &&
@@ -782,14 +789,14 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Manager 2 (Optional)
                     </label>
                     <select
                       name="manager2_id"
                       value={editFormData.manager2_id || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     >
                       <option value="">Select Manager 2</option>
                       {managers &&
@@ -805,14 +812,14 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Manager 3 (Optional)
                     </label>
                     <select
                       name="manager3_id"
                       value={editFormData.manager3_id || ""}
                       onChange={handleEditInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className="mt-1 block w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     >
                       <option value="">Select Manager 3</option>
                       {managers &&
@@ -832,13 +839,13 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   <button
                     type="button"
                     onClick={() => setShowEditModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet border border-brand-black/20 rounded-lg hover:bg-hover-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-violet shadow-md"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green border border-transparent rounded-lg hover:bg-hover-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green shadow-md"
                   >
                     Update Employee
                   </button>
@@ -851,15 +858,15 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
 
       {/* View Employee Modal */}
       {showViewModal && viewingEmployee && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-6 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-brand-black">
                 Employee Details
               </h3>
               <button
                 onClick={() => setShowViewModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-brand-black/60 hover:text-brand-black transition-colors"
               >
                 ×
               </button>
@@ -868,58 +875,58 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     Employee
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {viewingEmployee.employee_name}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     ID
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {viewingEmployee.employee_id}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     Email
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {viewingEmployee.company_email}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     Type
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {viewingEmployee.type}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     DOJ
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {new Date(viewingEmployee.doj).toLocaleDateString()}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     Manager
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {viewingEmployee.display_manager_name || "Not Assigned"}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     Status
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {viewingEmployee.status}
                   </p>
                 </div>
@@ -928,7 +935,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
               <div className="pt-4">
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
+                  className="w-full bg-brand-green hover:bg-hover-primary text-brand-black font-medium py-2 px-4 rounded-lg transition duration-200 shadow-md"
                 >
                   OK
                 </button>
@@ -940,35 +947,35 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
 
       {/* Upload Excel Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-6 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Upload Employee Data from Excel/CSV
               </h3>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-brand-black mb-2">
                   Select Excel/CSV File
                 </label>
                 <input
                   type="file"
                   accept=".xlsx,.xls,.csv"
                   onChange={handleFileChange}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="block w-full text-sm text-brand-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-brand-green/20 file:text-brand-green hover:file:bg-brand-green/30 transition-colors"
                 />
                 {uploadFile && (
-                  <p className="mt-2 text-sm text-green-600">
+                  <p className="mt-2 text-sm text-brand-green">
                     Selected: {uploadFile.name}
                   </p>
                 )}
               </div>
 
-              <div className="mb-4 p-3 bg-blue-50 rounded-md">
-                <h4 className="text-sm font-medium text-blue-800 mb-2">
+              <div className="mb-4 p-4 bg-brand-green/10 rounded-lg border border-brand-green/20">
+                <h4 className="text-sm font-medium text-brand-black mb-2">
                   Required Columns:
                 </h4>
-                <ul className="text-xs text-blue-700 space-y-1">
+                <ul className="text-xs text-brand-black/70 space-y-1">
                   <li>• employee_name (required)</li>
                   <li>• company_email (required)</li>
                   <li>
@@ -993,19 +1000,19 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                     setShowUploadModal(false);
                     setUploadFile(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet border border-brand-black/20 rounded-lg hover:bg-hover-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-violet shadow-md"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleUploadExcel}
                   disabled={!uploadFile || uploading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green border border-transparent rounded-lg hover:bg-hover-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-md"
                 >
                   {uploading ? (
                     <>
                       <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-black"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"

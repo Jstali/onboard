@@ -99,31 +99,31 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
     switch (status) {
       case "submitted":
         return (
-          <span className="px-2 py-1 text-xs font-medium bg-warning-100 text-warning-800 rounded-full">
+          <span className="px-3 py-1 text-xs font-medium bg-brand-yellow/20 text-brand-black rounded-full">
             Pending
           </span>
         );
       case "approved":
         return (
-          <span className="px-2 py-1 text-xs font-medium bg-success-100 text-success-800 rounded-full">
+          <span className="px-3 py-1 text-xs font-medium bg-brand-green text-brand-black rounded-full">
             Approved
           </span>
         );
       case "rejected":
         return (
-          <span className="px-2 py-1 text-xs font-medium bg-danger-100 text-danger-800 rounded-full">
+          <span className="px-3 py-1 text-xs font-medium bg-brand-red/20 text-brand-red rounded-full">
             Rejected
           </span>
         );
       case "no_form":
         return (
-          <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+          <span className="px-3 py-1 text-xs font-medium bg-brand-black/10 text-brand-black/60 rounded-full">
             No Form
           </span>
         );
       default:
         return (
-          <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+          <span className="px-3 py-1 text-xs font-medium bg-brand-black/10 text-brand-black/60 rounded-full">
             {status || "Unknown"}
           </span>
         );
@@ -131,59 +131,62 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
   };
 
   return (
-    <div>
+    <div className="bg-brand-pearl rounded-lg shadow-md border border-brand-black/10">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-brand-black/10">
+          <thead className="bg-brand-pearl">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Employee
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Submitted
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
             {employees.map((employee) => (
-              <tr key={employee.id} className="hover:bg-gray-50">
+              <tr
+                key={employee.id}
+                className="hover:bg-ui-secondary transition-colors"
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-brand-black">
                       {employee.email}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-brand-black/60">
                       ID: {employee.id}
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">
+                  <span className="text-sm text-brand-black">
                     {employee.type || "N/A"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {getStatusBadge(employee.status)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black/60">
                   {employee.submitted_at
                     ? new Date(employee.submitted_at).toLocaleDateString()
                     : "N/A"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-3">
                     <button
                       onClick={() => handleViewDetails(employee.id)}
-                      className="text-primary-600 hover:text-primary-900"
+                      className="text-brand-green hover:text-state-hover p-1 transition-colors rounded"
                       title="View Details"
                     >
                       <FaEye className="w-4 h-4" />
@@ -192,14 +195,14 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
                       <>
                         <button
                           onClick={() => handleApprove(employee)}
-                          className="text-success-600 hover:text-success-900"
+                          className="text-brand-green hover:text-state-hover p-1 transition-colors rounded"
                           title="Approve"
                         >
                           <FaCheck className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleReject(employee)}
-                          className="text-warning-600 hover:text-warning-900"
+                          className="text-brand-yellow hover:text-brand-yellow/80 p-1 transition-colors rounded"
                           title="Reject"
                         >
                           <FaTimes className="w-4 h-4" />
@@ -207,13 +210,13 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
                       </>
                     )}
                     {employee.status === "no_form" && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-brand-black/40 italic">
                         No form to approve
                       </span>
                     )}
                     <button
                       onClick={() => handleDelete(employee.id)}
-                      className="text-danger-600 hover:text-danger-900"
+                      className="text-brand-red hover:text-hover-danger p-1 transition-colors rounded"
                       title="Delete"
                     >
                       <FaTrash className="w-4 h-4" />
@@ -228,15 +231,15 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
 
       {/* Employee Details Modal */}
       {selectedEmployee && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-3/4 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-6 border border-brand-black/10 w-3/4 shadow-lg rounded-lg bg-brand-pearl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-brand-black">
                 Employee Details
               </h3>
               <button
                 onClick={() => setSelectedEmployee(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-brand-black/60 hover:text-brand-black transition-colors"
               >
                 ×
               </button>
@@ -245,38 +248,38 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     Employment Type
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {selectedEmployee.type}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     Status
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {selectedEmployee.status}
                   </p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-brand-black">
                   Form Data
                 </label>
-                <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-64">
+                <pre className="bg-ui-secondary p-4 rounded-lg text-sm overflow-auto max-h-64 text-brand-black border border-brand-black/10">
                   {JSON.stringify(selectedEmployee.form_data, null, 2)}
                 </pre>
               </div>
 
               {selectedEmployee.files && selectedEmployee.files.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-brand-black">
                     Files
                   </label>
-                  <ul className="text-sm text-gray-900">
+                  <ul className="text-sm text-brand-black">
                     {selectedEmployee.files.map((file, index) => (
                       <li key={index}>{file}</li>
                     ))}
@@ -290,16 +293,16 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
 
       {/* Approval Modal */}
       {showApprovalModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-6 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-brand-black">
                 {approvalData.status === "approved" ? "Approve" : "Reject"}{" "}
                 Employee
               </h3>
               <button
                 onClick={() => setShowApprovalModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-brand-black/60 hover:text-brand-black transition-colors"
               >
                 ×
               </button>
@@ -313,11 +316,11 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
               className="space-y-4"
             >
               {approvalData.status === "approved" && (
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                <div className="bg-brand-green/10 border border-brand-green/20 rounded-lg p-4 mb-4">
                   <div className="flex">
                     <div className="flex-shrink-0">
                       <svg
-                        className="h-5 w-5 text-blue-400"
+                        className="h-5 w-5 text-brand-green"
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
@@ -329,10 +332,10 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <h3 className="text-sm font-medium text-blue-800">
+                      <h3 className="text-sm font-medium text-brand-black">
                         Approval Note
                       </h3>
-                      <div className="mt-2 text-sm text-blue-700">
+                      <div className="mt-2 text-sm text-brand-black/70">
                         <p>
                           Employee will be moved to the "Onboarded Employees"
                           tab where you can assign their name, company email,
@@ -348,14 +351,16 @@ const EmployeeList = ({ employees, onRefresh, onApprove }) => {
                 <button
                   type="button"
                   onClick={() => setShowApprovalModal(false)}
-                  className="btn-secondary"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet border border-brand-black/20 rounded-lg hover:bg-hover-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-violet shadow-md"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className={`btn-${
-                    approvalData.status === "approved" ? "success" : "danger"
+                  className={`px-4 py-2 text-sm font-medium text-brand-black border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md transition-colors ${
+                    approvalData.status === "approved"
+                      ? "bg-brand-green hover:bg-hover-primary focus:ring-brand-green"
+                      : "bg-brand-red hover:bg-hover-danger focus:ring-brand-red"
                   }`}
                 >
                   {approvalData.status === "approved" ? "Approve" : "Reject"}

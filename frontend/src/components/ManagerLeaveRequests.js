@@ -100,31 +100,34 @@ const ManagerLeaveRequests = () => {
     switch (status) {
       case "Pending Manager Approval":
         return {
-          color: "bg-yellow-100 text-yellow-800",
+          color:
+            "bg-brand-yellow/20 text-brand-black border border-brand-yellow/40",
           text: "Pending for Manager Approval",
-          icon: <FaClock className="text-yellow-600" />,
+          icon: <FaClock className="text-brand-yellow" />,
         };
       case "Pending HR Approval":
         return {
-          color: "bg-blue-100 text-blue-800",
+          color:
+            "bg-brand-blue/20 text-brand-black border border-brand-blue/40",
           text: "Pending for HR Approval",
-          icon: <FaClock className="text-blue-600" />,
+          icon: <FaClock className="text-brand-blue" />,
         };
       case "approved":
         return {
-          color: "bg-green-100 text-green-800",
+          color:
+            "bg-brand-green/20 text-brand-black border border-brand-green/40",
           text: "Approved",
-          icon: <FaCheck className="text-green-600" />,
+          icon: <FaCheck className="text-brand-green" />,
         };
       case "rejected":
         return {
-          color: "bg-red-100 text-red-800",
+          color: "bg-brand-red/20 text-brand-black border border-brand-red/40",
           text: "Rejected",
-          icon: <FaTimes className="text-red-600" />,
+          icon: <FaTimes className="text-brand-red" />,
         };
       default:
         return {
-          color: "bg-gray-100 text-gray-800",
+          color: "bg-brand-pearl text-brand-black border border-brand-black/20",
           text: status,
           icon: null,
         };
@@ -141,29 +144,29 @@ const ManagerLeaveRequests = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-brand-pearl flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-green"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-brand-pearl">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-brand-pearl shadow-sm border-b border-brand-black/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate("/manager/dashboard")}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-brand-black/70 hover:text-brand-green transition-colors duration-200"
               >
                 <FaArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-brand-black">
                 Leave Requests
               </h1>
-              <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+              <span className="bg-brand-violet/20 text-brand-black text-xs font-medium px-2.5 py-0.5 rounded border border-brand-violet/40">
                 Manager
               </span>
             </div>
@@ -172,7 +175,7 @@ const ManagerLeaveRequests = () => {
                 logout();
                 navigate("/login");
               }}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center space-x-2"
+              className="bg-brand-red text-brand-black px-4 py-2 rounded-lg hover:bg-hover-danger flex items-center space-x-2 transition-colors duration-200"
             >
               <FaSignOutAlt />
               <span>Logout</span>
@@ -184,16 +187,16 @@ const ManagerLeaveRequests = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-brand-pearl rounded-lg shadow p-6 border border-brand-black/10">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
+              <div className="p-3 rounded-full bg-brand-yellow/20 text-brand-yellow">
                 <FaClock className="h-6 w-6" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-brand-black/70">
                   Pending Approval
                 </p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-semibold text-brand-black">
                   {
                     leaveRequests.filter(
                       (req) => req.status === "Pending Manager Approval"
@@ -204,14 +207,16 @@ const ManagerLeaveRequests = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-brand-pearl rounded-lg shadow p-6 border border-brand-black/10">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+              <div className="p-3 rounded-full bg-brand-blue/20 text-brand-blue">
                 <FaClock className="h-6 w-6" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending HR</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm font-medium text-brand-black/70">
+                  Pending HR
+                </p>
+                <p className="text-2xl font-semibold text-brand-black">
                   {
                     leaveRequests.filter(
                       (req) => req.status === "Pending HR Approval"
@@ -222,14 +227,16 @@ const ManagerLeaveRequests = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-brand-pearl rounded-lg shadow p-6 border border-brand-black/10">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100 text-green-600">
+              <div className="p-3 rounded-full bg-brand-green/20 text-brand-green">
                 <FaCheck className="h-6 w-6" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Approved</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm font-medium text-brand-black/70">
+                  Approved
+                </p>
+                <p className="text-2xl font-semibold text-brand-black">
                   {
                     leaveRequests.filter((req) => req.status === "approved")
                       .length
@@ -239,14 +246,16 @@ const ManagerLeaveRequests = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-brand-pearl rounded-lg shadow p-6 border border-brand-black/10">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-red-100 text-red-600">
+              <div className="p-3 rounded-full bg-brand-red/20 text-brand-red">
                 <FaTimes className="h-6 w-6" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Rejected</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm font-medium text-brand-black/70">
+                  Rejected
+                </p>
+                <p className="text-2xl font-semibold text-brand-black">
                   {
                     leaveRequests.filter((req) => req.status === "rejected")
                       .length
@@ -258,49 +267,49 @@ const ManagerLeaveRequests = () => {
         </div>
 
         {/* Leave Requests Table */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">
+        <div className="bg-brand-pearl rounded-xl shadow-lg border border-brand-black/10">
+          <div className="px-6 py-4 border-b border-brand-black/10">
+            <h2 className="text-lg font-medium text-brand-black">
               Leave Requests
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-brand-black/70">
               Review and manage leave requests from your team
             </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-brand-black/10">
+              <thead className="bg-brand-pearl">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Employee
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Leave Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Date Range
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Days
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Submitted
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
                 {leaveRequests.length === 0 ? (
                   <tr>
                     <td
                       colSpan="7"
-                      className="px-6 py-4 text-center text-gray-500"
+                      className="px-6 py-4 text-center text-brand-black/60"
                     >
                       No leave requests found
                     </td>
@@ -309,42 +318,45 @@ const ManagerLeaveRequests = () => {
                   leaveRequests.map((request) => {
                     const statusDisplay = getStatusDisplay(request.status);
                     return (
-                      <tr key={request.id} className="hover:bg-gray-50">
+                      <tr
+                        key={request.id}
+                        className="hover:bg-brand-pearl/80 transition-colors duration-150"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                <span className="text-sm font-medium text-gray-700">
+                              <div className="h-10 w-10 rounded-full bg-brand-green/20 flex items-center justify-center">
+                                <span className="text-sm font-medium text-brand-green">
                                   {request.first_name?.charAt(0)}
                                   {request.last_name?.charAt(0)}
                                 </span>
                               </div>
                             </div>
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
+                              <div className="text-sm font-medium text-brand-black">
                                 {request.first_name} {request.last_name}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-brand-black/70">
                                 {request.email}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           {request.leave_type}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           <div>
                             <div>{formatDate(request.from_date)}</div>
                             {request.to_date &&
                               request.to_date !== request.from_date && (
-                                <div className="text-gray-500">
+                                <div className="text-brand-black/70">
                                   to {formatDate(request.to_date)}
                                 </div>
                               )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           {request.total_leave_days} days
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -357,7 +369,7 @@ const ManagerLeaveRequests = () => {
                             {statusDisplay.text}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           {formatDate(request.created_at)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -367,7 +379,7 @@ const ManagerLeaveRequests = () => {
                                 setSelectedRequest(request);
                                 setShowActionModal(true);
                               }}
-                              className="text-blue-600 hover:text-blue-900 flex items-center space-x-1"
+                              className="text-brand-green hover:text-brand-green/80 flex items-center space-x-1 transition-colors duration-150"
                             >
                               <FaEye />
                               <span>Review</span>
@@ -378,7 +390,7 @@ const ManagerLeaveRequests = () => {
                                 setSelectedRequest(request);
                                 setShowActionModal(true);
                               }}
-                              className="text-gray-600 hover:text-gray-900 flex items-center space-x-1"
+                              className="text-brand-black/60 hover:text-brand-black flex items-center space-x-1 transition-colors duration-150"
                             >
                               <FaEye />
                               <span>View</span>
@@ -397,71 +409,71 @@ const ManagerLeaveRequests = () => {
 
       {/* Action Modal */}
       {showActionModal && selectedRequest && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/20 w-11/12 md:w-1/2 shadow-lg rounded-md bg-brand-pearl">
             <div className="mt-3">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-brand-black">
                   {canTakeAction(selectedRequest.status)
                     ? "Review Leave Request"
                     : "Leave Request Details"}
                 </h3>
                 <button
                   onClick={() => setShowActionModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-brand-black/60 hover:text-brand-black transition-colors duration-200"
                 >
                   <FaTimes />
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">
+                <div className="bg-brand-pearl/50 p-4 rounded-lg border border-brand-black/10">
+                  <h4 className="font-medium text-brand-black mb-2">
                     Request Details
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-600">Employee:</span>
-                      <div className="font-medium">
+                      <span className="text-brand-black/70">Employee:</span>
+                      <div className="font-medium text-brand-black">
                         {selectedRequest.first_name} {selectedRequest.last_name}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Leave Type:</span>
-                      <div className="font-medium">
+                      <span className="text-brand-black/70">Leave Type:</span>
+                      <div className="font-medium text-brand-black">
                         {selectedRequest.leave_type}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">From Date:</span>
-                      <div className="font-medium">
+                      <span className="text-brand-black/70">From Date:</span>
+                      <div className="font-medium text-brand-black">
                         {formatDate(selectedRequest.from_date)}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">To Date:</span>
-                      <div className="font-medium">
+                      <span className="text-brand-black/70">To Date:</span>
+                      <div className="font-medium text-brand-black">
                         {selectedRequest.to_date
                           ? formatDate(selectedRequest.to_date)
                           : "Same day"}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Total Days:</span>
-                      <div className="font-medium">
+                      <span className="text-brand-black/70">Total Days:</span>
+                      <div className="font-medium text-brand-black">
                         {selectedRequest.total_leave_days} days
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-600">Status:</span>
-                      <div className="font-medium">
+                      <span className="text-brand-black/70">Status:</span>
+                      <div className="font-medium text-brand-black">
                         {getStatusDisplay(selectedRequest.status).text}
                       </div>
                     </div>
                   </div>
                   <div className="mt-4">
-                    <span className="text-gray-600">Reason:</span>
-                    <div className="font-medium mt-1">
+                    <span className="text-brand-black/70">Reason:</span>
+                    <div className="font-medium mt-1 text-brand-black">
                       {selectedRequest.reason}
                     </div>
                   </div>
@@ -470,7 +482,7 @@ const ManagerLeaveRequests = () => {
                 {canTakeAction(selectedRequest.status) && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-brand-black">
                         Action
                       </label>
                       <select
@@ -481,7 +493,7 @@ const ManagerLeaveRequests = () => {
                             action: e.target.value,
                           })
                         }
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        className="mt-1 block w-full border border-brand-black/20 rounded-md px-3 py-2 bg-brand-pearl text-brand-black focus:ring-brand-green focus:border-brand-green"
                       >
                         <option value="approve">Approve</option>
                         <option value="reject">Reject</option>
@@ -489,7 +501,7 @@ const ManagerLeaveRequests = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-brand-black">
                         Notes (Optional)
                       </label>
                       <textarea
@@ -500,7 +512,7 @@ const ManagerLeaveRequests = () => {
                             notes: e.target.value,
                           })
                         }
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        className="mt-1 block w-full border border-brand-black/20 rounded-md px-3 py-2 bg-brand-pearl text-brand-black focus:ring-brand-green focus:border-brand-green"
                         rows="3"
                         placeholder="Add any notes or comments..."
                       />
@@ -511,17 +523,17 @@ const ManagerLeaveRequests = () => {
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     onClick={() => setShowActionModal(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                    className="px-4 py-2 bg-brand-pearl border border-brand-black/20 text-brand-black rounded-lg hover:bg-brand-pearl/80 transition-colors duration-200"
                   >
                     Close
                   </button>
                   {canTakeAction(selectedRequest.status) && (
                     <button
                       onClick={handleAction}
-                      className={`px-4 py-2 rounded-lg text-white ${
+                      className={`px-4 py-2 rounded-lg text-brand-black transition-colors duration-200 ${
                         actionForm.action === "approve"
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-red-600 hover:bg-red-700"
+                          ? "bg-brand-green hover:bg-hover-primary"
+                          : "bg-brand-red hover:bg-hover-danger"
                       }`}
                     >
                       {actionForm.action === "approve" ? "Approve" : "Reject"}

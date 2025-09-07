@@ -34,7 +34,7 @@ const HRConfig = () => {
 
   // System Settings State
   const [systemSettings, setSystemSettings] = useState({
-            total_annual_leaves: 15,
+    total_annual_leaves: 15,
     allow_half_day: true,
     approval_workflow: "manager_then_hr",
   });
@@ -330,20 +330,20 @@ const HRConfig = () => {
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-lg">
+    <div className="bg-brand-pearl rounded-lg shadow-lg border border-brand-black/10">
       {/* Header */}
-      <div className="border-b border-gray-200 px-6 py-4">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-          <FaCog className="mr-3 text-blue-600" />
+      <div className="border-b border-brand-black/10 px-6 py-4">
+        <h2 className="text-2xl font-bold text-brand-black flex items-center">
+          <FaCog className="mr-3 text-brand-green" />
           HR Configuration
         </h2>
-        <p className="text-gray-600 mt-1">
+        <p className="text-brand-black/70 mt-1">
           Manage leave types, system settings, and departments
         </p>
       </div>
 
       {/* Section Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-brand-black/10">
         <nav className="flex space-x-8 px-6">
           {sections.map((section) => {
             const Icon = section.icon;
@@ -351,10 +351,10 @@ const HRConfig = () => {
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeSection === section.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-brand-green text-brand-green"
+                    : "border-transparent text-brand-black/70 hover:text-brand-black hover:border-brand-black/30"
                 }`}
               >
                 <Icon className="mr-2" />
@@ -372,10 +372,10 @@ const HRConfig = () => {
           <div>
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-brand-black">
                   Leave Types
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-brand-black/70">
                   Manage available leave types for employees
                 </p>
               </div>
@@ -390,7 +390,7 @@ const HRConfig = () => {
                   });
                   setShowLeaveTypeModal(true);
                 }}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center px-4 py-2 bg-brand-green text-brand-black rounded-lg hover:bg-hover-primary transition-colors duration-200"
               >
                 <FaPlus className="mr-2" />
                 Add Leave Type
@@ -398,47 +398,50 @@ const HRConfig = () => {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-brand-black/10">
+                <thead className="bg-brand-pearl">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Description
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Max Days
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
                   {leaveTypes.map((leaveType) => (
-                    <tr key={leaveType.id} className="hover:bg-gray-50">
+                    <tr
+                      key={leaveType.id}
+                      className="hover:bg-brand-pearl/80 transition-colors duration-200"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div
                             className="w-4 h-4 rounded-full mr-3"
                             style={{ backgroundColor: leaveType.color }}
                           ></div>
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-brand-black">
                             {leaveType.type_name}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-900">
+                        <span className="text-sm text-brand-black">
                           {leaveType.description}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-900">
+                        <span className="text-sm text-brand-black">
                           {leaveType.max_days
                             ? `${leaveType.max_days} days`
                             : "No limit"}
@@ -448,8 +451,8 @@ const HRConfig = () => {
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             leaveType.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-brand-green/10 text-brand-green border border-brand-green/20"
+                              : "bg-brand-red/10 text-brand-red border border-brand-red/20"
                           }`}
                         >
                           {leaveType.is_active ? "Active" : "Inactive"}
@@ -458,13 +461,13 @@ const HRConfig = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button
                           onClick={() => handleEditLeaveType(leaveType)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-brand-green hover:text-brand-green/80 transition-colors duration-200"
                         >
                           <FaEdit />
                         </button>
                         <button
                           onClick={() => handleDeleteLeaveType(leaveType.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-brand-red hover:text-brand-red/80 transition-colors duration-200"
                         >
                           <FaTrash />
                         </button>
@@ -481,10 +484,10 @@ const HRConfig = () => {
         {activeSection === "system-settings" && (
           <div>
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-brand-black">
                 System Settings
               </h3>
-              <p className="text-gray-600">
+              <p className="text-brand-black/70">
                 Configure global leave management settings
               </p>
             </div>
@@ -494,7 +497,7 @@ const HRConfig = () => {
               className="space-y-6 max-w-2xl"
             >
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-brand-black mb-2">
                   Total Annual Leaves
                 </label>
                 <input
@@ -508,10 +511,10 @@ const HRConfig = () => {
                       total_annual_leaves: parseInt(e.target.value),
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green bg-brand-pearl text-brand-black"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-brand-black/70 mt-1">
                   Default number of annual leave days for all employees
                 </p>
               </div>
@@ -527,19 +530,19 @@ const HRConfig = () => {
                         allow_half_day: e.target.checked,
                       }))
                     }
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-brand-green border-brand-black/20 rounded focus:ring-brand-green"
                   />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
+                  <span className="ml-2 text-sm font-medium text-brand-black">
                     Allow Half-Day Leaves
                   </span>
                 </label>
-                <p className="text-xs text-gray-500 mt-1 ml-6">
+                <p className="text-xs text-brand-black/70 mt-1 ml-6">
                   Enable employees to request half-day leaves
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-brand-black mb-2">
                   Approval Workflow
                 </label>
                 <select
@@ -550,14 +553,14 @@ const HRConfig = () => {
                       approval_workflow: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green bg-brand-pearl text-brand-black"
                   required
                 >
                   <option value="manager_then_hr">Manager → HR</option>
                   <option value="direct_hr">Direct HR</option>
                   <option value="manager_only">Manager Only</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-brand-black/70 mt-1">
                   Define the approval workflow for leave requests
                 </p>
               </div>
@@ -565,11 +568,11 @@ const HRConfig = () => {
               <button
                 type="submit"
                 disabled={settingsLoading}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="flex items-center px-4 py-2 bg-brand-green text-brand-black rounded-lg hover:bg-hover-primary transition-colors duration-200 disabled:opacity-50"
               >
                 {settingsLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-black mr-2"></div>
                     Updating...
                   </>
                 ) : (
@@ -588,10 +591,10 @@ const HRConfig = () => {
           <div>
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-brand-black">
                   Departments
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-brand-black/70">
                   Manage company departments and assign managers
                 </p>
               </div>
@@ -606,7 +609,7 @@ const HRConfig = () => {
                   });
                   setShowDepartmentModal(true);
                 }}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center px-4 py-2 bg-brand-green text-brand-black rounded-lg hover:bg-hover-primary transition-colors duration-200"
               >
                 <FaPlus className="mr-2" />
                 Add Department
@@ -614,50 +617,53 @@ const HRConfig = () => {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-brand-black/10">
+                <thead className="bg-brand-pearl">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Department
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Code
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Manager
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
                   {departments.map((department) => (
-                    <tr key={department.id} className="hover:bg-gray-50">
+                    <tr
+                      key={department.id}
+                      className="hover:bg-brand-pearl/80 transition-colors duration-200"
+                    >
                       <td className="px-6 py-4">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-brand-black">
                             {department.name}
                           </div>
                           {department.description && (
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-brand-black/70">
                               {department.description}
                             </div>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded">
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold bg-brand-pearl/50 text-brand-black border border-brand-black/20 rounded">
                           {department.code}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <FaUsers className="mr-2 text-gray-400" />
-                          <span className="text-sm text-gray-900">
+                          <FaUsers className="mr-2 text-brand-black/60" />
+                          <span className="text-sm text-brand-black">
                             {department.manager_name || "No manager assigned"}
                           </span>
                         </div>
@@ -666,8 +672,8 @@ const HRConfig = () => {
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             department.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-brand-green/10 text-brand-green border border-brand-green/20"
+                              : "bg-brand-red/10 text-brand-red border border-brand-red/20"
                           }`}
                         >
                           {department.is_active ? "Active" : "Inactive"}
@@ -676,13 +682,13 @@ const HRConfig = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button
                           onClick={() => handleEditDepartment(department)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-brand-green hover:text-brand-green/80 transition-colors duration-200"
                         >
                           <FaEdit />
                         </button>
                         <button
                           onClick={() => handleDeleteDepartment(department.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-brand-red hover:text-brand-red/80 transition-colors duration-200"
                         >
                           <FaTrash />
                         </button>
@@ -698,15 +704,15 @@ const HRConfig = () => {
 
       {/* Leave Type Modal */}
       {showLeaveTypeModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/20 w-96 shadow-lg rounded-md bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 {editingLeaveType ? "Edit Leave Type" : "Add Leave Type"}
               </h3>
               <form onSubmit={handleLeaveTypeSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Leave Type Name *
                   </label>
                   <input
@@ -718,12 +724,12 @@ const HRConfig = () => {
                         type_name: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green bg-brand-pearl text-brand-black"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Description *
                   </label>
                   <textarea
@@ -735,12 +741,12 @@ const HRConfig = () => {
                       }))
                     }
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green bg-brand-pearl text-brand-black"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Max Days (Optional)
                   </label>
                   <input
@@ -753,12 +759,12 @@ const HRConfig = () => {
                         max_days: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green bg-brand-pearl text-brand-black"
                     placeholder="Leave empty for no limit"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Color
                   </label>
                   <input
@@ -770,21 +776,21 @@ const HRConfig = () => {
                         color: e.target.value,
                       }))
                     }
-                    className="w-full h-10 border border-gray-300 rounded-lg"
+                    className="w-full h-10 border border-brand-black/20 rounded-lg"
                   />
                 </div>
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
                     onClick={() => setShowLeaveTypeModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-pearl border border-brand-black/20 rounded-md hover:bg-brand-pearl/80 transition-colors duration-200"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-md hover:bg-hover-primary disabled:opacity-50 transition-colors duration-200"
                   >
                     {loading
                       ? "Saving..."
@@ -801,15 +807,15 @@ const HRConfig = () => {
 
       {/* Department Modal */}
       {showDepartmentModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/20 w-96 shadow-lg rounded-md bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 {editingDepartment ? "Edit Department" : "Add Department"}
               </h3>
               <form onSubmit={handleDepartmentSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Department Name *
                   </label>
                   <input
@@ -821,12 +827,12 @@ const HRConfig = () => {
                         name: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green bg-brand-pearl text-brand-black"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Department Code *
                   </label>
                   <input
@@ -838,13 +844,13 @@ const HRConfig = () => {
                         code: e.target.value.toUpperCase(),
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green bg-brand-pearl text-brand-black"
                     required
                     maxLength="10"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Description
                   </label>
                   <textarea
@@ -856,11 +862,11 @@ const HRConfig = () => {
                       }))
                     }
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green bg-brand-pearl text-brand-black"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Manager
                   </label>
                   <select
@@ -871,7 +877,7 @@ const HRConfig = () => {
                         manager_id: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green bg-brand-pearl text-brand-black"
                   >
                     <option value="">Select Manager</option>
                     {managers
@@ -891,14 +897,14 @@ const HRConfig = () => {
                   <button
                     type="button"
                     onClick={() => setShowDepartmentModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-pearl border border-brand-black/20 rounded-md hover:bg-brand-pearl/80 transition-colors duration-200"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-md hover:bg-hover-primary disabled:opacity-50 transition-colors duration-200"
                   >
                     {loading
                       ? "Saving..."
@@ -917,38 +923,38 @@ const HRConfig = () => {
       {activeSection === "reports" && (
         <div className="p-6">
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-brand-black">
               Reports & Exports
             </h3>
-            <p className="text-gray-600">
+            <p className="text-brand-black/70">
               Generate and download various reports
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Hierarchy Report */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="bg-brand-pearl border border-brand-black/10 rounded-lg p-6">
               <div className="flex items-center mb-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <FaFileExcel className="w-6 h-6 text-blue-600" />
+                <div className="p-3 bg-brand-blue/20 rounded-lg">
+                  <FaFileExcel className="w-6 h-6 text-brand-blue" />
                 </div>
                 <div className="ml-4">
-                  <h4 className="text-lg font-semibold text-gray-900">
+                  <h4 className="text-lg font-semibold text-brand-black">
                     Employee Hierarchy Report
                   </h4>
-                  <p className="text-gray-600">
+                  <p className="text-brand-black/70">
                     Export complete organizational structure
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-brand-black/70 mb-4">
                 Download a comprehensive report containing employee details,
                 manager assignments, and organizational hierarchy.
               </p>
               <button
                 onClick={exportHierarchy}
                 disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="w-full flex items-center justify-center px-4 py-2 bg-brand-blue text-brand-black rounded-lg hover:bg-hover-info disabled:opacity-50 transition-colors duration-200"
               >
                 <FaDownload className="mr-2" />
                 {loading ? "Generating..." : "Download Hierarchy Report"}
@@ -956,27 +962,27 @@ const HRConfig = () => {
             </div>
 
             {/* Expense Reports */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="bg-brand-pearl border border-brand-black/10 rounded-lg p-6">
               <div className="flex items-center mb-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <FaFileExcel className="w-6 h-6 text-green-600" />
+                <div className="p-3 bg-brand-green/20 rounded-lg">
+                  <FaFileExcel className="w-6 h-6 text-brand-green" />
                 </div>
                 <div className="ml-4">
-                  <h4 className="text-lg font-semibold text-gray-900">
+                  <h4 className="text-lg font-semibold text-brand-black">
                     Expense Reports
                   </h4>
-                  <p className="text-gray-600">
+                  <p className="text-brand-black/70">
                     Access expense analytics and reports
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-brand-black/70 mb-4">
                 View detailed expense analytics, category breakdowns, and export
                 expense data in various formats.
               </p>
               <button
                 onClick={() => (window.location.href = "#expense-analytics")}
-                className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="w-full flex items-center justify-center px-4 py-2 bg-brand-green text-brand-black rounded-lg hover:bg-hover-primary transition-colors duration-200"
               >
                 <FaChartBar className="mr-2" />
                 Go to Expense Analytics

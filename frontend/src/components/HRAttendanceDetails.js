@@ -49,13 +49,13 @@ const HRAttendanceDetails = () => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     switch (status) {
       case "Present":
-        return `${baseClasses} bg-green-100 text-green-800`;
+        return `${baseClasses} bg-brand-green text-brand-black`;
       case "Work From Home":
-        return `${baseClasses} bg-blue-100 text-blue-800`;
+        return `${baseClasses} bg-brand-blue text-brand-black`;
       case "Leave":
-        return `${baseClasses} bg-red-100 text-red-800`;
+        return `${baseClasses} bg-brand-red text-brand-black`;
       default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+        return `${baseClasses} bg-brand-pearl text-brand-black`;
     }
   };
 
@@ -194,14 +194,16 @@ const HRAttendanceDetails = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-brand-pearl p-4 rounded-lg">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Attendance Details</h2>
+        <h2 className="text-2xl font-bold text-brand-black">
+          Attendance Details
+        </h2>
         <div className="flex space-x-3">
           <button
             onClick={fetchAttendanceDetails}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+            className="px-4 py-2 rounded-lg transition-colors flex items-center bg-brand-green text-brand-black hover:bg-hover-primary shadow"
             title="Refresh data"
           >
             <FaSync className="mr-2" />
@@ -209,7 +211,7 @@ const HRAttendanceDetails = () => {
           </button>
           <button
             onClick={handleDownloadAttendance}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+            className="px-4 py-2 rounded-lg transition-colors flex items-center bg-brand-green text-brand-black hover:bg-hover-primary shadow"
             title="Download attendance data as CSV"
           >
             <FaDownload className="mr-2" />
@@ -219,16 +221,16 @@ const HRAttendanceDetails = () => {
       </div>
 
       {/* Month/Year Filter */}
-      <div className="bg-white rounded-lg shadow-sm border p-4">
+      <div className="bg-brand-pearl rounded-lg shadow-md border border-brand-black/10 p-4">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-brand-black mb-1">
               Month
             </label>
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
             >
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i + 1} value={i + 1}>
@@ -239,13 +241,13 @@ const HRAttendanceDetails = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-brand-black mb-1">
               Year
             </label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
             >
               <option value={2024}>2024</option>
               <option value={2025}>2025</option>
@@ -254,7 +256,7 @@ const HRAttendanceDetails = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-brand-black mb-1">
               Search Employee
             </label>
             <input
@@ -262,18 +264,18 @@ const HRAttendanceDetails = () => {
               placeholder="Name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black placeholder:text-brand-black/50"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-brand-black mb-1">
               Department
             </label>
             <select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
             >
               <option value="">All Departments</option>
               <option value="IT">IT</option>
@@ -286,11 +288,11 @@ const HRAttendanceDetails = () => {
       </div>
 
       {/* Records Count */}
-      <div className="bg-white rounded-lg shadow-sm border p-4">
+      <div className="bg-brand-pearl rounded-lg shadow-md border border-brand-black/10 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <FaUsers className="text-gray-400" />
-            <span className="text-sm text-gray-600">
+            <FaUsers className="text-brand-green" />
+            <span className="text-sm text-brand-black/70">
               Showing {filteredRecords.length} of {attendanceRecords.length}{" "}
               records
             </span>
@@ -299,86 +301,86 @@ const HRAttendanceDetails = () => {
       </div>
 
       {/* Attendance Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-brand-pearl rounded-lg shadow-md border border-brand-black/10 overflow-hidden">
         {filteredRecords.length === 0 ? (
-          <div className="text-center py-12">
-            <FaCalendarAlt className="mx-auto text-gray-400 text-4xl mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="text-center py-12 bg-brand-pearl">
+            <FaCalendarAlt className="mx-auto text-brand-green text-4xl mb-4" />
+            <h3 className="text-lg font-medium text-brand-black mb-2">
               No Attendance Records
             </h3>
-            <p className="text-gray-500">
+            <p className="text-brand-black/60">
               No attendance records found for the selected criteria.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full">
+              <thead className="bg-brand-pearl border-b border-brand-black/10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Employee
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Department
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Present Days
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     WFH Days
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Leave Days
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Total Days
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
                 {filteredRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50">
+                  <tr key={record.id} className="hover:bg-ui-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-brand-black">
                           {record.employee_name ||
                             `${record.first_name} ${record.last_name}`}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-brand-black/70">
                           {record.email}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                       {record.department || "N/A"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
+                      <span className="bg-brand-green text-brand-black px-2 py-1 rounded-full text-xs">
                         {record.present_days}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
+                      <span className="bg-brand-blue text-brand-black px-2 py-1 rounded-full text-xs">
                         {record.wfh_days}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
+                      <span className="bg-brand-red text-brand-black px-2 py-1 rounded-full text-xs">
                         {record.leave_days}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
+                      <span className="bg-brand-pearl text-brand-black px-2 py-1 rounded-full text-xs">
                         {record.total_attendance_days}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black/80">
                       <button
                         onClick={() => openEditModal(record)}
-                        className="font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-3 py-2 transition-colors duration-200 text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 hover:border-blue-300"
+                        className="font-medium focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-offset-2 rounded px-3 py-2 transition-colors duration-200 text-brand-violet hover:text-brand-green hover:bg-ui-secondary border border-brand-black/20"
                         title="View employee details"
                       >
                         <FaEdit className="inline mr-1" />
@@ -393,21 +395,21 @@ const HRAttendanceDetails = () => {
         )}
       </div>
       {editingRecord && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/10 w-full max-w-md shadow-lg rounded-lg bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Edit Attendance - {editingRecord.employee_name || "Employee"}
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Status
                   </label>
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                   >
                     <option value="Present">Present</option>
                     <option value="Work From Home">Work From Home</option>
@@ -415,27 +417,27 @@ const HRAttendanceDetails = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Reason
                   </label>
                   <textarea
                     rows={3}
                     value={editReason}
                     onChange={(e) => setEditReason(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     placeholder="Optional reason"
                   />
                 </div>
                 <div className="flex justify-end space-x-2 pt-2">
                   <button
                     onClick={closeEditModal}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary shadow"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-lg hover:bg-hover-primary shadow"
                   >
                     Save
                   </button>

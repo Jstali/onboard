@@ -177,6 +177,21 @@ const EmployeeAttendance = () => {
   ) => {
     try {
       const token = localStorage.getItem("token");
+
+      // Build request body, omitting null values
+      const requestBody = {
+        date,
+        status,
+      };
+
+      // Only include optional fields if they have valid values
+      if (checkInTime) requestBody.checkintime = checkInTime;
+      if (checkOutTime) requestBody.checkouttime = checkOutTime;
+      if (notes && notes.trim()) requestBody.notes = notes;
+      if (hours !== null && hours !== undefined && hours !== "") {
+        requestBody.hours = hours;
+      }
+
       const response = await fetch(
         "http://localhost:5001/api/attendance/mark",
         {
@@ -185,14 +200,7 @@ const EmployeeAttendance = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            date,
-            status,
-            checkintime: checkInTime,
-            checkouttime: checkOutTime,
-            notes,
-            hours,
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -253,31 +261,35 @@ const EmployeeAttendance = () => {
     switch (status) {
       case "present":
         return {
-          icon: <FaCheck className="text-green-600" />,
-          color: "bg-green-100 text-green-800",
+          icon: <FaCheck className="text-deep-space-black" />,
+          color: "bg-lumen-green text-deep-space-black rounded-full",
         };
       case "Work From Home":
         return {
-          icon: <FaHome className="text-blue-600" />,
-          color: "bg-blue-100 text-blue-800",
+          icon: <FaHome className="text-deep-space-black" />,
+          color: "bg-neon-violet text-deep-space-black rounded-full",
         };
       case "leave":
         return {
-          icon: <FaTimes className="text-red-600" />,
-          color: "bg-red-100 text-red-800",
+          icon: <FaTimes className="text-deep-space-black" />,
+          color: "bg-coral-red text-deep-space-black rounded-full",
         };
       case "absent":
         return {
-          icon: <FaTimes className="text-gray-600" />,
-          color: "bg-gray-100 text-gray-800",
+          icon: <FaTimes className="text-deep-space-black" />,
+          color: "bg-neon-violet text-deep-space-black rounded-full",
         };
       case "Half Day":
         return {
-          icon: <FaClock className="text-orange-600" />,
-          color: "bg-orange-100 text-orange-800",
+          icon: <FaClock className="text-deep-space-black" />,
+          color: "bg-yellow text-deep-space-black rounded-full",
         };
       default:
-        return { icon: null, color: "bg-gray-100 text-gray-800" };
+        return {
+          icon: null,
+          color:
+            "bg-iridescent-pearl text-deep-space-black border-2 border-deep-space-black rounded-full",
+        };
     }
   };
 
@@ -391,17 +403,17 @@ const EmployeeAttendance = () => {
   // Show loading or authentication message
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-iridescent-pearl flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading attendance data...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-lumen-green mx-auto mb-4"></div>
+          <p className="text-deep-space-black">Loading attendance data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-iridescent-pearl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Header */}
@@ -409,22 +421,22 @@ const EmployeeAttendance = () => {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate("/employee/dashboard")}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                className="flex items-center px-3 py-2 text-sm font-medium text-deep-space-black bg-iridescent-pearl border border-deep-space-black/20 hover:bg-neon-violet/20 rounded-xl transition-colors duration-200"
               >
                 <FaHome className="w-4 h-4 mr-2" />
                 Home
               </button>
-              <h2 className="text-3xl font-bold text-gray-900">
+              <h2 className="text-3xl font-bold text-deep-space-black">
                 My Attendance
               </h2>
             </div>
             <div className="flex space-x-3">
               <button
                 onClick={() => setView("weekly")}
-                className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+                className={`px-4 py-2 rounded-xl flex items-center space-x-2 shadow-md ${
                   view === "weekly"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    ? "bg-lumen-green text-deep-space-black"
+                    : "bg-iridescent-pearl text-deep-space-black border border-deep-space-black/20 hover:bg-neon-violet/20"
                 }`}
               >
                 <FaTable />
@@ -432,10 +444,10 @@ const EmployeeAttendance = () => {
               </button>
               <button
                 onClick={() => setView("calendar")}
-                className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+                className={`px-4 py-2 rounded-xl flex items-center space-x-2 shadow-md ${
                   view === "calendar"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    ? "bg-lumen-green text-deep-space-black"
+                    : "bg-iridescent-pearl text-deep-space-black border border-deep-space-black/20 hover:bg-neon-violet/20"
                 }`}
               >
                 <FaCalendarAlt />
@@ -446,44 +458,44 @@ const EmployeeAttendance = () => {
 
           {/* Weekly View */}
           {view === "weekly" && (
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="bg-iridescent-pearl rounded-xl shadow-md border border-deep-space-black/10 overflow-hidden">
               {/* Current Week Header */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-800 text-center">
+              <div className="px-6 py-4 border-b border-deep-space-black/10">
+                <h3 className="text-xl font-semibold text-deep-space-black text-center">
                   Current Week: {formatWeekRange()}
                 </h3>
               </div>
 
               {/* Weekly Table */}
               <div className="p-6">
-                <div className="overflow-x-auto rounded-lg border border-gray-200">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                <div className="overflow-x-auto rounded-xl border border-deep-space-black/10 shadow-md">
+                  <table className="min-w-full bg-iridescent-pearl rounded-xl overflow-hidden">
+                    <thead className="bg-iridescent-pearl border-b border-deep-space-black/10">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl rounded-tl-xl">
                           Day
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
                           Date
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
                           Status
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
                           Project
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
                           Tasks
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
                           Actions
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl rounded-tr-xl">
                           Hours
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-iridescent-pearl divide-y divide-deep-space-black/10">
                       {generateWeekDays().map((date, index) => {
                         const attendanceRecord = getAttendanceForDate(
                           date.toISOString().split("T")[0]
@@ -495,27 +507,29 @@ const EmployeeAttendance = () => {
                         return (
                           <tr
                             key={index}
-                            className={`hover:bg-gray-50 transition-colors duration-200 ${
+                            className={`hover:bg-neon-violet/10 transition-colors duration-200 ${
                               isToday
-                                ? "bg-blue-50 border-l-4 border-blue-500"
-                                : ""
+                                ? "bg-lumen-green/10 border-l-4 border-lumen-green"
+                                : index % 2 === 0
+                                ? "bg-iridescent-pearl"
+                                : "bg-iridescent-pearl-dark"
                             }`}
                           >
-                            <td className="px-6 py-5 whitespace-nowrap text-sm font-semibold text-gray-900">
+                            <td className="px-6 py-5 whitespace-nowrap text-sm font-semibold text-deep-space-black bg-inherit">
                               {date.toLocaleDateString("en-US", {
                                 weekday: "short",
                               })}
                             </td>
-                            <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-700">
+                            <td className="px-6 py-5 whitespace-nowrap text-sm text-deep-space-black bg-inherit">
                               {date.toLocaleDateString("en-US", {
                                 month: "short",
                                 day: "numeric",
                               })}
                             </td>
-                            <td className="px-6 py-5 whitespace-nowrap">
+                            <td className="px-6 py-5 whitespace-nowrap bg-inherit">
                               {attendanceRecord ? (
                                 <span
-                                  className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                                  className={`inline-flex px-3 py-1 text-sm font-medium ${
                                     getStatusDisplay(attendanceRecord.status)
                                       .color
                                   }`}
@@ -528,16 +542,16 @@ const EmployeeAttendance = () => {
                                       attendanceRecord.status.slice(1)}
                                 </span>
                               ) : (
-                                <span className="text-gray-400 text-sm">
+                                <span className="text-deep-space-black bg-iridescent-pearl border-2 border-deep-space-black rounded-full px-3 py-1 text-sm font-medium">
                                   Not marked
                                 </span>
                               )}
                             </td>
-                            <td className="px-6 py-5 whitespace-nowrap">
+                            <td className="px-6 py-5 whitespace-nowrap bg-inherit">
                               <input
                                 type="text"
                                 placeholder="Enter project name"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                className="w-full bg-iridescent-pearl border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder:text-deep-space-black/50 transition-colors duration-200"
                                 value={
                                   projectInputs[
                                     date.toISOString().split("T")[0]
@@ -554,11 +568,11 @@ const EmployeeAttendance = () => {
                                 }}
                               />
                             </td>
-                            <td className="px-6 py-5 whitespace-nowrap">
+                            <td className="px-6 py-5 whitespace-nowrap bg-inherit">
                               <input
                                 type="text"
                                 placeholder="Describe your tasks"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                className="w-full bg-iridescent-pearl border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder:text-deep-space-black/50 transition-colors duration-200"
                                 value={
                                   taskInputs[
                                     date.toISOString().split("T")[0]
@@ -575,9 +589,9 @@ const EmployeeAttendance = () => {
                                 }}
                               />
                             </td>
-                            <td className="px-6 py-5 whitespace-nowrap">
+                            <td className="px-6 py-5 whitespace-nowrap bg-inherit">
                               <select
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-white"
+                                className="w-full bg-iridescent-pearl border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green transition-colors duration-200 text-deep-space-black"
                                 value={attendanceRecord?.status || ""}
                                 onChange={(e) => {
                                   if (e.target.value) {
@@ -613,9 +627,9 @@ const EmployeeAttendance = () => {
                                 <option value="Half Day">Half Day</option>
                               </select>
                             </td>
-                            <td className="px-6 py-5 whitespace-nowrap">
+                            <td className="px-6 py-5 whitespace-nowrap bg-inherit">
                               <select
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-white"
+                                className="w-full bg-iridescent-pearl border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green transition-colors duration-200 text-deep-space-black"
                                 value={
                                   hoursInputs[
                                     date.toISOString().split("T")[0]
@@ -692,9 +706,9 @@ const EmployeeAttendance = () => {
               </div>
 
               {/* Attendance Summary */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-6 border-t border-gray-200">
+              <div className="px-6 py-6 border-t border-deep-space-black/10">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-6">
+                  <p className="text-sm text-deep-space-black/70 mb-6">
                     {loading
                       ? "Loading..."
                       : `${
@@ -712,63 +726,63 @@ const EmployeeAttendance = () => {
 
                   {/* Week Statistics */}
                   <div className="grid grid-cols-5 gap-6">
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-green-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-lumen-green mb-1">
                         {
                           attendance.filter(
                             (record) => record.status === "present"
                           ).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         Present
                       </div>
                     </div>
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-blue-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-neon-violet mb-1">
                         {
                           attendance.filter(
                             (record) => record.status === "Work From Home"
                           ).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         WFH
                       </div>
                     </div>
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-red-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-coral-red mb-1">
                         {
                           attendance.filter(
                             (record) => record.status === "leave"
                           ).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         Leave
                       </div>
                     </div>
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-gray-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-deep-space-black/70 mb-1">
                         {
                           attendance.filter(
                             (record) => record.status === "absent"
                           ).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         Absent
                       </div>
                     </div>
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-orange-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-yellow mb-1">
                         {
                           attendance.filter(
                             (record) => record.status === "Half Day"
                           ).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         Half Day
                       </div>
                     </div>
@@ -780,25 +794,25 @@ const EmployeeAttendance = () => {
 
           {/* Calendar View */}
           {view === "calendar" && (
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="bg-iridescent-pearl rounded-xl shadow-md border border-deep-space-black/10 overflow-hidden">
               {/* Month Navigation */}
-              <div className="flex justify-between items-center p-4 border-b">
+              <div className="flex justify-between items-center p-4 border-b border-deep-space-black/10">
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setView("weekly")}
-                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                    className="flex items-center px-3 py-2 text-sm font-medium text-deep-space-black bg-iridescent-pearl border border-deep-space-black/20 hover:bg-neon-violet/20 rounded-xl transition-colors duration-200"
                   >
                     <FaArrowLeft className="w-4 h-4 mr-2" />
                     Back
                   </button>
                   <button
                     onClick={goToPreviousMonth}
-                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                    className="px-3 py-1 bg-iridescent-pearl border border-deep-space-black/20 rounded-xl hover:bg-neon-violet/20 text-deep-space-black"
                   >
                     Previous Month
                   </button>
                 </div>
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-semibold text-deep-space-black">
                   {currentMonth.toLocaleDateString("en-US", {
                     month: "long",
                     year: "numeric",
@@ -806,7 +820,7 @@ const EmployeeAttendance = () => {
                 </h3>
                 <button
                   onClick={goToNextMonth}
-                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                  className="px-3 py-1 bg-iridescent-pearl border border-deep-space-black/20 rounded-xl hover:bg-neon-violet/20 text-deep-space-black"
                 >
                   Next Month
                 </button>
@@ -820,7 +834,7 @@ const EmployeeAttendance = () => {
                     (day) => (
                       <div
                         key={day}
-                        className="p-2 text-center text-sm font-medium text-gray-500"
+                        className="p-2 text-center text-sm font-medium text-deep-space-black/70"
                       >
                         {day}
                       </div>
@@ -847,13 +861,13 @@ const EmployeeAttendance = () => {
                       return (
                         <div
                           key={index}
-                          className={`p-2 min-h-[80px] border border-gray-200 ${
+                          className={`p-2 min-h-[80px] border border-deep-space-black/10 ${
                             !isCurrentMonth
-                              ? "bg-gray-50 text-gray-400"
-                              : "bg-white"
-                          } ${isToday ? "ring-2 ring-blue-500" : ""}`}
+                              ? "bg-neon-violet/10 text-deep-space-black/50"
+                              : "bg-iridescent-pearl"
+                          } ${isToday ? "ring-2 ring-lumen-green" : ""}`}
                         >
-                          <div className="text-sm font-medium mb-1">
+                          <div className="text-sm font-medium text-deep-space-black mb-1">
                             {date.getDate()}
                           </div>
                           {isCurrentMonth && (
@@ -873,7 +887,7 @@ const EmployeeAttendance = () => {
                                       attendanceRecord.status.slice(1)}
                                 </div>
                               ) : (
-                                <div className="text-xs text-gray-400">
+                                <div className="text-xs text-deep-space-black/50">
                                   No attendance
                                 </div>
                               )}
@@ -887,16 +901,16 @@ const EmployeeAttendance = () => {
               </div>
 
               {/* Attendance Summary for Calendar View */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-6 border-t border-gray-200">
+              <div className="px-6 py-6 border-t border-deep-space-black/10">
                 <div className="text-center">
-                  <h3 className="text-xl font-semibold mb-6 text-gray-800">
+                  <h3 className="text-xl font-semibold mb-6 text-deep-space-black">
                     Monthly Attendance Summary
                   </h3>
 
                   {/* Monthly Statistics */}
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-green-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-lumen-green mb-1">
                         {
                           attendance.filter((a) => {
                             const attendanceDate = new Date(a.date);
@@ -911,12 +925,12 @@ const EmployeeAttendance = () => {
                           }).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         Present
                       </div>
                     </div>
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-blue-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-neon-violet mb-1">
                         {
                           attendance.filter((a) => {
                             const attendanceDate = new Date(a.date);
@@ -931,12 +945,12 @@ const EmployeeAttendance = () => {
                           }).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         WFH
                       </div>
                     </div>
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-red-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-coral-red mb-1">
                         {
                           attendance.filter((a) => {
                             const attendanceDate = new Date(a.date);
@@ -951,12 +965,12 @@ const EmployeeAttendance = () => {
                           }).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         Leave
                       </div>
                     </div>
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-gray-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-deep-space-black/70 mb-1">
                         {
                           attendance.filter((a) => {
                             const attendanceDate = new Date(a.date);
@@ -971,12 +985,12 @@ const EmployeeAttendance = () => {
                           }).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         Absent
                       </div>
                     </div>
-                    <div className="text-center bg-white rounded-lg p-4 shadow-sm">
-                      <div className="text-3xl font-bold text-orange-600 mb-1">
+                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                      <div className="text-3xl font-bold text-yellow mb-1">
                         {
                           attendance.filter((a) => {
                             const attendanceDate = new Date(a.date);
@@ -991,7 +1005,7 @@ const EmployeeAttendance = () => {
                           }).length
                         }
                       </div>
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-deep-space-black">
                         Half Day
                       </div>
                     </div>

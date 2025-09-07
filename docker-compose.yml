@@ -1,0 +1,213 @@
+# =============================================================================
+# NXZEN EMPLOYEE MANAGEMENT SYSTEM - DOCKER COMPOSE
+# =============================================================================
+# Production deployment configuration for server 149.102.158.71
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: nxzen_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: onboardxdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: MySecurePass#2025
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database_tables.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+      - ./backend/migrations:/docker-entrypoint-initdb.d/migrations:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - nxzen_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d onboardxdb"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Redis for sessions and caching
+  redis:
+    image: redis:7-alpine
+    container_name: nxzen_redis
+    restart: unless-stopped
+    command: redis-server --requirepass nxzen_redis_password_2024 --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - nxzen_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nxzen_backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=onboardxdb
+      - DB_USER=postgres
+      - DB_PASSWORD=MySecurePass#2025
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=nxzen_redis_password_2024
+      - JWT_SECRET=nxzen_jwt_secret_key_production_2024_secure
+      - PORT=2026
+      - HOST=0.0.0.0
+      - CORS_ORIGIN=https://149.102.158.71:2025,https://nxzen.com
+      - FRONTEND_URL=https://149.102.158.71:2025
+      - BACKEND_URL=https://149.102.158.71:2026/api
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+      - backend_backups:/app/backups
+    ports:
+      - "2026:2026"
+    networks:
+      - nxzen_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2026/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nxzen_frontend
+    restart: unless-stopped
+    ports:
+      - "2025:80"
+      - "2026:443"
+    networks:
+      - nxzen_network
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy (Optional - for SSL termination)
+  nginx:
+    image: nginx:alpine
+    container_name: nxzen_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - nxzen_network
+    depends_on:
+      - frontend
+      - backend
+    profiles:
+      - ssl
+
+  # Database Backup Service
+  backup:
+    image: postgres:15-alpine
+    container_name: nxzen_backup
+    restart: "no"
+    environment:
+      PGPASSWORD: nxzen_secure_password_2024
+    volumes:
+      - backend_backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    networks:
+      - nxzen_network
+    depends_on:
+      - postgres
+    command: /bin/sh -c "while true; do sleep 86400; /backup.sh; done"
+    profiles:
+      - backup
+
+  # Monitoring with Prometheus (Optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nxzen_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - nxzen_network
+    profiles:
+      - monitoring
+
+  # Grafana for monitoring dashboards (Optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nxzen_grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=nxzen_grafana_password_2024
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - nxzen_network
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+# Networks
+networks:
+  nxzen_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
+  backend_backups:
+    driver: local
+  nginx_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local

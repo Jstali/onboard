@@ -146,15 +146,15 @@ const HRExpenseManagement = () => {
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "approved":
-        return "bg-green-100 text-green-800";
+        return "bg-brand-green/20 text-brand-black border border-brand-green/40";
       case "rejected":
-        return "bg-red-100 text-red-800";
+        return "bg-brand-red/20 text-brand-black border border-brand-red/40";
       case "Pending Manager Approval":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-brand-yellow/20 text-brand-black border border-brand-yellow/40";
       case "manager Approved":
-        return "bg-blue-100 text-blue-800";
+        return "bg-brand-blue/20 text-brand-black border border-brand-blue/40";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-brand-pearl text-brand-black/70 border border-brand-black/20";
     }
   };
 
@@ -175,43 +175,43 @@ const HRExpenseManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-64 bg-brand-pearl">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6 bg-brand-pearl min-h-screen">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+        <h2 className="text-2xl font-bold text-brand-black mb-2">
           Expense Management
         </h2>
-        <p className="text-gray-600">
+        <p className="text-brand-black/70">
           Review and manage all expense requests in the system.
         </p>
       </div>
 
       {/* Tab Navigation */}
       <div className="mb-6">
-        <div className="border-b border-gray-200">
+        <div className="border-b border-brand-black/10">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab("pending")}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === "pending"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-brand-green text-brand-green"
+                  : "border-transparent text-brand-black/70 hover:text-brand-black hover:border-brand-black/30"
               }`}
             >
               Pending HR Approval
             </button>
             <button
               onClick={() => setActiveTab("all")}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === "all"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-brand-green text-brand-green"
+                  : "border-transparent text-brand-black/70 hover:text-brand-black hover:border-brand-black/30"
               }`}
             >
               All Expenses
@@ -221,22 +221,22 @@ const HRExpenseManagement = () => {
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="mb-4 p-4 bg-brand-red/20 border border-brand-red/40 text-brand-black rounded">
           {error}
         </div>
       )}
 
       {expenses.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">
+          <div className="text-brand-green text-6xl mb-4">
             {activeTab === "pending" ? "✅" : "📄"}
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="text-lg font-medium text-brand-black mb-2">
             {activeTab === "pending"
               ? "No pending expense requests"
               : "No expense requests found"}
           </h3>
-          <p className="text-gray-500">
+          <p className="text-brand-black/70">
             {activeTab === "pending"
               ? "All expense requests have been processed."
               : "No expense requests have been submitted yet."}
@@ -250,22 +250,22 @@ const HRExpenseManagement = () => {
               {expenses.map((expense) => (
                 <div
                   key={expense.id}
-                  className="bg-white shadow rounded-lg p-6"
+                  className="bg-brand-pearl shadow rounded-lg p-6 border border-brand-black/10"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-brand-black">
                         {expense.expense_category} - {expense.expense_type}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-brand-black/70">
                         Series: {expense.series}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-gray-900">
+                      <p className="text-xl font-bold text-brand-black">
                         {formatCurrency(expense.amount, expense.currency)}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-brand-black/70">
                         {formatDate(expense.expense_date)}
                       </p>
                       <span
@@ -280,37 +280,37 @@ const HRExpenseManagement = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-2">
+                      <h4 className="font-medium text-brand-black mb-2">
                         Employee Details
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-brand-black/70">
                         <strong>Name:</strong> {expense.employee_name}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-brand-black/70">
                         <strong>Email:</strong> {expense.employee_email}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-brand-black/70">
                         <strong>Submitted:</strong>{" "}
                         {formatDate(expense.created_at)}
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-2">
+                      <h4 className="font-medium text-brand-black mb-2">
                         Expense Details
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-brand-black/70">
                         <strong>Category:</strong> {expense.expense_category}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-brand-black/70">
                         <strong>Type:</strong> {expense.expense_type}
                       </p>
                       {expense.project_reference && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-brand-black/70">
                           <strong>Project:</strong> {expense.project_reference}
                         </p>
                       )}
                       {expense.payment_mode && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-brand-black/70">
                           <strong>Payment Mode:</strong> {expense.payment_mode}
                         </p>
                       )}
@@ -318,10 +318,10 @@ const HRExpenseManagement = () => {
                   </div>
 
                   <div className="mb-4">
-                    <h4 className="font-medium text-gray-700 mb-2">
+                    <h4 className="font-medium text-brand-black mb-2">
                       Description
                     </h4>
-                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                    <p className="text-sm text-brand-black/70 bg-brand-pearl/50 p-3 rounded border border-brand-black/10">
                       {expense.description}
                     </p>
                   </div>
@@ -329,10 +329,10 @@ const HRExpenseManagement = () => {
                   {/* Manager Approval Status */}
                   {expense.manager_approval_status && (
                     <div className="mb-4">
-                      <h4 className="font-medium text-gray-700 mb-2">
+                      <h4 className="font-medium text-brand-black mb-2">
                         Manager Approval Status
                       </h4>
-                      <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                      <p className="text-sm text-brand-black/70 bg-brand-blue/10 p-3 rounded border border-brand-blue/20">
                         {expense.manager_approval_status}
                       </p>
                     </div>
@@ -341,15 +341,15 @@ const HRExpenseManagement = () => {
                   {/* HR Approval */}
                   {expense.hr_name && (
                     <div className="mb-4">
-                      <h4 className="font-medium text-gray-700 mb-2">
+                      <h4 className="font-medium text-brand-black mb-2">
                         HR Approval
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-brand-black/70">
                         <strong>Approved by:</strong> {expense.hr_name} on{" "}
                         {formatDate(expense.hrApprovedAt)}
                       </p>
                       {expense.hrApprovalNotes && (
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-brand-black/70 mt-1">
                           <strong>Notes:</strong> {expense.hrApprovalNotes}
                         </p>
                       )}
@@ -359,14 +359,14 @@ const HRExpenseManagement = () => {
                   {/* Attachment */}
                   {expense.attachment_url && (
                     <div className="mb-4">
-                      <h4 className="font-medium text-gray-700 mb-2">
+                      <h4 className="font-medium text-brand-black mb-2">
                         Attachment
                       </h4>
                       <a
                         href={`http://localhost:5001${expense.attachment_url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        className="inline-flex items-center text-sm text-brand-green hover:text-brand-green/80 transition-colors duration-200"
                       >
                         <svg
                           className="w-4 h-4 mr-1"
@@ -389,7 +389,7 @@ const HRExpenseManagement = () => {
                   {/* Approval Actions - Only show for pending requests */}
                   {activeTab === "pending" &&
                     expense.status === "Manager Approved" && (
-                      <div className="flex justify-end space-x-3 pt-4 border-t">
+                      <div className="flex justify-end space-x-3 pt-4 border-t border-brand-black/10">
                         <button
                           onClick={() => {
                             const notes = prompt(
@@ -398,11 +398,11 @@ const HRExpenseManagement = () => {
                             handleApproval(expense.id, "approve", notes || "");
                           }}
                           disabled={processingId === expense.id}
-                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                          className="px-4 py-2 bg-brand-green text-brand-black rounded-md hover:bg-hover-primary focus:outline-none focus:ring-2 focus:ring-brand-green disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
                         >
                           {processingId === expense.id && (
                             <svg
-                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-black"
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
                               viewBox="0 0 24 24"
@@ -434,11 +434,11 @@ const HRExpenseManagement = () => {
                             handleApproval(expense.id, "reject", notes || "");
                           }}
                           disabled={processingId === expense.id}
-                          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                          className="px-4 py-2 bg-brand-red text-brand-black rounded-md hover:bg-hover-danger focus:outline-none focus:ring-2 focus:ring-brand-red disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
                         >
                           {processingId === expense.id && (
                             <svg
-                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-black"
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
                               viewBox="0 0 24 24"
@@ -471,70 +471,73 @@ const HRExpenseManagement = () => {
 
           {/* All Expenses - Table View */}
           {activeTab === "all" && (
-            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+            <div className="bg-brand-pearl shadow overflow-hidden sm:rounded-md border border-brand-black/10">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-brand-black/10">
+                  <thead className="bg-brand-pearl border-b border-brand-black/10">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Employee
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Expense Details
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Amount
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
                     {expenses.map((expense) => (
-                      <tr key={expense.id} className="hover:bg-gray-50">
+                      <tr
+                        key={expense.id}
+                        className="hover:bg-brand-pearl/80 transition-colors duration-200"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-brand-black">
                               {expense.employee_name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-brand-black/70">
                               {expense.employee_email}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-brand-black">
                               {expense.expense_category} -{" "}
                               {expense.expense_type}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-brand-black/70">
                               Series: {expense.series}
                             </div>
                             {expense.project_reference && (
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-brand-black/70">
                                 Project: {expense.project_reference}
                               </div>
                             )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-brand-black">
                             {formatCurrency(expense.amount, expense.currency)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
+                          <div className="text-sm text-brand-black">
                             {formatDate(expense.expense_date)}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-brand-black/70">
                             Submitted: {formatDate(expense.created_at)}
                           </div>
                         </td>
@@ -550,7 +553,7 @@ const HRExpenseManagement = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
                             onClick={() => handleViewDetails(expense)}
-                            className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                            className="text-brand-green hover:text-brand-green/80 p-1 rounded transition-colors duration-200"
                             title="View Details"
                           >
                             <FaEye className="h-4 w-4" />
@@ -568,17 +571,17 @@ const HRExpenseManagement = () => {
 
       {/* Expense Details Modal */}
       {showDetailsModal && selectedExpense && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/20 w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-brand-pearl">
             <div className="mt-3">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-brand-black">
                   Expense Details - {selectedExpense.expense_category} -{" "}
                   {selectedExpense.expense_type}
                 </h3>
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-brand-black/60 hover:text-brand-black transition-colors duration-200"
                 >
                   <svg
                     className="w-6 h-6"
@@ -598,17 +601,17 @@ const HRExpenseManagement = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-medium text-gray-700 mb-3">
+                  <h4 className="font-medium text-brand-black mb-3">
                     Employee Details
                   </h4>
                   <div className="space-y-2">
-                    <p className="text-sm">
+                    <p className="text-sm text-brand-black/70">
                       <strong>Name:</strong> {selectedExpense.employee_name}
                     </p>
-                    <p className="text-sm">
+                    <p className="text-sm text-brand-black/70">
                       <strong>Email:</strong> {selectedExpense.employee_email}
                     </p>
-                    <p className="text-sm">
+                    <p className="text-sm text-brand-black/70">
                       <strong>Submitted:</strong>{" "}
                       {formatDate(selectedExpense.created_at)}
                     </p>
@@ -616,36 +619,36 @@ const HRExpenseManagement = () => {
                 </div>
 
                 <div>
-                  <h4 className="font-medium text-gray-700 mb-3">
+                  <h4 className="font-medium text-brand-black mb-3">
                     Expense Details
                   </h4>
                   <div className="space-y-2">
-                    <p className="text-sm">
+                    <p className="text-sm text-brand-black/70">
                       <strong>Category:</strong>{" "}
                       {selectedExpense.expense_category}
                     </p>
-                    <p className="text-sm">
+                    <p className="text-sm text-brand-black/70">
                       <strong>Type:</strong> {selectedExpense.expense_type}
                     </p>
-                    <p className="text-sm">
+                    <p className="text-sm text-brand-black/70">
                       <strong>Amount:</strong>{" "}
                       {formatCurrency(
                         selectedExpense.amount,
                         selectedExpense.currency
                       )}
                     </p>
-                    <p className="text-sm">
+                    <p className="text-sm text-brand-black/70">
                       <strong>Date:</strong>{" "}
                       {formatDate(selectedExpense.expense_date)}
                     </p>
                     {selectedExpense.project_reference && (
-                      <p className="text-sm">
+                      <p className="text-sm text-brand-black/70">
                         <strong>Project:</strong>{" "}
                         {selectedExpense.project_reference}
                       </p>
                     )}
                     {selectedExpense.payment_mode && (
-                      <p className="text-sm">
+                      <p className="text-sm text-brand-black/70">
                         <strong>Payment Mode:</strong>{" "}
                         {selectedExpense.payment_mode}
                       </p>
@@ -655,18 +658,20 @@ const HRExpenseManagement = () => {
               </div>
 
               <div className="mt-6">
-                <h4 className="font-medium text-gray-700 mb-3">Description</h4>
-                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                <h4 className="font-medium text-brand-black mb-3">
+                  Description
+                </h4>
+                <p className="text-sm text-brand-black/70 bg-brand-pearl/50 p-3 rounded border border-brand-black/10">
                   {selectedExpense.description}
                 </p>
               </div>
 
               {selectedExpense.manager_approval_status && (
                 <div className="mt-6">
-                  <h4 className="font-medium text-gray-700 mb-3">
+                  <h4 className="font-medium text-brand-black mb-3">
                     Manager Approval Status
                   </h4>
-                  <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                  <p className="text-sm text-brand-black/70 bg-brand-blue/10 p-3 rounded border border-brand-blue/20">
                     {selectedExpense.manager_approval_status}
                   </p>
                 </div>
@@ -674,19 +679,19 @@ const HRExpenseManagement = () => {
 
               {selectedExpense.hr_name && (
                 <div className="mt-6">
-                  <h4 className="font-medium text-gray-700 mb-3">
+                  <h4 className="font-medium text-brand-black mb-3">
                     HR Approval
                   </h4>
                   <div className="space-y-2">
-                    <p className="text-sm">
+                    <p className="text-sm text-brand-black/70">
                       <strong>Approved by:</strong> {selectedExpense.hr_name}
                     </p>
-                    <p className="text-sm">
+                    <p className="text-sm text-brand-black/70">
                       <strong>Approved on:</strong>{" "}
                       {formatDate(selectedExpense.hrApprovedAt)}
                     </p>
                     {selectedExpense.hrApprovalNotes && (
-                      <p className="text-sm">
+                      <p className="text-sm text-brand-black/70">
                         <strong>Notes:</strong>{" "}
                         {selectedExpense.hrApprovalNotes}
                       </p>
@@ -697,12 +702,14 @@ const HRExpenseManagement = () => {
 
               {selectedExpense.attachment_url && (
                 <div className="mt-6">
-                  <h4 className="font-medium text-gray-700 mb-3">Attachment</h4>
+                  <h4 className="font-medium text-brand-black mb-3">
+                    Attachment
+                  </h4>
                   <a
                     href={`http://localhost:5001${selectedExpense.attachment_url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                    className="inline-flex items-center text-sm text-brand-green hover:text-brand-green/80 transition-colors duration-200"
                   >
                     <svg
                       className="w-4 h-4 mr-1"
@@ -723,15 +730,9 @@ const HRExpenseManagement = () => {
               )}
 
               {/* Approval Actions - Only show for pending requests */}
-              {console.log(
-                "Debug - activeTab:",
-                activeTab,
-                "selectedExpense.status:",
-                selectedExpense.status
-              )}
               {activeTab === "pending" &&
                 selectedExpense.status === "Manager Approved" && (
-                  <div className="mt-6 flex justify-end space-x-3 pt-4 border-t">
+                  <div className="mt-6 flex justify-end space-x-3 pt-4 border-t border-brand-black/10">
                     <button
                       onClick={() => {
                         const notes = prompt("Add approval notes (optional):");
@@ -743,11 +744,11 @@ const HRExpenseManagement = () => {
                         setShowDetailsModal(false);
                       }}
                       disabled={processingId === selectedExpense.id}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                      className="px-4 py-2 bg-brand-green text-brand-black rounded-md hover:bg-hover-primary focus:outline-none focus:ring-2 focus:ring-brand-green disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
                     >
                       {processingId === selectedExpense.id && (
                         <svg
-                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-black"
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
@@ -782,11 +783,11 @@ const HRExpenseManagement = () => {
                         setShowDetailsModal(false);
                       }}
                       disabled={processingId === selectedExpense.id}
-                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                      className="px-4 py-2 bg-brand-red text-brand-black rounded-md hover:bg-hover-danger focus:outline-none focus:ring-2 focus:ring-brand-red disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
                     >
                       {processingId === selectedExpense.id && (
                         <svg
-                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-black"
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
@@ -816,7 +817,7 @@ const HRExpenseManagement = () => {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  className="px-4 py-2 bg-brand-pearl border border-brand-black/20 text-brand-black rounded-md hover:bg-brand-pearl/80 focus:outline-none focus:ring-2 focus:ring-brand-black/20 transition-colors duration-200"
                 >
                   Close
                 </button>

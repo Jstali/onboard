@@ -14,7 +14,7 @@ router.get("/dashboard", async (req, res) => {
   try {
     const managerId = req.user.userId;
 
-    // Get all employees under this manager with their leave information
+    // Get all employees under this manager with their leave information (only from employee_master)
     const result = await pool.query(
       `
       SELECT 
@@ -23,6 +23,7 @@ router.get("/dashboard", async (req, res) => {
         u.last_name,
         u.email,
         em.employee_id as emp_id,
+        em.employee_name,
         em.department,
         em.designation,
         em.type as employment_type,
@@ -32,12 +33,13 @@ router.get("/dashboard", async (req, res) => {
         COALESCE(lb.total_allocated, 0) as total_allocated
       FROM users u
       JOIN manager_employee_mapping mem ON u.id = mem.employee_id
-      LEFT JOIN employee_master em ON u.email = em.company_email
+      INNER JOIN employee_master em ON u.email = em.company_email
       LEFT JOIN leave_balances lb ON u.id = lb.employee_id AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)
       WHERE mem.manager_id = $1 
         AND mem.is_active = true 
+        AND em.status = 'active'
         AND u.role = 'employee'
-      ORDER BY u.first_name, u.last_name
+      ORDER BY em.employee_name, u.first_name, u.last_name
     `,
       [managerId]
     );
@@ -65,6 +67,7 @@ router.get("/employees", async (req, res) => {
         u.last_name,
         u.email,
         em.employee_id as emp_id,
+        em.employee_name,
         em.department,
         em.designation,
         em.type as employment_type,
@@ -90,12 +93,13 @@ router.get("/employees", async (req, res) => {
         ) as recent_leaves
       FROM users u
       JOIN manager_employee_mapping mem ON u.id = mem.employee_id
-      LEFT JOIN employee_master em ON u.email = em.company_email
+      INNER JOIN employee_master em ON u.email = em.company_email
       LEFT JOIN leave_balances lb ON u.id = lb.employee_id AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)
       WHERE mem.manager_id = $1 
         AND mem.is_active = true 
+        AND em.status = 'active'
         AND u.role = 'employee'
-      ORDER BY u.first_name, u.last_name
+      ORDER BY em.employee_name, u.first_name, u.last_name
     `,
       [managerId]
     );

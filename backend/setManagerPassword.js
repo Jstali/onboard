@@ -4,14 +4,14 @@ const { pool } = require("./config/database");
 async function setManagerPassword() {
   try {
     console.log("🔧 Setting password for existing manager account...");
-    
+
     // Manager credentials to update
-    const managerEmail = "vamshi@nxzen.com";
+    const managerEmail = "stalin11@nxzen.com"; // Hughie S (manager)
     const newPassword = "manager123";
-    
+
     // Hash the password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
+
     // Update the manager's password
     const result = await pool.query(
       `UPDATE users 
@@ -20,7 +20,7 @@ async function setManagerPassword() {
        RETURNING id, email, first_name, last_name`,
       [hashedPassword, managerEmail]
     );
-    
+
     if (result.rows.length > 0) {
       const manager = result.rows[0];
       console.log("✅ Updated manager password successfully!");
@@ -35,7 +35,6 @@ async function setManagerPassword() {
     } else {
       console.log("❌ Manager not found or not updated");
     }
-    
   } catch (error) {
     console.error("❌ Error setting manager password:", error);
   } finally {

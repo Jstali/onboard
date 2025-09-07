@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # =============================================================================
-# NXZEN EMPLOYEE MANAGEMENT SYSTEM - DEPLOYMENT SCRIPT
+# NXZEN EMPLOYEE MANAGEMENT SYSTEM - EXTERNAL DATABASE DEPLOYMENT SCRIPT
 # =============================================================================
-# Production deployment script for server 149.102.158.71
+# Production deployment script for server 149.102.158.71 with external database
+# Database: onboardxdb on localhost:5432
 # =============================================================================
 
 set -e  # Exit on any error
@@ -18,8 +19,15 @@ NC='\033[0m' # No Color
 # Configuration
 SERVER_IP="149.102.158.71"
 APP_NAME="nxzen-hrms"
-DOCKER_COMPOSE_FILE="docker-compose.prod.yml"
+DOCKER_COMPOSE_FILE="docker-compose.external-db.yml"
 BACKUP_DIR="/opt/backups/nxzen-hrms"
+
+# Database Configuration
+DB_HOST="localhost"
+DB_PORT="5432"
+DB_NAME="onboardxdb"
+DB_USER="postgres"
+DB_PASSWORD="MySecurePass#2025"
 
 # Function to print colored output
 print_status() {
@@ -38,17 +46,46 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Function to check if running on correct server
-check_server() {
-    local current_ip=$(curl -s ifconfig.me)
-    if [ "$current_ip" != "$SERVER_IP" ]; then
-        print_warning "This script is designed for server $SERVER_IP"
-        print_warning "Current server IP: $current_ip"
-        read -p "Continue anyway? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+# Function to check database connection
+check_database() {
+    print_status "Checking database connection..."
+    
+    if command -v psql &> /dev/null; then
+        if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "\q" > /dev/null 2>&1; then
+            print_success "Database connection successful"
+        else
+            print_error "Cannot connect to database. Please check:"
+            echo "  - Database is running on $DB_HOST:$DB_PORT"
+            echo "  - Database '$DB_NAME' exists"
+            echo "  - User '$DB_USER' has access"
+            echo "  - Password is correct"
             exit 1
         fi
+    else
+        print_warning "psql not found. Skipping database connection test."
+        print_warning "Please ensure database is accessible at $DB_HOST:$DB_PORT"
+    fi
+}
+
+# Function to check if database tables exist
+check_database_tables() {
+    print_status "Checking if database tables exist..."
+    
+    if command -v psql &> /dev/null; then
+        local table_count=$(PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" | xargs)
+        
+        if [ "$table_count" -gt 0 ]; then
+            print_success "Database tables exist ($table_count tables found)"
+        else
+            print_warning "No tables found in database. You may need to run the database setup script."
+            read -p "Do you want to continue anyway? (y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                exit 1
+            fi
+        fi
+    else
+        print_warning "psql not found. Skipping table check."
     fi
 }
 
@@ -91,10 +128,12 @@ create_backup() {
     mkdir -p "$backup_path"
     
     # Backup database
-    if docker-compose -f $DOCKER_COMPOSE_FILE ps postgres | grep -q "Up"; then
+    if command -v pg_dump &> /dev/null; then
         print_status "Backing up database..."
-        docker-compose -f $DOCKER_COMPOSE_FILE exec -T postgres pg_dump -U nxzen_user nxzen_hrms_prod > "$backup_path/database.sql"
+        PGPASSWORD="$DB_PASSWORD" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" > "$backup_path/database.sql"
         print_success "Database backup created"
+    else
+        print_warning "pg_dump not found. Skipping database backup."
     fi
     
     # Backup uploads
@@ -106,7 +145,7 @@ create_backup() {
     
     # Backup configuration
     print_status "Backing up configuration..."
-    cp docker-compose.prod.yml "$backup_path/"
+    cp docker-compose.external-db.yml "$backup_path/"
     cp production.env "$backup_path/"
     print_success "Configuration backup created"
     
@@ -177,7 +216,7 @@ verify_deployment() {
     print_status "Verifying deployment..."
     
     # Check if services are running
-    local services=("postgres" "redis" "backend" "frontend")
+    local services=("redis" "backend" "frontend")
     for service in "${services[@]}"; do
         if docker-compose -f $DOCKER_COMPOSE_FILE ps $service | grep -q "Up"; then
             print_success "$service is running"
@@ -219,40 +258,35 @@ show_status() {
     echo "  API: http://$SERVER_IP:2025/api"
     echo "  Health Check: http://$SERVER_IP:2025/health"
     echo ""
+    print_status "Database Information:"
+    echo "  Host: $DB_HOST"
+    echo "  Port: $DB_PORT"
+    echo "  Database: $DB_NAME"
+    echo "  User: $DB_USER"
+    echo ""
     print_status "Logs can be viewed with:"
     echo "  docker-compose -f $DOCKER_COMPOSE_FILE logs -f [service_name]"
-}
-
-# Function to setup SSL (optional)
-setup_ssl() {
-    read -p "Do you want to setup SSL certificates? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_status "SSL setup would require:"
-        echo "  1. SSL certificates in ./nginx/ssl/"
-        echo "  2. Update nginx configuration"
-        echo "  3. Update docker-compose to use SSL profile"
-        echo ""
-        print_warning "SSL setup is not automated in this script"
-        print_warning "Please configure SSL certificates manually"
-    fi
 }
 
 # Main deployment function
 main() {
     echo "============================================================================="
-    echo "NXZEN EMPLOYEE MANAGEMENT SYSTEM - PRODUCTION DEPLOYMENT"
+    echo "NXZEN EMPLOYEE MANAGEMENT SYSTEM - EXTERNAL DATABASE DEPLOYMENT"
     echo "============================================================================="
     echo "Server: $SERVER_IP"
     echo "Application: $APP_NAME"
+    echo "Database: $DB_NAME@$DB_HOST:$DB_PORT"
     echo "============================================================================="
     echo ""
     
-    # Check if we're on the right server
-    check_server
-    
     # Check prerequisites
     check_prerequisites
+    
+    # Check database connection
+    check_database
+    
+    # Check database tables
+    check_database_tables
     
     # Create backup
     create_backup
@@ -271,8 +305,6 @@ main() {
         print_success "Deployment completed successfully!"
         echo ""
         show_status
-        echo ""
-        setup_ssl
         echo ""
         print_success "Your NXZEN Employee Management System is now live!"
         print_status "Access your application at: http://$SERVER_IP:2025"
@@ -307,6 +339,10 @@ case "${1:-}" in
         ;;
     "cleanup")
         cleanup_images
+        ;;
+    "check-db")
+        check_database
+        check_database_tables
         ;;
     *)
         main

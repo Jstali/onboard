@@ -5,7 +5,7 @@ async function setStalinPassword() {
   try {
     console.log("🔧 Setting password for stalin j...");
 
-    const stalinEmail = "stalin31@gmail.com";
+    const stalinEmail = "stalinj@nxzen.com";
     const newPassword = "stalin123";
 
     // Hash the password

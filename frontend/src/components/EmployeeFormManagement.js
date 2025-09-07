@@ -298,37 +298,18 @@ const EmployeeFormManagement = ({ onRefresh }) => {
   };
 
   const getStatusBadge = (status) => {
+    const base = "px-2 py-1 text-xs font-medium rounded-full";
     switch (status) {
       case "pending":
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-            Pending
-          </span>
-        );
+        return <span className={`${base} bg-brand-yellow text-brand-black`}>Pending</span>;
       case "submitted":
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-            Submitted
-          </span>
-        );
+        return <span className={`${base} bg-brand-blue text-brand-black`}>Submitted</span>;
       case "approved":
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-            Approved
-          </span>
-        );
+        return <span className={`${base} bg-brand-green text-brand-black`}>Approved</span>;
       case "rejected":
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-            Rejected
-          </span>
-        );
+        return <span className={`${base} bg-brand-red text-brand-black`}>Rejected</span>;
       default:
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-            {status || "Unknown"}
-          </span>
-        );
+        return <span className={`${base} bg-brand-pearl text-brand-black`}>{status || "Unknown"}</span>;
     }
   };
 
@@ -413,27 +394,23 @@ const EmployeeFormManagement = ({ onRefresh }) => {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-brand-pearl p-6 rounded-lg">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Employee Form Management
-        </h2>
-        <p className="text-gray-600">
-          View and manage all employee onboarding forms submitted by candidates.
-        </p>
+        <h2 className="text-2xl font-bold text-brand-black mb-2">Employee Form Management</h2>
+        <p className="text-brand-black/70">View and manage all employee onboarding forms submitted by candidates.</p>
       </div>
 
       {/* Search and Filter Controls */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-green" />
             <input
               type="text"
               placeholder="Search by name, email, or type..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="pl-10 pr-4 py-2 w-full bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green placeholder:text-brand-black/50 text-brand-black"
             />
           </div>
         </div>
@@ -441,7 +418,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
           >
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
@@ -454,60 +431,54 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
       {/* Forms Table */}
       {filteredForms.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="text-gray-400 text-6xl mb-4">📋</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No Employee Forms Found
-          </h3>
-          <p className="text-gray-500">
-            {searchTerm || statusFilter !== "all"
-              ? "Try adjusting your search or filter criteria."
-              : "No employee forms have been submitted yet."}
-          </p>
+        <div className="text-center py-8 bg-brand-pearl rounded-lg border border-brand-black/10">
+          <div className="text-brand-green text-6xl mb-4">📋</div>
+          <h3 className="text-lg font-medium text-brand-black mb-2">No Employee Forms Found</h3>
+          <p className="text-brand-black/60">{searchTerm || statusFilter !== "all" ? "Try adjusting your search or filter criteria." : "No employee forms have been submitted yet."}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto bg-brand-pearl shadow-md rounded-lg border border-brand-black/10">
+          <table className="min-w-full">
+            <thead className="bg-brand-pearl border-b border-brand-black/10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Employee Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Documents
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Manager
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Submitted
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredForms.map((form) => (
-                <tr key={form.id} className="hover:bg-gray-50">
+            <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
+              {filteredForms.map((form, index) => (
+                <tr key={form.id} className={`${index % 2 === 0 ? 'bg-brand-pearl' : 'bg-ui-secondary'} hover:bg-ui-secondary`}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-brand-black">
                         {form.user_email}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-brand-black/70">
                         {form.first_name && form.last_name
                           ? `${form.first_name} ${form.last_name}`
                           : form.form_data?.name || "Name not available"}
                       </div>
                       {form.phone && (
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-brand-black/50">
                           📞 {form.phone}
                         </div>
                       )}
@@ -523,7 +494,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleViewDocuments(form)}
-                        className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-brand-blue text-brand-black hover:bg-hover-primary"
                       >
                         <FaFileAlt className="mr-1" />
                         View Status
@@ -532,23 +503,23 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {form.assigned_manager ? (
-                      <span className="text-sm text-green-600 font-medium">
+                      <span className="text-sm text-brand-black font-medium">
                         {form.assigned_manager}
                       </span>
                     ) : (
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-brand-black/50">
                         Not assigned
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black/70">
                     {formatDate(form.submitted_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => handleEditEmployee(form)}
-                        className="text-purple-600 hover:text-purple-900"
+                        className="text-brand-violet hover:text-brand-green"
                         title="Edit Employee Details"
                       >
                         <FaEdit className="inline-block" />
@@ -559,14 +530,14 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                         <>
                           <button
                             onClick={() => handleApproveForm(form)}
-                            className="text-green-600 hover:text-green-900"
+                            className="text-brand-green hover:text-state-hover"
                             title="Approve Application"
                           >
                             <FaCheck className="inline-block" />
                           </button>
                           <button
                             onClick={() => handleRejectForm(form)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-brand-red hover:text-hover-danger"
                             title="Reject Application"
                           >
                             <FaTimes className="inline-block" />
@@ -576,7 +547,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
                       <button
                         onClick={() => handleDeleteForm(form.id)}
-                        className="text-gray-600 hover:text-gray-900"
+                        className="text-brand-black/60 hover:text-brand-black"
                         title="Delete Form"
                       >
                         <FaTrash className="inline-block" />
@@ -592,10 +563,10 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
       {/* Form Details Modal */}
       {showFormDetails && selectedForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/10 w-11/12 max-w-4xl shadow-lg rounded-lg bg-brand-pearl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-brand-black">
                 Employee Form Details
               </h3>
               <div className="flex items-center space-x-3">
@@ -611,14 +582,14 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     });
                     setShowDocumentStatus(true);
                   }}
-                  className="inline-flex items-center px-3 py-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-brand-green text-brand-black hover:bg-hover-primary shadow"
                 >
                   <FaFileAlt className="mr-2" />
                   View Documents
                 </button>
                 <button
                   onClick={() => setShowFormDetails(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-brand-black/60 hover:text-brand-black"
                 >
                   ×
                 </button>
@@ -629,64 +600,64 @@ const EmployeeFormManagement = ({ onRefresh }) => {
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Employee Email
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {selectedForm.user_email}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Employee Type
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {selectedForm.employee_type}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Status
                   </label>
                   <div>{getStatusBadge(selectedForm.status)}</div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Submitted Date
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {formatDate(selectedForm.submitted_at)}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Phone
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {selectedForm.phone || "Not provided"}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Assigned Manager
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {selectedForm.assigned_manager || "Not assigned"}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Department
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {selectedForm.department || "Not assigned"}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Designation
                   </label>
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-brand-black">
                     {selectedForm.designation || "Not assigned"}
                   </p>
                 </div>
@@ -696,37 +667,37 @@ const EmployeeFormManagement = ({ onRefresh }) => {
               {(selectedForm.emergency_contact_name ||
                 selectedForm.emergency_contact_phone) && (
                 <div>
-                  <h4 className="text-md font-medium text-gray-900 mb-3">
+                  <h4 className="text-md font-medium text-brand-black mb-3">
                     Emergency Contact
                   </h4>
-                  <div className="bg-red-50 rounded-lg p-4">
+                  <div className="bg-brand-pearl rounded-lg p-4 border border-brand-red/20">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {selectedForm.emergency_contact_name && (
                         <div>
-                          <label className="block text-sm font-medium text-red-700 mb-1">
+                          <label className="block text-sm font-medium text-brand-black mb-1">
                             Contact Name
                           </label>
-                          <p className="text-sm text-red-900">
+                          <p className="text-sm text-brand-black">
                             {selectedForm.emergency_contact_name}
                           </p>
                         </div>
                       )}
                       {selectedForm.emergency_contact_phone && (
                         <div>
-                          <label className="block text-sm font-medium text-red-700 mb-1">
+                          <label className="block text-sm font-medium text-brand-black mb-1">
                             Contact Phone
                           </label>
-                          <p className="text-sm text-red-900">
+                          <p className="text-sm text-brand-black">
                             {selectedForm.emergency_contact_phone}
                           </p>
                         </div>
                       )}
                       {selectedForm.emergency_contact_relationship && (
                         <div>
-                          <label className="block text-sm font-medium text-red-700 mb-1">
+                          <label className="block text-sm font-medium text-brand-black mb-1">
                             Relationship
                           </label>
-                          <p className="text-sm text-red-900">
+                          <p className="text-sm text-brand-black">
                             {selectedForm.emergency_contact_relationship}
                           </p>
                         </div>
@@ -740,37 +711,37 @@ const EmployeeFormManagement = ({ onRefresh }) => {
               {(selectedForm.emergency_contact_name2 ||
                 selectedForm.emergency_contact_phone2) && (
                 <div>
-                  <h4 className="text-md font-medium text-gray-900 mb-3">
+                  <h4 className="text-md font-medium text-brand-black mb-3">
                     Second Emergency Contact
                   </h4>
-                  <div className="bg-orange-50 rounded-lg p-4">
+                  <div className="bg-brand-pearl rounded-lg p-4 border border-brand-violet/20">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {selectedForm.emergency_contact_name2 && (
                         <div>
-                          <label className="block text-sm font-medium text-orange-700 mb-1">
+                          <label className="block text-sm font-medium text-brand-black mb-1">
                             Contact Name
                           </label>
-                          <p className="text-sm text-orange-900">
+                          <p className="text-sm text-brand-black">
                             {selectedForm.emergency_contact_name2}
                           </p>
                         </div>
                       )}
                       {selectedForm.emergency_contact_phone2 && (
                         <div>
-                          <label className="block text-sm font-medium text-orange-700 mb-1">
+                          <label className="block text-sm font-medium text-brand-black mb-1">
                             Contact Phone
                           </label>
-                          <p className="text-sm text-orange-900">
+                          <p className="text-sm text-brand-black">
                             {selectedForm.emergency_contact_phone2}
                           </p>
                         </div>
                       )}
                       {selectedForm.emergency_contact_relationship2 && (
                         <div>
-                          <label className="block text-sm font-medium text-orange-700 mb-1">
+                          <label className="block text-sm font-medium text-brand-black mb-1">
                             Relationship
                           </label>
-                          <p className="text-sm text-orange-900">
+                          <p className="text-sm text-brand-black">
                             {selectedForm.emergency_contact_relationship2}
                           </p>
                         </div>
@@ -782,18 +753,18 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
               {/* Form Data */}
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
+                <h4 className="text-md font-medium text-brand-black mb-3">
                   Form Information
                 </h4>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-brand-pearl rounded-lg p-4 border border-brand-black/10">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {Object.entries(selectedForm.form_data || {}).map(
                       ([key, value]) => (
                         <div key={key}>
-                          <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                          <label className="block text-sm font-medium text-brand-black mb-1 capitalize">
                             {key.replace(/_/g, " ")}
                           </label>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-sm text-brand-black">
                             {typeof value === "string"
                               ? value
                               : JSON.stringify(value)}
@@ -807,7 +778,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
               {/* Document Status */}
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
+                <h4 className="text-md font-medium text-brand-black mb-3">
                   Document Upload Status
                 </h4>
                 <DocumentStatus
@@ -889,14 +860,14 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   });
                   setShowDocumentStatus(true);
                 }}
-                className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-brand-green text-brand-black hover:bg-hover-primary shadow"
               >
                 <FaFileAlt className="mr-2" />
                 View All Documents
               </button>
               <button
                 onClick={() => setShowFormDetails(false)}
-                className="btn-secondary"
+                className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary shadow"
               >
                 Close
               </button>
@@ -907,10 +878,10 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
       {/* Document Status Modal */}
       {showDocumentStatus && selectedEmployeeForDocs && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border border-brand-black/10 w-11/12 max-w-6xl shadow-lg rounded-lg bg-brand-pearl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-brand-black">
                 Document Status - {selectedEmployeeForDocs.name}
               </h3>
               <button
@@ -918,7 +889,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   setShowDocumentStatus(false);
                   setSelectedEmployeeForDocs(null);
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-brand-black/60 hover:text-brand-black"
               >
                 <span className="sr-only">Close</span>
                 <svg
@@ -950,7 +921,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   setShowDocumentStatus(false);
                   setSelectedEmployeeForDocs(null);
                 }}
-                className="btn-secondary"
+                className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary shadow"
               >
                 Close
               </button>
@@ -961,10 +932,10 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
       {/* Edit Employee Modal */}
       {showEditForm && editingEmployee && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border border-brand-black/10 w-11/12 max-w-2xl shadow-lg rounded-lg bg-brand-pearl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-brand-black">
                 Edit Employee Details
               </h3>
               <button
@@ -972,7 +943,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   setShowEditForm(false);
                   setEditingEmployee(null);
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-brand-black/60 hover:text-brand-black"
               >
                 <span className="sr-only">Close</span>
                 <svg
@@ -1027,49 +998,49 @@ const EmployeeFormManagement = ({ onRefresh }) => {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Full Name *
                   </label>
                   <input
                     type="text"
                     name="name"
                     defaultValue={editingEmployee.form_data?.name || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Email *
                   </label>
                   <input
                     type="email"
                     name="email"
                     defaultValue={editingEmployee.form_data?.email || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Employee ID (6 digits) *
                   </label>
                   <input
                     type="text"
                     value={editingEmployee.form_data?.employee_id || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-brand-black/20 rounded-lg bg-ui-secondary text-brand-black/60 cursor-not-allowed"
                     readOnly
                     disabled
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-brand-black/60 mt-1">
                     Employee ID is permanent and cannot be changed
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Phone
                   </label>
                   <input
@@ -1085,31 +1056,31 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                         .replace(/[^0-9]/g, "")
                         .slice(0, 10);
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Date of Joining *
                   </label>
                   <input
                     type="date"
                     name="doj"
                     defaultValue={editingEmployee.form_data?.doj || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Employment Type *
                   </label>
                   <select
                     name="employment_type"
                     defaultValue={editingEmployee.employee_type || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     required
                   >
                     <option value="Full-Time">Full-Time</option>
@@ -1122,19 +1093,19 @@ const EmployeeFormManagement = ({ onRefresh }) => {
 
               {/* Manager Assignment Section */}
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
+                <h4 className="text-md font-medium text-brand-black mb-3">
                   Manager Assignment
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-brand-black mb-1">
                       Manager 1 *
                     </label>
                     <select
                       name="manager1"
                       value={selectedManager1}
                       onChange={(e) => setSelectedManager1(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                       required
                     >
                       <option value="">Select Manager 1</option>
@@ -1152,14 +1123,14 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-brand-black mb-1">
                       Manager 2 (Optional)
                     </label>
                     <select
                       name="manager2"
                       value={selectedManager2}
                       onChange={(e) => setSelectedManager2(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     >
                       <option value="">Select Manager 2</option>
                       {getFilteredManagers(selectedManager2, "Manager 2").map(
@@ -1176,14 +1147,14 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-brand-black mb-1">
                       Manager 3 (Optional)
                     </label>
                     <select
                       name="manager3"
                       value={selectedManager3}
                       onChange={(e) => setSelectedManager3(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     >
                       <option value="">Select Manager 3</option>
                       {getFilteredManagers(selectedManager3, "Manager 3").map(
@@ -1199,57 +1170,57 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     </select>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-brand-black/60 mt-2">
                   Manager 1 is required. Manager 2 and 3 are optional for
                   multi-manager approval workflow.
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-brand-black mb-1">
                   Address
                 </label>
                 <textarea
                   name="address"
                   defaultValue={editingEmployee.form_data?.address || ""}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Latest Graduation
                   </label>
                   <textarea
                     name="education"
                     defaultValue={editingEmployee.form_data?.education || ""}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Experience
                   </label>
                   <textarea
                     name="experience"
                     defaultValue={editingEmployee.form_data?.experience || ""}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                   />
                 </div>
               </div>
 
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
+                <h4 className="text-md font-medium text-brand-black mb-3">
                   Emergency Contact
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-brand-black mb-1">
                       Contact Name
                     </label>
                     <input
@@ -1258,12 +1229,12 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       defaultValue={
                         editingEmployee.form_data?.emergencyContact?.name || ""
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-brand-black mb-1">
                       Contact Phone
                     </label>
                     <input
@@ -1281,12 +1252,12 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                           .replace(/[^0-9]/g, "")
                           .slice(0, 10);
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-brand-black mb-1">
                       Relationship
                     </label>
                     <input
@@ -1296,19 +1267,19 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                         editingEmployee.form_data?.emergencyContact
                           ?.relationship || ""
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
+                <h4 className="text-md font-medium text-brand-black mb-3">
                   Second Emergency Contact
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-brand-black mb-1">
                       Contact Name
                     </label>
                     <input
@@ -1317,12 +1288,12 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       defaultValue={
                         editingEmployee.form_data?.emergencyContact2?.name || ""
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-brand-black mb-1">
                       Contact Phone
                     </label>
                     <input
@@ -1341,12 +1312,12 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                           .replace(/[^0-9]/g, "")
                           .slice(0, 10);
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-brand-black mb-1">
                       Relationship
                     </label>
                     <input
@@ -1356,7 +1327,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                         editingEmployee.form_data?.emergencyContact2
                           ?.relationship || ""
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     />
                   </div>
                 </div>
@@ -1373,13 +1344,13 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     setSelectedManager2("");
                     setSelectedManager3("");
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary shadow"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-lg hover:bg-hover-primary shadow"
                 >
                   Update Employee
                 </button>

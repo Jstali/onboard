@@ -140,19 +140,19 @@ const HRExpenseAnalytics = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-64 bg-brand-pearl">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-600">{error}</p>
+      <div className="bg-brand-red/20 border border-brand-red/40 rounded-lg p-4">
+        <p className="text-brand-black">{error}</p>
         <button
           onClick={fetchAnalytics}
-          className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          className="mt-2 px-4 py-2 bg-brand-red text-brand-black rounded-md hover:bg-hover-danger transition-colors duration-200"
         >
           Retry
         </button>
@@ -162,21 +162,21 @@ const HRExpenseAnalytics = () => {
 
   if (!analytics) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No analytics data available</p>
+      <div className="text-center py-8 bg-brand-pearl">
+        <p className="text-brand-black/70">No analytics data available</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-brand-pearl min-h-screen p-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-brand-black">
             Expense Analytics
           </h2>
-          <p className="text-gray-600">
+          <p className="text-brand-black/70">
             Comprehensive expense analysis and reporting
           </p>
         </div>
@@ -184,7 +184,7 @@ const HRExpenseAnalytics = () => {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-brand-black/20 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
           >
             <option value="current_year">Current Year</option>
             <option value="current_month">Current Month</option>
@@ -194,7 +194,7 @@ const HRExpenseAnalytics = () => {
           <button
             onClick={exportToExcel}
             disabled={exportLoading}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center space-x-2"
+            className="px-4 py-2 bg-brand-green text-brand-black rounded-md hover:bg-hover-primary disabled:opacity-50 flex items-center space-x-2 transition-colors duration-200"
           >
             <FaFileExcel className="w-4 h-4" />
             <span>Export Excel</span>
@@ -202,7 +202,7 @@ const HRExpenseAnalytics = () => {
           <button
             onClick={exportHierarchy}
             disabled={exportLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+            className="px-4 py-2 bg-brand-violet text-brand-black rounded-md hover:bg-hover-secondary disabled:opacity-50 flex items-center space-x-2 transition-colors duration-200"
           >
             <FaDownload className="w-4 h-4" />
             <span>Hierarchy Report</span>
@@ -212,60 +212,62 @@ const HRExpenseAnalytics = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-brand-pearl p-6 rounded-lg shadow-sm border border-brand-black/10">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FaChartBar className="w-6 h-6 text-blue-600" />
+            <div className="p-2 bg-brand-blue/20 rounded-lg">
+              <FaChartBar className="w-6 h-6 text-brand-blue" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">
+              <p className="text-sm font-medium text-brand-black/70">
                 Total Expenses
               </p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-brand-black">
                 {analytics.totalStats?.total_expenses || 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-brand-pearl p-6 rounded-lg shadow-sm border border-brand-black/10">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <FaChartBar className="w-6 h-6 text-green-600" />
+            <div className="p-2 bg-brand-green/20 rounded-lg">
+              <FaChartBar className="w-6 h-6 text-brand-green" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Amount</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-brand-black/70">
+                Total Amount
+              </p>
+              <p className="text-2xl font-bold text-brand-black">
                 {formatCurrency(analytics.totalStats?.total_amount || 0)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-brand-pearl p-6 rounded-lg shadow-sm border border-brand-black/10">
           <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <FaChartBar className="w-6 h-6 text-yellow-600" />
+            <div className="p-2 bg-brand-yellow/20 rounded-lg">
+              <FaChartBar className="w-6 h-6 text-brand-yellow" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">
+              <p className="text-sm font-medium text-brand-black/70">
                 Average Amount
               </p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-brand-black">
                 {formatCurrency(analytics.totalStats?.avg_amount || 0)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-brand-pearl p-6 rounded-lg shadow-sm border border-brand-black/10">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <FaChartBar className="w-6 h-6 text-purple-600" />
+            <div className="p-2 bg-brand-violet/20 rounded-lg">
+              <FaChartBar className="w-6 h-6 text-brand-violet" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Period</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-brand-black/70">Period</p>
+              <p className="text-2xl font-bold text-brand-black">
                 {getPeriodLabel(analytics.period)}
               </p>
             </div>
@@ -276,8 +278,8 @@ const HRExpenseAnalytics = () => {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Category Breakdown */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-brand-pearl p-6 rounded-lg shadow-sm border border-brand-black/10">
+          <h3 className="text-lg font-semibold text-brand-black mb-4">
             Expenses by Category
           </h3>
           <div className="space-y-3">
@@ -288,15 +290,15 @@ const HRExpenseAnalytics = () => {
                     className="w-4 h-4 rounded-full mr-3"
                     style={{ backgroundColor: `hsl(${index * 60}, 70%, 50%)` }}
                   ></div>
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-brand-black/70">
                     {category.expense_category}
                   </span>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-brand-black">
                     {formatCurrency(category.total_amount)}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-brand-black/70">
                     {category.count} expenses
                   </p>
                 </div>
@@ -306,8 +308,8 @@ const HRExpenseAnalytics = () => {
         </div>
 
         {/* Project Breakdown */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-brand-pearl p-6 rounded-lg shadow-sm border border-brand-black/10">
+          <h3 className="text-lg font-semibold text-brand-black mb-4">
             Expenses by Project
           </h3>
           <div className="space-y-3">
@@ -318,15 +320,15 @@ const HRExpenseAnalytics = () => {
                     className="w-4 h-4 rounded-full mr-3"
                     style={{ backgroundColor: `hsl(${index * 45}, 70%, 50%)` }}
                   ></div>
-                  <span className="text-sm font-medium text-gray-700 truncate">
+                  <span className="text-sm font-medium text-brand-black/70 truncate">
                     {project.project}
                   </span>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-brand-black">
                     {formatCurrency(project.total_amount)}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-brand-black/70">
                     {project.count} expenses
                   </p>
                 </div>
@@ -336,8 +338,8 @@ const HRExpenseAnalytics = () => {
         </div>
 
         {/* Client Breakdown */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-brand-pearl p-6 rounded-lg shadow-sm border border-brand-black/10">
+          <h3 className="text-lg font-semibold text-brand-black mb-4">
             Expenses by Client
           </h3>
           <div className="space-y-3">
@@ -348,15 +350,15 @@ const HRExpenseAnalytics = () => {
                     className="w-4 h-4 rounded-full mr-3"
                     style={{ backgroundColor: `hsl(${index * 30}, 70%, 50%)` }}
                   ></div>
-                  <span className="text-sm font-medium text-gray-700 truncate">
+                  <span className="text-sm font-medium text-brand-black/70 truncate">
                     {client.client}
                   </span>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-brand-black">
                     {formatCurrency(client.total_amount)}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-brand-black/70">
                     {client.count} expenses
                   </p>
                 </div>
@@ -366,14 +368,14 @@ const HRExpenseAnalytics = () => {
         </div>
 
         {/* Monthly Trends */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-brand-pearl p-6 rounded-lg shadow-sm border border-brand-black/10">
+          <h3 className="text-lg font-semibold text-brand-black mb-4">
             Monthly Trends
           </h3>
           <div className="space-y-3">
             {analytics.monthlyTrends?.slice(-6).map((trend, index) => (
               <div key={index} className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-brand-black/70">
                   {new Date(trend.year, trend.month - 1).toLocaleDateString(
                     "en-US",
                     {
@@ -383,10 +385,10 @@ const HRExpenseAnalytics = () => {
                   )}
                 </span>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-brand-black">
                     {formatCurrency(trend.total_amount)}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-brand-black/70">
                     {trend.count} expenses
                   </p>
                 </div>

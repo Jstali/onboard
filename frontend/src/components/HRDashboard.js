@@ -126,7 +126,7 @@ const HRDashboard = () => {
                   alt="nxzen Logo"
                   className="w-10 h-10 object-contain transition-transform duration-300 hover:rotate-12"
                 />
-                <div className="text-black font-semibold text-lg transition-colors duration-300 hover:text-primary-600">
+                <div className="text-black font-semibold text-lg transition-colors duration-300 hover:text-blue-600">
                   nxzen
                 </div>
               </div>
@@ -145,7 +145,7 @@ const HRDashboard = () => {
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-red-100 hover:text-red-700 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-md"
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-red-100 hover:text-red-500 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-md"
               >
                 <FaSignOutAlt className="mr-2 transition-transform duration-300 hover:scale-110" />
                 Logout
@@ -167,8 +167,8 @@ const HRDashboard = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center py-4 px-3 border-b-2 font-medium text-sm transition-all duration-300 ease-in-out transform hover:scale-105 whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
-                      ? "border-primary-500 text-primary-600 bg-primary-50"
-                      : "border-transparent text-gray-500 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50"
+                      ? "border-blue-500 text-blue-600 bg-blue-50"
+                      : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50"
                   }`}
                 >
                   <Icon

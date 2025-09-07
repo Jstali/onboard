@@ -268,19 +268,17 @@ const HRDocumentCollection = () => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     switch (status) {
       case "Received":
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case "Pending":
-        return `${baseClasses} bg-orange-100 text-orange-800`;
       case "Uploaded":
-        return `${baseClasses} bg-green-100 text-green-800`;
+        return `${baseClasses} bg-brand-green text-brand-black`;
+      case "Pending":
       case "Not Uploaded":
-        return `${baseClasses} bg-orange-100 text-orange-800`;
+        return `${baseClasses} bg-brand-yellow text-brand-black`;
       case "Follow-Up":
-        return `${baseClasses} bg-blue-100 text-blue-800`;
+        return `${baseClasses} bg-brand-blue text-brand-black`;
       case "N/A":
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+        return `${baseClasses} bg-brand-pearl text-brand-black`;
       default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+        return `${baseClasses} bg-brand-pearl text-brand-black`;
     }
   };
 
@@ -567,19 +565,19 @@ const HRDocumentCollection = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-brand-pearl p-4 rounded-lg">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-2xl font-bold text-brand-black">
           HR Document Collection - Complete Employee Form Details
         </h2>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border p-4">
+      <div className="bg-brand-pearl rounded-lg shadow-md border border-brand-black/10 p-4">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-brand-black mb-1">
               Search
             </label>
             <input
@@ -589,11 +587,11 @@ const HRDocumentCollection = () => {
               onChange={(e) =>
                 setFilters({ ...filters, searchTerm: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black placeholder:text-brand-black/50"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-brand-black mb-1">
               Document Status
             </label>
             <select
@@ -601,7 +599,7 @@ const HRDocumentCollection = () => {
               onChange={(e) =>
                 setFilters({ ...filters, status: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
             >
               <option value="">All Status</option>
               <option value="Pending">Pending</option>
@@ -612,7 +610,7 @@ const HRDocumentCollection = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-brand-black mb-1">
               Document Type
             </label>
             <select
@@ -620,7 +618,7 @@ const HRDocumentCollection = () => {
               onChange={(e) =>
                 setFilters({ ...filters, documentType: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
             >
               <option value="">All Types</option>
               <option value="Required">Required</option>
@@ -629,7 +627,7 @@ const HRDocumentCollection = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-brand-black mb-1">
               Employment Type
             </label>
             <select
@@ -637,7 +635,7 @@ const HRDocumentCollection = () => {
               onChange={(e) =>
                 setFilters({ ...filters, employmentType: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
             >
               <option value="">All Types</option>
               <option value="Full-Time">Full-Time</option>
@@ -648,7 +646,7 @@ const HRDocumentCollection = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-brand-black mb-1">
               Form Status
             </label>
             <select
@@ -656,7 +654,7 @@ const HRDocumentCollection = () => {
               onChange={(e) =>
                 setFilters({ ...filters, formStatus: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
             >
               <option value="">All Status</option>
               <option value="approved">Approved</option>
@@ -669,40 +667,40 @@ const HRDocumentCollection = () => {
       </div>
 
       {/* Documents Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-brand-pearl rounded-lg shadow-md border border-brand-black/10 overflow-hidden">
         <div className="overflow-x-auto" style={{ maxWidth: "100%" }}>
           <table
             className="min-w-full border border-gray-300"
             style={{ tableLayout: "fixed" }}
           >
-            <thead className="bg-blue-800">
+            <thead className="bg-brand-pearl">
               <tr>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400 sticky left-0 z-10 bg-blue-800"
+                  className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider border border-brand-black/10 sticky left-0 z-10 bg-brand-pearl"
                   style={{ width: "200px", minWidth: "200px" }}
                 >
                   Employee Details
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider border border-brand-black/10"
                   style={{ width: "120px", minWidth: "120px" }}
                 >
                   Join Date
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider border border-brand-black/10"
                   style={{ width: "140px", minWidth: "140px" }}
                 >
                   Form Status
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider border border-brand-black/10"
                   style={{ width: "120px", minWidth: "120px" }}
                 >
                   Type
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider border border-brand-black/10"
                   style={{ width: "120px", minWidth: "120px" }}
                 >
                   Submitted
@@ -717,7 +715,7 @@ const HRDocumentCollection = () => {
                 {templates.map((template) => (
                   <th
                     key={template.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                    className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider border border-brand-black/10"
                     style={{ width: "180px", minWidth: "180px" }}
                   >
                     {template.document_name}
@@ -822,15 +820,15 @@ const HRDocumentCollection = () => {
 
                   {/* Document Summary */}
                   <td
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
+                    className="px-6 py-4 whitespace-nowrap text-sm text-brand-black border border-brand-black/10"
                     style={{ width: "150px", minWidth: "150px" }}
                   >
                     <div className="text-xs">
-                      <div className="font-medium text-gray-900">
+                      <div className="font-medium text-brand-black">
                         {group.submitted_documents}/{group.total_documents}{" "}
                         Submitted
                       </div>
-                      <div className="text-gray-500">
+                      <div className="text-brand-black/70">
                         {group.pending_documents} Pending
                       </div>
                     </div>
@@ -850,17 +848,17 @@ const HRDocumentCollection = () => {
                     return (
                       <td
                         key={template.id}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border border-gray-300"
+                        className="px-6 py-4 whitespace-nowrap text-sm text-brand-black border border-brand-black/10"
                         style={{ width: "180px", minWidth: "180px" }}
                       >
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
                             status === "Received" || status === "Uploaded"
-                              ? "bg-green-100 text-green-800"
+                              ? "bg-brand-green text-brand-black"
                               : status === "Pending" ||
                                 status === "Not Uploaded"
-                              ? "bg-orange-100 text-orange-800"
-                              : "bg-gray-100 text-gray-800"
+                              ? "bg-brand-yellow text-brand-black"
+                              : "bg-brand-pearl text-brand-black"
                           }`}
                         >
                           {status === "Received" || status === "Uploaded"
@@ -877,12 +875,12 @@ const HRDocumentCollection = () => {
         </div>
 
         {currentEmployees.length === 0 && (
-          <div className="text-center py-12">
-            <FaFileAlt className="mx-auto text-gray-400 text-4xl mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="text-center py-12 bg-brand-pearl">
+            <FaFileAlt className="mx-auto text-brand-green text-4xl mb-4" />
+            <h3 className="text-lg font-medium text-brand-black mb-2">
               No Employee Data Found
             </h3>
-            <p className="text-gray-500">
+            <p className="text-brand-black/60">
               {filters.searchTerm ||
               Object.values(filters).some((f) => f !== "" && f !== "all")
                 ? "Try adjusting your search or filter criteria."
@@ -893,26 +891,26 @@ const HRDocumentCollection = () => {
 
         {/* Pagination */}
         {filteredGroupedEmployees.length > 0 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="bg-brand-pearl px-4 py-3 flex items-center justify-between border-t border-brand-black/10 sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center px-4 py-2 border border-brand-black/20 text-sm font-medium rounded-md text-brand-black bg-brand-pearl hover:bg-ui-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-brand-black/20 text-sm font-medium rounded-md text-brand-black bg-brand-pearl hover:bg-ui-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
               </button>
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-brand-black/80">
                   Showing{" "}
                   <span className="font-medium">
                     {indexOfFirstEmployee + 1}
@@ -939,7 +937,7 @@ const HRDocumentCollection = () => {
                   <button
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-brand-black/20 bg-brand-pearl text-sm font-medium text-brand-black hover:bg-ui-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="sr-only">Previous</span>
                     <svg
@@ -965,8 +963,8 @@ const HRDocumentCollection = () => {
                         onClick={() => setCurrentPage(pageNumber)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                           pageNumber === currentPage
-                            ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                            : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                            ? "z-10 bg-brand-green border-brand-green text-brand-black"
+                            : "bg-brand-pearl border-brand-black/20 text-brand-black hover:bg-ui-secondary"
                         }`}
                       >
                         {pageNumber}
@@ -977,7 +975,7 @@ const HRDocumentCollection = () => {
                   <button
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-brand-black/20 bg-brand-pearl text-sm font-medium text-brand-black hover:bg-ui-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="sr-only">Next</span>
                     <svg
@@ -1003,23 +1001,23 @@ const HRDocumentCollection = () => {
 
       {/* Add Document Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Add Document Collection Record
               </h3>
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Employee
                     </label>
                     <select
                       name="employee_id"
                       value={formData.employee_id}
                       onChange={(e) => handleEmployeeSelect(e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 block w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                       required
                     >
                       <option value="">Select Employee</option>
@@ -1032,7 +1030,7 @@ const HRDocumentCollection = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Document Name
                     </label>
                     <input
@@ -1040,20 +1038,20 @@ const HRDocumentCollection = () => {
                       name="document_name"
                       value={formData.document_name}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 block w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Document Type
                     </label>
                     <select
                       name="document_type"
                       value={formData.document_type}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 block w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                       required
                     >
                       <option value="Required">Required</option>
@@ -1062,7 +1060,7 @@ const HRDocumentCollection = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Due Date
                     </label>
                     <input
@@ -1070,13 +1068,13 @@ const HRDocumentCollection = () => {
                       name="due_date"
                       value={formData.due_date}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 block w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Notes
                     </label>
                     <textarea
@@ -1084,7 +1082,7 @@ const HRDocumentCollection = () => {
                       value={formData.notes}
                       onChange={handleInputChange}
                       rows="3"
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 block w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                     />
                   </div>
                 </div>
@@ -1093,13 +1091,13 @@ const HRDocumentCollection = () => {
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary shadow"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-lg hover:bg-hover-primary shadow"
                   >
                     Add Document
                   </button>
@@ -1112,23 +1110,23 @@ const HRDocumentCollection = () => {
 
       {/* Bulk Add Documents Modal */}
       {showBulkAddModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border border-brand-black/10 w-[600px] shadow-lg rounded-lg bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Bulk Add Document Collection Records
               </h3>
               <form onSubmit={handleBulkSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Employee
                     </label>
                     <select
                       name="employee_id"
                       value={bulkFormData.employee_id}
                       onChange={(e) => handleBulkEmployeeSelect(e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 block w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                       required
                     >
                       <option value="">Select Employee</option>
@@ -1141,7 +1139,7 @@ const HRDocumentCollection = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-brand-black">
                       Due Date
                     </label>
                     <input
@@ -1149,17 +1147,17 @@ const HRDocumentCollection = () => {
                       name="due_date"
                       value={bulkFormData.due_date}
                       onChange={handleBulkInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 block w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-brand-black mb-2">
                       Select Documents ({bulkFormData.selectedDocuments.length}{" "}
                       selected)
                     </label>
-                    <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-md p-3">
+                    <div className="max-h-60 overflow-y-auto border border-brand-black/20 rounded-md p-3 bg-brand-pearl">
                       {templates.map((template) => (
                         <div
                           key={template.id}
@@ -1172,14 +1170,14 @@ const HRDocumentCollection = () => {
                               (doc) => doc.id === template.id
                             )}
                             onChange={() => handleDocumentToggle(template.id)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            className="h-4 w-4 text-brand-green focus:ring-brand-green border-brand-black/30 rounded"
                           />
                           <label
                             htmlFor={`template-${template.id}`}
                             className="flex-1"
                           >
                             <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-medium text-brand-black">
                                 {template.document_name}
                               </span>
                               <span
@@ -1188,7 +1186,7 @@ const HRDocumentCollection = () => {
                                 {template.document_type}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-brand-black/60">
                               {template.description}
                             </p>
                           </label>
@@ -1202,13 +1200,13 @@ const HRDocumentCollection = () => {
                   <button
                     type="button"
                     onClick={() => setShowBulkAddModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary shadow"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-lg hover:bg-hover-primary shadow"
                   >
                     Add Documents
                   </button>
@@ -1221,30 +1219,30 @@ const HRDocumentCollection = () => {
 
       {/* Status Update Modal */}
       {showStatusModal && selectedDocument && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Update Document Status
               </h3>
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-brand-black/70 mb-2">
                   <strong>Employee:</strong> {selectedDocument.employee_name}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-brand-black/70 mb-2">
                   <strong>Document:</strong> {selectedDocument.document_name}
                 </p>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-brand-black/70 mb-4">
                   <strong>Current Status:</strong> {selectedDocument.status}
                 </p>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-brand-black mb-2">
                   New Status
                 </label>
                 <select
                   id="newStatus"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-brand-pearl border border-brand-black/20 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
                   defaultValue={selectedDocument.status}
                 >
                   <option value="Pending">Pending</option>
@@ -1260,7 +1258,7 @@ const HRDocumentCollection = () => {
                     setShowStatusModal(false);
                     setSelectedDocument(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary shadow"
                 >
                   Cancel
                 </button>
@@ -1270,7 +1268,7 @@ const HRDocumentCollection = () => {
                       document.getElementById("newStatus").value;
                     handleStatusUpdate(selectedDocument.id, newStatus);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-lg hover:bg-hover-primary shadow"
                 >
                   Update Status
                 </button>

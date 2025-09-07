@@ -160,24 +160,26 @@ const HRLeaveApproval = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Approved":
-        return "text-green-600 bg-green-100";
+        return "text-brand-black bg-brand-green/20 border border-brand-green/40";
       case "Rejected":
-        return "text-red-600 bg-red-100";
+        return "text-brand-black bg-brand-red/20 border border-brand-red/40";
       case "Manager Approved":
-        return "text-blue-600 bg-blue-100";
+        return "text-brand-black bg-brand-blue/20 border border-brand-blue/40";
       case "Pending Manager Approval":
-        return "text-yellow-600 bg-yellow-100";
+        return "text-brand-black bg-brand-yellow/20 border border-brand-yellow/40";
       default:
-        return "text-gray-600 bg-gray-100";
+        return "text-brand-black/70 bg-brand-pearl border border-brand-black/20";
     }
   };
 
   if (user?.role !== "hr") {
     return (
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <h2 className="text-xl font-bold text-red-800 mb-2">Access Denied</h2>
-          <p className="text-red-600">
+      <div className="max-w-6xl mx-auto p-6 bg-brand-pearl min-h-screen">
+        <div className="bg-brand-red/10 border border-brand-red/20 rounded-lg p-6 text-center">
+          <h2 className="text-xl font-bold text-brand-red mb-2">
+            Access Denied
+          </h2>
+          <p className="text-brand-red/80">
             This page is only accessible to HR personnel.
           </p>
         </div>
@@ -186,9 +188,9 @@ const HRLeaveApproval = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+    <div className="max-w-6xl mx-auto p-6 bg-brand-pearl min-h-screen">
+      <div className="bg-brand-pearl rounded-lg shadow-lg p-6 border border-brand-black/10">
+        <h2 className="text-2xl font-bold text-brand-black mb-6">
           HR Leave Management
         </h2>
 
@@ -196,8 +198,8 @@ const HRLeaveApproval = () => {
           <div
             className={`p-4 rounded-lg mb-6 ${
               message.includes("successfully")
-                ? "bg-green-100 text-green-700 border border-green-200"
-                : "bg-red-100 text-red-700 border border-red-200"
+                ? "bg-brand-green/20 text-brand-black border border-brand-green/40"
+                : "bg-brand-red/20 text-brand-black border border-brand-red/40"
             }`}
           >
             {message}
@@ -205,31 +207,31 @@ const HRLeaveApproval = () => {
         )}
 
         {loading && (
-          <div className="flex items-center justify-center p-4 mb-6 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-            <span className="text-blue-800">Processing request...</span>
+          <div className="flex items-center justify-center p-4 mb-6 bg-brand-green/10 border border-brand-green/20 rounded-lg">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-green mr-2"></div>
+            <span className="text-brand-black">Processing request...</span>
           </div>
         )}
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-200 mb-6">
+        <div className="border-b border-brand-black/10 mb-6">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab("pending")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === "pending"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-brand-green text-brand-green"
+                  : "border-transparent text-brand-black/70 hover:text-brand-black hover:border-brand-black/30"
               }`}
             >
               Pending Approval ({pendingRequests.length})
             </button>
             <button
               onClick={() => setActiveTab("all")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === "all"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-brand-green text-brand-green"
+                  : "border-transparent text-brand-black/70 hover:text-brand-black hover:border-brand-black/30"
               }`}
             >
               All Requests ({allRequests.length})
@@ -242,57 +244,60 @@ const HRLeaveApproval = () => {
           <div>
             {pendingRequests.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">✅</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <div className="text-brand-green text-6xl mb-4">✅</div>
+                <h3 className="text-lg font-medium text-brand-black mb-2">
                   No Pending Requests
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-brand-black/70">
                   All manager-approved requests have been processed.
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-brand-black/10 bg-brand-pearl rounded-xl overflow-hidden border border-brand-black/10">
+                  <thead className="bg-brand-pearl border-b border-brand-black/10">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Series
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Employee
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         From
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         To
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Days
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Manager
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
                     {pendingRequests.map((request) => (
-                      <tr key={request.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr
+                        key={request.id}
+                        className="hover:bg-brand-pearl/80 transition-colors duration-200"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-black">
                           {request.series}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-brand-black">
                               {request.employee_name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-brand-black/70">
                               {request.employee_email}
                             </div>
                           </div>
@@ -311,28 +316,28 @@ const HRLeaveApproval = () => {
                                 }}
                               ></div>
                             )}
-                            <span className="text-sm text-gray-900">
+                            <span className="text-sm text-brand-black">
                               {request.leave_type}
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           {formatDate(request.from_date)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           {request.to_date ? formatDate(request.to_date) : "-"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           {request.total_leave_days}
                           {request.half_day && " (½ day)"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-brand-black">
                               {request.manager_approval_status ||
                                 "No managers assigned"}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-brand-black/70">
                               {request.managerApprovedAt &&
                                 formatDate(request.managerApprovedAt)}
                             </div>
@@ -345,7 +350,7 @@ const HRLeaveApproval = () => {
                                 handleDirectApproval(request, "approve")
                               }
                               disabled={loading}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-brand-black bg-brand-green hover:bg-hover-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green disabled:opacity-50 transition-colors duration-200"
                             >
                               ✅ Approve
                             </button>
@@ -354,13 +359,13 @@ const HRLeaveApproval = () => {
                                 handleDirectApproval(request, "reject")
                               }
                               disabled={loading}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-brand-black bg-brand-red hover:bg-hover-danger focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red disabled:opacity-50 transition-colors duration-200"
                             >
                               ❌ Reject
                             </button>
                             <button
                               onClick={() => handleApproval(request)}
-                              className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              className="inline-flex items-center px-3 py-1 border border-brand-black/20 text-xs font-medium rounded-md text-brand-black bg-brand-pearl hover:bg-brand-pearl/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green transition-colors duration-200"
                             >
                               📝 Review
                             </button>
@@ -380,60 +385,63 @@ const HRLeaveApproval = () => {
           <div>
             {allRequests.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">📋</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <div className="text-brand-green text-6xl mb-4">📋</div>
+                <h3 className="text-lg font-medium text-brand-black mb-2">
                   No Leave Requests
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-brand-black/70">
                   No leave requests have been submitted yet.
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-brand-black/10 bg-brand-pearl rounded-xl overflow-hidden border border-brand-black/10">
+                  <thead className="bg-brand-pearl border-b border-brand-black/10">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Series
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Employee
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         From
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         To
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Days
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Submitted
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
                     {allRequests.map((request) => (
-                      <tr key={request.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr
+                        key={request.id}
+                        className="hover:bg-brand-pearl/80 transition-colors duration-200"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-black">
                           {request.series}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-brand-black">
                               {request.employee_name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-brand-black/70">
                               {request.employee_email}
                             </div>
                           </div>
@@ -452,18 +460,18 @@ const HRLeaveApproval = () => {
                                 }}
                               ></div>
                             )}
-                            <span className="text-sm text-gray-900">
+                            <span className="text-sm text-brand-black">
                               {request.leave_type}
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           {formatDate(request.from_date)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           {request.to_date ? formatDate(request.to_date) : "-"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
                           {request.total_leave_days}
                           {request.half_day && " (½ day)"}
                         </td>
@@ -476,7 +484,7 @@ const HRLeaveApproval = () => {
                             {request.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black/70">
                           {formatDate(request.created_at)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -485,7 +493,7 @@ const HRLeaveApproval = () => {
                               setSelectedRequest(request);
                               setShowModal(true);
                             }}
-                            className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                            className="inline-flex items-center px-3 py-1 border border-brand-black/20 text-xs font-medium rounded-md text-brand-black bg-brand-pearl hover:bg-brand-pearl/80 transition-colors duration-200"
                           >
                             View
                           </button>
@@ -502,18 +510,18 @@ const HRLeaveApproval = () => {
 
       {/* Approval Modal */}
       {showModal && selectedRequest && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/20 w-96 shadow-lg rounded-md bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Final Review - Leave Request
               </h3>
 
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-brand-black/70 mb-2">
                   <strong>Employee:</strong> {selectedRequest.employee_name}
                 </p>
-                <div className="text-sm text-gray-600 mb-2">
+                <div className="text-sm text-brand-black/70 mb-2">
                   <div className="flex items-center">
                     {leaveTypes.find(
                       (t) => t.type_name === selectedRequest.leave_type
@@ -532,29 +540,29 @@ const HRLeaveApproval = () => {
                     </span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-brand-black/70 mb-2">
                   <strong>From:</strong> {formatDate(selectedRequest.from_date)}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-brand-black/70 mb-2">
                   <strong>To:</strong>{" "}
                   {selectedRequest.to_date
                     ? formatDate(selectedRequest.to_date)
                     : "-"}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-brand-black/70 mb-2">
                   <strong>Total Days:</strong>{" "}
                   {selectedRequest.total_leave_days}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-brand-black/70 mb-2">
                   <strong>Reason:</strong> {selectedRequest.reason}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-brand-black/70 mb-2">
                   <strong>Manager Approval Status:</strong>{" "}
                   {selectedRequest.manager_approval_status ||
                     "No managers assigned"}
                 </p>
                 {selectedRequest.managerApprovalNotes && (
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-brand-black/70 mb-2">
                     <strong>Manager Notes:</strong>{" "}
                     {selectedRequest.managerApprovalNotes}
                   </p>
@@ -562,7 +570,7 @@ const HRLeaveApproval = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-brand-black mb-2">
                   Final Action *
                 </label>
                 <select
@@ -573,7 +581,7 @@ const HRLeaveApproval = () => {
                       action: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-brand-black/20 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                 >
                   <option value="">Select Action</option>
                   <option value="approve">Approve</option>
@@ -582,7 +590,7 @@ const HRLeaveApproval = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-brand-black mb-2">
                   Notes (Optional)
                 </label>
                 <textarea
@@ -595,21 +603,21 @@ const HRLeaveApproval = () => {
                   }
                   rows={3}
                   placeholder="Add any notes or comments..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-brand-black/20 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black placeholder-brand-black/50"
                 />
               </div>
 
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={closeModal}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-pearl border border-brand-black/20 rounded-md hover:bg-brand-pearl/80 focus:outline-none focus:ring-2 focus:ring-brand-black/20 transition-colors duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleApprovalSubmit}
                   disabled={loading || !approvalData.action}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-md hover:bg-hover-primary focus:outline-none focus:ring-2 focus:ring-brand-green disabled:opacity-50 transition-colors duration-200"
                 >
                   {loading ? "Processing..." : "Submit Decision"}
                 </button>

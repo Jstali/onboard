@@ -83,7 +83,7 @@ const EmployeeCRUD = () => {
         name: `${formData.first_name} ${formData.last_name}`,
         email: formData.email, // Personal email
         type: formData.type,
-        doj: new Date().toISOString().split('T')[0], // Send only date part (YYYY-MM-DD)
+        doj: new Date().toISOString().split("T")[0], // Send only date part (YYYY-MM-DD)
       };
 
       console.log("Sending employee data:", employeeData);
@@ -195,29 +195,29 @@ const EmployeeCRUD = () => {
   const getStatusBadge = (status) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     return status === "active"
-      ? `${baseClasses} bg-green-100 text-green-800`
-      : `${baseClasses} bg-red-100 text-red-800`;
+      ? `${baseClasses} bg-brand-green text-brand-black`
+      : `${baseClasses} bg-brand-red text-brand-black`;
   };
 
   const getRoleBadge = (role) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     switch (role) {
       case "Full-Time":
-        return `${baseClasses} bg-green-100 text-green-800`;
+        return `${baseClasses} bg-brand-green text-brand-black`;
       case "Contract":
-        return `${baseClasses} bg-blue-100 text-blue-800`;
+        return `${baseClasses} bg-brand-blue text-brand-black`;
       case "Intern":
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+        return `${baseClasses} bg-brand-yellow text-brand-black`;
       case "Product Developer":
-        return `${baseClasses} bg-indigo-100 text-indigo-800`;
+        return `${baseClasses} bg-brand-violet text-brand-black`;
       case "hr":
-        return `${baseClasses} bg-purple-100 text-purple-800`;
+        return `${baseClasses} bg-brand-violet text-brand-black`;
       case "manager":
-        return `${baseClasses} bg-blue-100 text-blue-800`;
+        return `${baseClasses} bg-brand-blue text-brand-black`;
       case "Not Assigned":
-        return `${baseClasses} bg-gray-100 text-gray-600`;
+        return `${baseClasses} bg-brand-pearl text-brand-black/60`;
       default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+        return `${baseClasses} bg-brand-pearl text-brand-black`;
     }
   };
 
@@ -230,37 +230,37 @@ const EmployeeCRUD = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-brand-pearl p-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">
+      <div className="flex justify-between items-center mb-6 px-4">
+        <h2 className="text-xl font-semibold text-brand-black">
           Employee Management
         </h2>
         <button
           onClick={() => setShowAddModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          className="bg-brand-green text-brand-black px-4 py-2 rounded-lg hover:bg-hover-primary transition-colors flex items-center gap-2 shadow-md"
         >
-          <FaPlus className="mr-2" />
+          <FaPlus />
           Add Employee
         </button>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-sm border p-4">
-        <div className="flex items-center space-x-4">
+      <div className="bg-brand-pearl rounded-lg shadow-md border border-brand-black/10 p-4 mb-6">
+        <div className="flex items-center gap-4">
           <div className="flex-1 relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-green" />
             <input
               type="text"
               placeholder="Search employees..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green placeholder:text-brand-black/50 text-sm text-brand-black"
             />
           </div>
           <button
             onClick={fetchEmployees}
-            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+            className="text-brand-black bg-brand-green px-4 py-2 rounded-lg hover:bg-hover-primary transition-colors text-sm font-medium shadow-md"
           >
             Refresh
           </button>
@@ -268,14 +268,14 @@ const EmployeeCRUD = () => {
       </div>
 
       {/* Employee Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-brand-pearl shadow-md rounded-lg overflow-hidden border border-brand-black/10">
         {filteredEmployees.length === 0 ? (
-          <div className="text-center py-12">
-            <FaUser className="mx-auto text-gray-400 text-4xl mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="text-center py-12 bg-brand-pearl">
+            <FaUser className="mx-auto text-brand-green text-4xl mb-4" />
+            <h3 className="text-lg font-medium text-brand-black mb-2">
               No Employees Found
             </h3>
-            <p className="text-gray-500">
+            <p className="text-brand-black/60">
               {searchTerm
                 ? "No employees match your search."
                 : "No employees added yet."}
@@ -283,45 +283,48 @@ const EmployeeCRUD = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full">
+              <thead className="bg-brand-pearl border-b border-brand-black/10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Employee ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Managers
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Created Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredEmployees.map((employee) => (
-                  <tr key={employee.id} className="hover:bg-gray-50">
+              <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
+                {filteredEmployees.map((employee, index) => (
+                  <tr
+                    key={employee.id}
+                    className={`${index % 2 === 0 ? 'bg-brand-pearl' : 'bg-ui-secondary'} border-b border-brand-black/5 hover:bg-ui-secondary transition-colors`}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <FaUser className="text-gray-500" />
+                        <div className="w-8 h-8 bg-brand-green/20 rounded-full flex items-center justify-center">
+                          <FaUser className="text-brand-green" />
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                        <div className="ml-3">
+                          <div className="text-sm font-medium text-brand-black">
                             {employee.first_name && employee.last_name
                               ? `${employee.first_name} ${employee.last_name}`
                               : employee.first_name ||
@@ -333,20 +336,20 @@ const EmployeeCRUD = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-brand-black">
                         {employee.assigned_employee_id ? (
-                          <span className="font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          <span className="font-mono">
                             {employee.assigned_employee_id}
                           </span>
                         ) : (
-                          <span className="text-gray-500 italic">
+                          <span className="text-brand-black/50 italic">
                             Not Assigned
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-brand-black">
                         {employee.email}
                       </div>
                     </td>
@@ -358,24 +361,24 @@ const EmployeeCRUD = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-brand-black">
                         {employee.assigned_manager && (
                           <div className="mb-1">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-blue/20 text-brand-blue">
                               {employee.assigned_manager}
                             </span>
                           </div>
                         )}
                         {employee.manager2_name && (
                           <div className="mb-1">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-green/20 text-brand-green">
                               {employee.manager2_name}
                             </span>
                           </div>
                         )}
                         {employee.manager3_name && (
                           <div>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-violet/20 text-brand-violet">
                               {employee.manager3_name}
                             </span>
                           </div>
@@ -383,7 +386,7 @@ const EmployeeCRUD = () => {
                         {!employee.assigned_manager &&
                           !employee.manager2_name &&
                           !employee.manager3_name && (
-                            <span className="text-gray-500 italic">
+                            <span className="text-brand-black/50 italic">
                               No Managers
                             </span>
                           )}
@@ -399,28 +402,28 @@ const EmployeeCRUD = () => {
                         ? format(new Date(employee.created_at), "MMM dd, yyyy")
                         : "-"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex space-x-3">
                         <button
                           onClick={() => handleView(employee)}
-                          className="text-blue-600 hover:text-blue-900 p-1"
+                          className="text-brand-green hover:text-state-hover p-1 transition-colors rounded"
                           title="View Details"
                         >
-                          <FaEye />
+                          <FaEye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleEdit(employee)}
-                          className="text-green-600 hover:text-green-900 p-1"
+                          className="text-brand-blue hover:text-brand-violet p-1 transition-colors rounded"
                           title="Edit"
                         >
-                          <FaEdit />
+                          <FaEdit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(employee)}
-                          className="text-red-600 hover:text-red-900 p-1"
+                          className="text-brand-red hover:text-hover-danger p-1 transition-colors rounded"
                           title="Delete"
                         >
-                          <FaTrash />
+                          <FaTrash className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -434,10 +437,10 @@ const EmployeeCRUD = () => {
 
       {/* Add Employee Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Add New Employee
               </h3>
 
@@ -451,13 +454,13 @@ const EmployeeCRUD = () => {
                     name="first_name"
                     value={formData.first_name}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Last Name *
                   </label>
                   <input
@@ -465,13 +468,13 @@ const EmployeeCRUD = () => {
                     name="last_name"
                     value={formData.last_name}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Email *
                   </label>
                   <input
@@ -479,20 +482,20 @@ const EmployeeCRUD = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Employment Type *
                   </label>
                   <select
                     name="type"
                     value={formData.type}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                     required
                   >
                     <option value="Full-Time">Full-Time</option>
@@ -509,14 +512,14 @@ const EmployeeCRUD = () => {
                     setShowAddModal(false);
                     resetForm();
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary transition-colors shadow-md"
                 >
                   <FaTimes className="mr-2 inline" />
                   Cancel
                 </button>
                 <button
                   onClick={handleCreate}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-lg hover:bg-hover-primary transition-colors shadow-md"
                 >
                   <FaSave className="mr-2 inline" />
                   Create Employee
@@ -529,16 +532,16 @@ const EmployeeCRUD = () => {
 
       {/* Edit Employee Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Edit Employee
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     First Name
                   </label>
                   <input
@@ -546,12 +549,12 @@ const EmployeeCRUD = () => {
                     name="first_name"
                     value={formData.first_name}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Last Name
                   </label>
                   <input
@@ -559,12 +562,12 @@ const EmployeeCRUD = () => {
                     name="last_name"
                     value={formData.last_name}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Email
                   </label>
                   <input
@@ -572,19 +575,19 @@ const EmployeeCRUD = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-brand-black mb-1">
                     Employment Type
                   </label>
                   <select
                     name="type"
                     value={formData.type}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500"
+                    className="w-full border border-brand-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
                   >
                     <option value="Full-Time">Full-Time</option>
                     <option value="Contract">Contract</option>
@@ -601,14 +604,14 @@ const EmployeeCRUD = () => {
                     setSelectedEmployee(null);
                     resetForm();
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-violet rounded-lg hover:bg-hover-secondary transition-colors shadow-md"
                 >
                   <FaTimes className="mr-2 inline" />
                   Cancel
                 </button>
                 <button
                   onClick={handleUpdate}
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-lg hover:bg-hover-primary transition-colors shadow-md"
                 >
                   <FaSave className="mr-2 inline" />
                   Update Employee
@@ -621,17 +624,17 @@ const EmployeeCRUD = () => {
 
       {/* View Employee Modal */}
       {showViewModal && selectedEmployee && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-brand-black/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-6 border border-brand-black/10 w-96 shadow-lg rounded-lg bg-brand-pearl">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-brand-black mb-4">
                 Employee Details
               </h3>
 
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">Name:</span>
-                  <span className="text-gray-900">
+                  <span className="font-medium text-brand-black">Name:</span>
+                  <span className="text-brand-black">
                     {selectedEmployee.first_name && selectedEmployee.last_name
                       ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}`
                       : selectedEmployee.first_name ||
@@ -641,27 +644,29 @@ const EmployeeCRUD = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">
+                  <span className="font-medium text-brand-black">
                     Employee ID:
                   </span>
-                  <span className="text-gray-900">
+                  <span className="text-brand-black">
                     {selectedEmployee.assigned_employee_id ? (
-                      <span className="font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                      <span className="font-mono bg-brand-green/20 text-brand-green px-2 py-1 rounded text-sm">
                         {selectedEmployee.assigned_employee_id}
                       </span>
                     ) : (
-                      <span className="text-gray-500 italic">Not Assigned</span>
+                      <span className="text-brand-black/50 italic">
+                        Not Assigned
+                      </span>
                     )}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">Email:</span>
-                  <span className="text-gray-900">
+                  <span className="font-medium text-brand-black">Email:</span>
+                  <span className="text-brand-black">
                     {selectedEmployee.email}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">Role:</span>
+                  <span className="font-medium text-brand-black">Role:</span>
                   <span
                     className={getRoleBadge(selectedEmployee.assigned_job_role)}
                   >
@@ -669,14 +674,14 @@ const EmployeeCRUD = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">Status:</span>
+                  <span className="font-medium text-brand-black">Status:</span>
                   <span className={getStatusBadge(selectedEmployee.status)}>
                     {selectedEmployee.status}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">Created:</span>
-                  <span className="text-gray-900">
+                  <span className="font-medium text-brand-black">Created:</span>
+                  <span className="text-brand-black">
                     {selectedEmployee.created_at
                       ? format(
                           new Date(selectedEmployee.created_at),
@@ -687,18 +692,18 @@ const EmployeeCRUD = () => {
                 </div>
                 {selectedEmployee.form_name && (
                   <div className="flex justify-between">
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-brand-black">
                       Form Name:
                     </span>
-                    <span className="text-gray-900">
+                    <span className="text-brand-black">
                       {selectedEmployee.form_name}
                     </span>
                   </div>
                 )}
                 {selectedEmployee.phone && (
                   <div className="flex justify-between">
-                    <span className="font-medium text-gray-700">Phone:</span>
-                    <span className="text-gray-900">
+                    <span className="font-medium text-brand-black">Phone:</span>
+                    <span className="text-brand-black">
                       {selectedEmployee.phone}
                     </span>
                   </div>
@@ -711,7 +716,7 @@ const EmployeeCRUD = () => {
                     setShowViewModal(false);
                     setSelectedEmployee(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  className="px-4 py-2 text-sm font-medium text-brand-black bg-brand-green rounded-lg hover:bg-hover-primary shadow-md transition-colors"
                 >
                   <FaTimes className="mr-2 inline" />
                   Close

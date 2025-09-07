@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd onboard
+
 echo "========================================"
 echo "   ONBOARD HR System - Starting Application"
 echo "========================================"
@@ -46,10 +48,10 @@ echo "========================================"
 
 # Start backend server in background
 echo "Starting backend server on port 5001..."
-cd backend
+cd onboard/backend
 npm start &
 BACKEND_PID=$!
-cd ..
+cd ../..
 
 # Wait a moment for backend to start
 sleep 3
@@ -61,10 +63,10 @@ echo "========================================"
 
 # Start frontend server in background
 echo "Starting frontend server on port 3001..."
-cd frontend
+cd onboard/frontend
 npm start &
 FRONTEND_PID=$!
-cd ..
+cd ../..
 
 # Wait a moment for frontend to start
 sleep 5

@@ -3,7 +3,6 @@ import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 
 const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
-  const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,15 +26,15 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "approved":
-        return "bg-green-100 text-green-800";
+        return "bg-brand-green/20 text-brand-black border border-brand-green/40";
       case "rejected":
-        return "bg-red-100 text-red-800";
+        return "bg-brand-red/20 text-brand-black border border-brand-red/40";
       case "Pending Manager Approval":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-brand-yellow/20 text-brand-black border border-brand-yellow/40";
       case "manager Approved":
-        return "bg-blue-100 text-blue-800";
+        return "bg-brand-blue/20 text-brand-black border border-brand-blue/40";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-brand-pearl text-brand-black/70 border border-brand-black/20";
     }
   };
 
@@ -71,16 +70,16 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-64 bg-brand-pearl">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      <div className="max-w-4xl mx-auto p-6 bg-brand-pearl">
+        <div className="bg-brand-red/20 border border-brand-red/40 text-brand-black px-4 py-3 rounded">
           {error}
         </div>
       </div>
@@ -88,56 +87,23 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      {/* Back Button */}
-      <div className="mb-4">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (onNavigateToSubmit) {
-              onNavigateToSubmit();
-            } else {
-              window.history.back();
-            }
-          }}
-          onMouseDown={(e) => e.preventDefault()}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer select-none"
-          type="button"
-        >
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
-          Back
-        </button>
-      </div>
-
+    <div className="max-w-6xl mx-auto p-6 bg-brand-pearl min-h-screen">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+        <h2 className="text-2xl font-bold text-brand-black mb-2">
           My Expense Requests
         </h2>
-        <p className="text-gray-600">
+        <p className="text-brand-black/70">
           View the status of all your submitted expense requests.
         </p>
       </div>
 
       {expenses.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">📄</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="text-brand-green text-6xl mb-4">📄</div>
+          <h3 className="text-lg font-medium text-brand-black mb-2">
             No expense requests found
           </h3>
-          <p className="text-gray-500">
+          <p className="text-brand-black/70">
             You haven't submitted any expense requests yet.
           </p>
         </div>
@@ -146,14 +112,14 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
           {expenses.map((expense) => (
             <div
               key={expense.id}
-              className="bg-white rounded-lg shadow-lg border border-gray-200 p-6"
+              className="bg-brand-pearl rounded-lg shadow-lg border border-brand-black/10 p-6"
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  <h3 className="text-lg font-semibold text-brand-black mb-1">
                     {expense.expense_category} - {expense.expense_type}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-brand-black/70">
                     Series: {expense.series}
                   </p>
                 </div>
@@ -167,37 +133,37 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="text-sm font-medium text-gray-600 mb-1">
+                <div className="bg-brand-pearl/50 rounded-lg p-3 border border-brand-black/10">
+                  <div className="text-sm font-medium text-brand-black/70 mb-1">
                     Amount
                   </div>
-                  <div className="text-lg font-semibold text-gray-900">
+                  <div className="text-lg font-semibold text-brand-black">
                     {formatCurrency(expense.amount, expense.currency)}
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="text-sm font-medium text-gray-600 mb-1">
+                <div className="bg-brand-pearl/50 rounded-lg p-3 border border-brand-black/10">
+                  <div className="text-sm font-medium text-brand-black/70 mb-1">
                     Expense Date
                   </div>
-                  <div className="text-sm text-gray-900">
+                  <div className="text-sm text-brand-black">
                     {formatDate(expense.expense_date)}
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="text-sm font-medium text-gray-600 mb-1">
+                <div className="bg-brand-pearl/50 rounded-lg p-3 border border-brand-black/10">
+                  <div className="text-sm font-medium text-brand-black/70 mb-1">
                     Submitted
                   </div>
-                  <div className="text-sm text-gray-900">
+                  <div className="text-sm text-brand-black">
                     {formatDate(expense.created_at)}
                   </div>
                 </div>
               </div>
 
               <div className="mb-4">
-                <div className="text-sm font-medium text-gray-600 mb-2">
+                <div className="text-sm font-medium text-brand-black/70 mb-2">
                   Description
                 </div>
-                <div className="text-sm text-gray-900 bg-gray-50 rounded-lg p-3">
+                <div className="text-sm text-brand-black bg-brand-pearl/50 rounded-lg p-3 border border-brand-black/10">
                   {expense.description}
                 </div>
               </div>
@@ -207,36 +173,36 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
                 expense.project_reference ||
                 expense.payment_mode) && (
                 <div className="mb-4">
-                  <div className="text-sm font-medium text-gray-600 mb-2">
+                  <div className="text-sm font-medium text-brand-black/70 mb-2">
                     Additional Details
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {expense.all_managers && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="text-sm font-medium text-gray-600 mb-1">
+                      <div className="bg-brand-pearl/50 rounded-lg p-3 border border-brand-black/10">
+                        <div className="text-sm font-medium text-brand-black/70 mb-1">
                           Managers
                         </div>
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-brand-black">
                           {expense.all_managers}
                         </div>
                       </div>
                     )}
                     {expense.project_reference && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="text-sm font-medium text-gray-600 mb-1">
+                      <div className="bg-brand-pearl/50 rounded-lg p-3 border border-brand-black/10">
+                        <div className="text-sm font-medium text-brand-black/70 mb-1">
                           Project
                         </div>
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-brand-black">
                           {expense.project_reference}
                         </div>
                       </div>
                     )}
                     {expense.payment_mode && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="text-sm font-medium text-gray-600 mb-1">
+                      <div className="bg-brand-pearl/50 rounded-lg p-3 border border-brand-black/10">
+                        <div className="text-sm font-medium text-brand-black/70 mb-1">
                           Payment Mode
                         </div>
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-brand-black">
                           {expense.payment_mode}
                         </div>
                       </div>
@@ -249,25 +215,25 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
               {(expense.manager1_status ||
                 expense.manager2_status ||
                 expense.manager3_status) && (
-                <div className="border-t pt-4 mb-4">
-                  <div className="text-sm font-medium text-gray-600 mb-3">
+                <div className="border-t border-brand-black/10 pt-4 mb-4">
+                  <div className="text-sm font-medium text-brand-black/70 mb-3">
                     Manager Approval Status
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {expense.manager1_name && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-brand-pearl/50 text-brand-black border border-brand-black/20">
                         {expense.manager1_name}:{" "}
                         {expense.manager1_status || "Pending"}
                       </span>
                     )}
                     {expense.manager2_name && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-brand-pearl/50 text-brand-black border border-brand-black/20">
                         {expense.manager2_name}:{" "}
                         {expense.manager2_status || "Pending"}
                       </span>
                     )}
                     {expense.manager3_name && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-brand-pearl/50 text-brand-black border border-brand-black/20">
                         {expense.manager3_name}:{" "}
                         {expense.manager3_status || "Pending"}
                       </span>
@@ -278,16 +244,16 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
 
               {/* HR Approval */}
               {expense.hr_name && (
-                <div className="border-t pt-4 mb-4">
-                  <div className="text-sm font-medium text-gray-600 mb-2">
+                <div className="border-t border-brand-black/10 pt-4 mb-4">
+                  <div className="text-sm font-medium text-brand-black/70 mb-2">
                     HR Approval
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-sm text-gray-900 mb-1">
+                  <div className="bg-brand-pearl/50 rounded-lg p-3 border border-brand-black/10">
+                    <div className="text-sm text-brand-black mb-1">
                       {expense.hr_name} - {formatDate(expense.hrApprovedAt)}
                     </div>
                     {expense.hrApprovalNotes && (
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-brand-black/70">
                         <span className="font-medium">Notes:</span>{" "}
                         {expense.hrApprovalNotes}
                       </div>
@@ -298,15 +264,15 @@ const EmployeeExpenseHistory = ({ onNavigateToSubmit }) => {
 
               {/* Attachment */}
               {expense.attachment_url && (
-                <div className="border-t pt-4">
-                  <div className="text-sm font-medium text-gray-600 mb-2">
+                <div className="border-t border-brand-black/10 pt-4">
+                  <div className="text-sm font-medium text-brand-black/70 mb-2">
                     Attachment
                   </div>
                   <a
                     href={`http://localhost:5001${expense.attachment_url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 bg-blue-50 rounded-lg px-3 py-2"
+                    className="inline-flex items-center text-sm text-brand-green hover:text-brand-green/80 bg-brand-green/10 rounded-lg px-3 py-2 transition-colors duration-200"
                   >
                     <svg
                       className="w-4 h-4 mr-2"
