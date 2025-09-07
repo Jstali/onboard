@@ -43,11 +43,11 @@ h6 { @apply text-base; }
 }
 
 .input-field {
-  @apply w-full px-4 py-3 border border-brand-black/20 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green transition-all duration-200 ease-in-out bg-brand-pearl;
+  @apply w-full px-4 py-3 border border-deep-space-black/20 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green transition-all duration-200 ease-in-out bg-gray-100;
 }
 
 .input-field:focus {
-  @apply ring-brand-green border-brand-green;
+  @apply ring-lumen-green border-lumen-green;
 }
 
 /* Cards and Containers */

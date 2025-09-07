@@ -59,24 +59,24 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-iridescent-pearl py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg">
+        <div className="bg-white shadow rounded-lg border border-deep-space-black/10">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-deep-space-black/10">
             <div className="flex items-center">
               <button
                 onClick={() => navigate(-1)}
-                className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 mr-4"
+                className="flex items-center text-deep-space-black/70 hover:text-deep-space-black hover:bg-neon-violet/20 transition-all duration-200 mr-4 px-2 py-1 rounded-lg"
               >
                 <FaArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="brand-heading-md text-deep-space-black">
                   Profile Settings
                 </h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="brand-body-sm text-deep-space-black/70">
                   Manage your account settings and password
                 </p>
               </div>
@@ -86,40 +86,40 @@ const Profile = () => {
           <div className="px-6 py-6">
             {/* User Information */}
             <div className="mb-8">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">
+              <h2 className="brand-subheading-md text-deep-space-black mb-4">
                 User Information
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="brand-body-sm text-deep-space-black/70 block">
                     Email
                   </label>
-                  <p className="mt-1 text-sm text-gray-900">{user?.email}</p>
+                  <p className="mt-1 brand-body-md text-deep-space-black">{user?.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="brand-body-sm text-deep-space-black/70 block">
                     Role
                   </label>
-                  <p className="mt-1 text-sm text-gray-900 capitalize">
+                  <p className="mt-1 brand-body-md text-deep-space-black capitalize">
                     {user?.role}
                   </p>
                 </div>
                 {user?.first_name && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="brand-body-sm text-deep-space-black/70 block">
                       First Name
                     </label>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <p className="mt-1 brand-body-md text-deep-space-black">
                       {user.first_name}
                     </p>
                   </div>
                 )}
                 {user?.last_name && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="brand-body-sm text-deep-space-black/70 block">
                       Last Name
                     </label>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <p className="mt-1 brand-body-md text-deep-space-black">
                       {user.last_name}
                     </p>
                   </div>
@@ -128,14 +128,14 @@ const Profile = () => {
             </div>
 
             {/* Password Change Section */}
-            <div className="border-t border-gray-200 pt-6">
+            <div className="border-t border-deep-space-black/10 pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="brand-subheading-md text-deep-space-black">
                   Change Password
                 </h2>
                 <button
                   onClick={() => setIsChangingPassword(!isChangingPassword)}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex items-center px-3 py-2 border border-deep-space-black/20 shadow-sm brand-body-sm rounded-md text-deep-space-black bg-white hover:bg-neon-violet hover:text-white focus:outline-none focus:ring-2 focus:ring-lumen-green transition-all duration-200"
                 >
                   {isChangingPassword ? "Cancel" : "Change Password"}
                 </button>
@@ -146,7 +146,7 @@ const Profile = () => {
                   <div>
                     <label
                       htmlFor="currentPassword"
-                      className="block text-sm font-medium text-gray-700"
+                      className="brand-body-sm text-deep-space-black block"
                     >
                       Current Password
                     </label>
@@ -157,14 +157,14 @@ const Profile = () => {
                       value={passwordData.currentPassword}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="mt-1 block w-full px-3 py-2 border border-deep-space-black/20 rounded-md shadow-sm focus:outline-none focus:ring-lumen-green focus:border-lumen-green bg-gray-100 text-deep-space-black brand-body-md"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="newPassword"
-                      className="block text-sm font-medium text-gray-700"
+                      className="brand-body-sm text-deep-space-black block"
                     >
                       New Password
                     </label>
@@ -176,14 +176,14 @@ const Profile = () => {
                       onChange={handleInputChange}
                       required
                       minLength={6}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="mt-1 block w-full px-3 py-2 border border-deep-space-black/20 rounded-md shadow-sm focus:outline-none focus:ring-lumen-green focus:border-lumen-green bg-gray-100 text-deep-space-black brand-body-md"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="confirmPassword"
-                      className="block text-sm font-medium text-gray-700"
+                      className="brand-body-sm text-deep-space-black block"
                     >
                       Confirm New Password
                     </label>
@@ -195,7 +195,7 @@ const Profile = () => {
                       onChange={handleInputChange}
                       required
                       minLength={6}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="mt-1 block w-full px-3 py-2 border border-deep-space-black/20 rounded-md shadow-sm focus:outline-none focus:ring-lumen-green focus:border-lumen-green bg-gray-100 text-deep-space-black brand-body-md"
                     />
                   </div>
 
@@ -203,14 +203,14 @@ const Profile = () => {
                     <button
                       type="button"
                       onClick={() => setIsChangingPassword(false)}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="inline-flex items-center px-4 py-2 border border-deep-space-black/20 shadow-sm brand-body-sm rounded-md text-deep-space-black bg-white hover:bg-neon-violet hover:text-white focus:outline-none focus:ring-2 focus:ring-lumen-green transition-all duration-200"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center px-4 py-2 border border-transparent brand-body-sm rounded-md shadow-sm text-deep-space-black bg-lumen-green hover:bg-neon-violet hover:text-white focus:outline-none focus:ring-2 focus:ring-lumen-green disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >
                       {loading ? "Changing..." : "Change Password"}
                     </button>
@@ -220,19 +220,19 @@ const Profile = () => {
             </div>
 
             {/* Logout Section */}
-            <div className="border-t border-gray-200 pt-6">
+            <div className="border-t border-deep-space-black/10 pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-medium text-gray-900">
+                  <h2 className="brand-subheading-md text-deep-space-black">
                     Sign Out
                   </h2>
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 brand-body-sm text-deep-space-black/70">
                     Sign out of your account
                   </p>
                 </div>
                 <button
                   onClick={logout}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent brand-body-sm rounded-md shadow-sm text-white bg-brand-coral hover:bg-deep-space-black focus:outline-none focus:ring-2 focus:ring-brand-coral transition-all duration-200"
                 >
                   Sign Out
                 </button>

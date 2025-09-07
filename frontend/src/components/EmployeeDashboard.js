@@ -231,9 +231,9 @@ const EmployeeDashboard = () => {
                 </div>
               </div>
               <div className="border-l border-gray-300 h-8"></div>
-              <h1 className="text-2xl font-bold text-deep-space-black">
-                Employee Portal
-              </h1>
+                <h1 className="brand-heading-md text-deep-space-black">
+                  Employee Portal
+                </h1>
             </div>
             <div className="flex items-center space-x-3">
               <Link

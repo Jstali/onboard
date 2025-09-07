@@ -20,14 +20,14 @@ const EmployeeExpensePortal = ({ onBackToDashboard }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-brand-pearl">
+    <div className="min-h-screen bg-iridescent-pearl">
       {/* Header with Tab Navigation */}
-      <div className="bg-brand-pearl shadow-sm border-b border-brand-black/10 sticky top-0 z-10">
+      <div className="bg-white shadow-sm border-b border-deep-space-black/10 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             {/* Left side - Title */}
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-brand-black">
+              <h1 className="text-2xl font-bold text-deep-space-black">
                 Expense Management
               </h1>
             </div>
@@ -35,7 +35,7 @@ const EmployeeExpensePortal = ({ onBackToDashboard }) => {
             {/* Right side - Back button */}
             <button
               onClick={onBackToDashboard}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-brand-black bg-brand-pearl border border-brand-black/20 hover:bg-brand-pearl/80 rounded-lg transition-all duration-200 transform hover:scale-105"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-deep-space-black bg-white border border-deep-space-black/20 hover:bg-neon-violet/20 rounded-lg transition-all duration-200 transform hover:scale-105"
             >
               <FaArrowLeft className="mr-2" />
               Back to Dashboard
@@ -43,7 +43,7 @@ const EmployeeExpensePortal = ({ onBackToDashboard }) => {
           </div>
 
           {/* Tab Navigation */}
-          <div className="border-b border-brand-black/10">
+          <div className="border-b border-deep-space-black/10">
             <nav className="-mb-px flex space-x-8">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -55,16 +55,16 @@ const EmployeeExpensePortal = ({ onBackToDashboard }) => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`group relative whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ease-in-out ${
                       isActive
-                        ? "border-brand-green text-brand-green"
-                        : "border-transparent text-brand-black/70 hover:text-brand-black hover:border-brand-black/30"
+                        ? "border-lumen-green text-lumen-green"
+                        : "border-transparent text-deep-space-black/70 hover:text-deep-space-black hover:border-deep-space-black/30"
                     }`}
                   >
                     <div className="flex items-center space-x-2">
                       <Icon
                         className={`transition-all duration-300 ${
                           isActive
-                            ? "text-brand-green transform scale-110"
-                            : "text-brand-black/60 group-hover:text-brand-black"
+                            ? "text-lumen-green transform scale-110"
+                            : "text-deep-space-black/60 group-hover:text-deep-space-black"
                         }`}
                       />
                       <span>{tab.label}</span>
@@ -72,7 +72,7 @@ const EmployeeExpensePortal = ({ onBackToDashboard }) => {
 
                     {/* Active indicator with animation */}
                     {isActive && (
-                      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-brand-green to-brand-green/80 rounded-t-full animate-pulse"></div>
+                      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-lumen-green to-lumen-green/80 rounded-t-full animate-pulse"></div>
                     )}
                   </button>
                 );

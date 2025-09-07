@@ -49,13 +49,15 @@ const HRAttendanceDetails = () => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     switch (status) {
       case "Present":
-        return `${baseClasses} bg-brand-green text-brand-black`;
+        return `${baseClasses} bg-lumen-green text-deep-space-black`;
       case "Work From Home":
-        return `${baseClasses} bg-brand-blue text-brand-black`;
+        return `${baseClasses} bg-neon-violet text-white`;
       case "Leave":
-        return `${baseClasses} bg-brand-red text-brand-black`;
+        return `${baseClasses} bg-neon-violet text-white`;
+      case "Absent":
+        return `${baseClasses} bg-brand-coral text-white`;
       default:
-        return `${baseClasses} bg-brand-pearl text-brand-black`;
+        return `${baseClasses} bg-white text-deep-space-black border border-deep-space-black/20`;
     }
   };
 

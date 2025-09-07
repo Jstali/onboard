@@ -14,16 +14,80 @@
   
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-      sans-serif;
+    font-family: 'Corporative Sans Rounded', 'Calibri', 'Arial', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.6;
     min-height: 100vh;
     @apply bg-brand-pearl text-brand-black;
   }
+}
 
+@layer components {
+  /* Brand Typography Utility Classes */
+  .brand-heading-xl {
+    @apply font-heading font-heading text-heading-xl italic text-deep-space-black;
+  }
+  
+  .brand-heading-lg {
+    @apply font-heading font-heading text-heading-lg italic text-deep-space-black;
+  }
+  
+  .brand-heading-md {
+    @apply font-heading font-heading text-heading-md italic text-deep-space-black;
+  }
+  
+  .brand-heading-sm {
+    @apply font-heading font-heading text-heading-sm italic text-deep-space-black;
+  }
+  
+  .brand-subheading-lg {
+    @apply font-subheading font-subheading text-subheading-lg uppercase tracking-wider text-deep-space-black;
+  }
+  
+  .brand-subheading-md {
+    @apply font-subheading font-subheading text-subheading-md uppercase tracking-wider text-deep-space-black;
+  }
+  
+  .brand-subheading-sm {
+    @apply font-subheading font-subheading text-subheading-sm uppercase tracking-wider text-deep-space-black;
+  }
+  
+  .brand-body-lg {
+    @apply font-body font-body text-body-lg text-deep-space-black/80;
+  }
+  
+  .brand-body-md {
+    @apply font-body font-body text-body-md text-deep-space-black/80;
+  }
+  
+  .brand-body-sm {
+    @apply font-body font-body text-body-sm text-deep-space-black/70;
+  }
+  
+  .brand-highlight {
+    @apply font-highlight font-highlight text-highlight italic text-neon-violet;
+  }
+  
+  /* Fallback classes for better compatibility */
+  .brand-heading-safe {
+    @apply font-heading-safe font-heading text-heading-lg italic text-deep-space-black;
+  }
+  
+  .brand-subheading-safe {
+    @apply font-subheading-safe font-subheading text-subheading-md uppercase tracking-wider text-deep-space-black;
+  }
+  
+  .brand-body-safe {
+    @apply font-body-safe font-body text-body-md text-deep-space-black/80;
+  }
+  
+  .brand-highlight-safe {
+    @apply font-highlight-safe font-highlight text-highlight italic text-neon-violet;
+  }
+}
+
+@layer base {
   code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
       monospace;
@@ -86,8 +150,7 @@
   
   /* Input Field Styles */
   .input-field {
-    @apply w-full px-4 py-3 bg-overlay-dark border-2 border-brand-violet rounded-2xl focus:outline-none focus:border-brand-green text-brand-pearl placeholder-brand-pearl/50 transition-all duration-300;
-    backdrop-filter: blur(8px);
+    @apply w-full px-4 py-3 bg-gray-100 border-2 border-deep-space-black/20 rounded-2xl focus:outline-none focus:border-lumen-green text-deep-space-black placeholder-deep-space-black/50 transition-all duration-300;
   }
 
   .input-field:focus {

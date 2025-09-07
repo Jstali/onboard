@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   FaTrash,
   FaDownload,
@@ -14,7 +15,8 @@ import {
 import DocumentStatus from "./DocumentStatus";
 
 const EmployeeFormManagement = ({ onRefresh }) => {
-  const { user } = useAuth();
+  const { user, refreshUserData } = useAuth();
+  const navigate = useNavigate();
   const [employeeForms, setEmployeeForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -254,16 +256,36 @@ const EmployeeFormManagement = ({ onRefresh }) => {
       )
     ) {
       try {
-        await axios.put(
+        const response = await axios.put(
           `http://localhost:5001/api/hr/employee-forms/${form.id}/approve`,
           {
             action: "approve",
           }
         );
 
-        toast.success(
-          "Employee form approved! Employee moved to onboarded list."
-        );
+        console.log("🔍 Approval response:", response.data);
+
+        // Check if the current user's role was updated
+        if (response.data.roleUpdated && response.data.newRole === 'manager') {
+          console.log("🔍 Current user's role was updated to manager");
+          
+          // Refresh user data to get the updated role
+          const updatedUser = await refreshUserData();
+          
+          if (updatedUser && updatedUser.role === 'manager') {
+            toast.success("Employee form approved! Your role has been updated to Manager. Redirecting to Manager Dashboard...");
+            
+            // Small delay to show the success message
+            setTimeout(() => {
+              navigate('/manager/dashboard');
+            }, 2000);
+          } else {
+            toast.success("Employee form approved! Employee moved to onboarded list.");
+          }
+        } else {
+          toast.success("Employee form approved! Employee moved to onboarded list.");
+        }
+
         fetchEmployeeForms();
         if (onRefresh) onRefresh();
       } catch (error) {
@@ -1005,7 +1027,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     type="text"
                     name="name"
                     defaultValue={editingEmployee.form_data?.name || ""}
-                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                    className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     required
                   />
                 </div>
@@ -1018,7 +1040,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     type="email"
                     name="email"
                     defaultValue={editingEmployee.form_data?.email || ""}
-                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                    className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     required
                   />
                 </div>
@@ -1030,7 +1052,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   <input
                     type="text"
                     value={editingEmployee.form_data?.employee_id || ""}
-                    className="w-full px-3 py-2 border border-brand-black/20 rounded-lg bg-ui-secondary text-brand-black/60 cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-deep-space-black/20 rounded-lg bg-gray-200 text-deep-space-black/60 cursor-not-allowed"
                     readOnly
                     disabled
                   />
@@ -1056,7 +1078,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                         .replace(/[^0-9]/g, "")
                         .slice(0, 10);
                     }}
-                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                    className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                   />
                 </div>
 
@@ -1068,7 +1090,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     type="date"
                     name="doj"
                     defaultValue={editingEmployee.form_data?.doj || ""}
-                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                    className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     required
                   />
                 </div>
@@ -1080,7 +1102,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                   <select
                     name="employment_type"
                     defaultValue={editingEmployee.employee_type || ""}
-                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                    className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     required
                   >
                     <option value="Full-Time">Full-Time</option>
@@ -1105,7 +1127,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       name="manager1"
                       value={selectedManager1}
                       onChange={(e) => setSelectedManager1(e.target.value)}
-                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                      className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                       required
                     >
                       <option value="">Select Manager 1</option>
@@ -1130,7 +1152,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       name="manager2"
                       value={selectedManager2}
                       onChange={(e) => setSelectedManager2(e.target.value)}
-                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                      className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     >
                       <option value="">Select Manager 2</option>
                       {getFilteredManagers(selectedManager2, "Manager 2").map(
@@ -1154,7 +1176,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       name="manager3"
                       value={selectedManager3}
                       onChange={(e) => setSelectedManager3(e.target.value)}
-                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                      className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     >
                       <option value="">Select Manager 3</option>
                       {getFilteredManagers(selectedManager3, "Manager 3").map(
@@ -1197,7 +1219,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     name="education"
                     defaultValue={editingEmployee.form_data?.education || ""}
                     rows={2}
-                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                    className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                   />
                 </div>
 
@@ -1209,7 +1231,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                     name="experience"
                     defaultValue={editingEmployee.form_data?.experience || ""}
                     rows={2}
-                    className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                    className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                   />
                 </div>
               </div>
@@ -1229,7 +1251,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       defaultValue={
                         editingEmployee.form_data?.emergencyContact?.name || ""
                       }
-                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                      className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     />
                   </div>
 
@@ -1252,7 +1274,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                           .replace(/[^0-9]/g, "")
                           .slice(0, 10);
                       }}
-                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                      className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     />
                   </div>
 
@@ -1267,7 +1289,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                         editingEmployee.form_data?.emergencyContact
                           ?.relationship || ""
                       }
-                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                      className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     />
                   </div>
                 </div>
@@ -1288,7 +1310,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                       defaultValue={
                         editingEmployee.form_data?.emergencyContact2?.name || ""
                       }
-                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                      className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     />
                   </div>
 
@@ -1312,7 +1334,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                           .replace(/[^0-9]/g, "")
                           .slice(0, 10);
                       }}
-                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                      className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     />
                   </div>
 
@@ -1327,7 +1349,7 @@ const EmployeeFormManagement = ({ onRefresh }) => {
                         editingEmployee.form_data?.emergencyContact2
                           ?.relationship || ""
                       }
-                      className="w-full px-3 py-2 bg-brand-pearl border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green text-brand-black"
+                      className="w-full px-3 py-2 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black"
                     />
                   </div>
                 </div>

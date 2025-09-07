@@ -152,6 +152,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUserData = async () => {
+    try {
+      if (token) {
+        const response = await axios.get("/auth/me");
+        setUser(response.data.user);
+        console.log("🔄 User data refreshed:", response.data.user);
+        return response.data.user;
+      }
+    } catch (error) {
+      console.error("Failed to refresh user data:", error);
+      return null;
+    }
+  };
+
   const value = {
     user,
     token,
@@ -160,6 +174,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     resetPassword,
     changePassword,
+    refreshUserData,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

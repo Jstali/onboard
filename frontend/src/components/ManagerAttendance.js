@@ -325,31 +325,31 @@ const ManagerAttendance = () => {
               <button
                 onClick={() => markAttendance("present")}
                 disabled={markingAttendance}
-                className="flex flex-col items-center p-6 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 disabled:opacity-50"
+                className="flex flex-col items-center p-6 bg-lumen-green/10 border border-lumen-green rounded-lg hover:bg-lumen-green/20 transition-colors duration-200 disabled:opacity-50"
               >
-                <FaCheckCircle className="w-8 h-8 text-green-600 mb-2" />
-                <h4 className="font-medium text-green-800">Present</h4>
-                <p className="text-sm text-green-600">Mark as present</p>
+                <FaCheckCircle className="w-8 h-8 text-lumen-green mb-2" />
+                <h4 className="font-medium text-deep-space-black">Present</h4>
+                <p className="text-sm text-deep-space-black/70">Mark as present</p>
               </button>
 
               <button
                 onClick={() => markAttendance("Work From Home")}
                 disabled={markingAttendance}
-                className="flex flex-col items-center p-6 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-200 disabled:opacity-50"
+                className="flex flex-col items-center p-6 bg-neon-violet/10 border border-neon-violet rounded-lg hover:bg-neon-violet/20 transition-colors duration-200 disabled:opacity-50"
               >
-                <FaHome className="w-8 h-8 text-blue-600 mb-2" />
-                <h4 className="font-medium text-blue-800">Work From Home</h4>
-                <p className="text-sm text-blue-600">Mark as WFH</p>
+                <FaHome className="w-8 h-8 text-neon-violet mb-2" />
+                <h4 className="font-medium text-deep-space-black">Work From Home</h4>
+                <p className="text-sm text-deep-space-black/70">Mark as WFH</p>
               </button>
 
               <button
                 onClick={() => markAttendance("Half Day")}
                 disabled={markingAttendance}
-                className="flex flex-col items-center p-6 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors duration-200 disabled:opacity-50"
+                className="flex flex-col items-center p-6 bg-neon-violet/10 border border-neon-violet rounded-lg hover:bg-neon-violet/20 transition-colors duration-200 disabled:opacity-50"
               >
-                <FaClock className="w-8 h-8 text-orange-600 mb-2" />
-                <h4 className="font-medium text-orange-800">Half Day</h4>
-                <p className="text-sm text-orange-600">Mark as half day</p>
+                <FaClock className="w-8 h-8 text-neon-violet mb-2" />
+                <h4 className="font-medium text-deep-space-black">Half Day</h4>
+                <p className="text-sm text-deep-space-black/70">Mark as half day</p>
               </button>
             </div>
           </div>

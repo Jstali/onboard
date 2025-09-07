@@ -89,18 +89,35 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="stars"></div> {/* Starry background */}
+    <div 
+      className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      style={{
+        backgroundImage: `url('/ChatGPT Image Sep 4, 2025, 07_15_39 PM.png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Dark overlay for better text readability */}
+      <div className="absolute inset-0 bg-deep-space-black/40"></div>
+      
+      {/* Logo in top left */}
+      <div className="absolute top-8 left-8">
+        <img 
+          src="/nxzen-logo.png" 
+          alt="nxzen logo" 
+          className="h-12 w-auto"
+        />
+      </div>
+
       <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="login-card animate-scale-in">
+        <div className="bg-deep-space-black/95 rounded-2xl p-8 shadow-2xl border border-deep-space-black/20 backdrop-blur-sm">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center shadow-2xl gradient-tertiary">
-              <span className="text-3xl font-bold text-blue-950">N</span>
-            </div>
-            <h1 className="heading-1 text-blue-100">Welcome Back</h1>
-            <p className="body-small text-blue-300">
-              Sign in to your Future Foresight portal
-            </p>
+            <img
+              src="/nxzen-logo-white.png"
+              alt="nxzen logo"
+              className="h-12 w-auto"
+            />
           </div>
 
           {!showPasswordChange ? (
@@ -108,15 +125,14 @@ const Login = () => {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-5">
                 <div className="form-group">
-                  <label className="form-label text-blue-100">
+                  <label className="brand-body-sm text-white mb-2 block">
                     Email Address
                   </label>
                   <div className="relative">
-                    <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300" />
                     <input
                       type="email"
                       required
-                      className="input-field pl-12 bg-purple-400/20 border-purple-300 focus:border-blue-400 focus:ring-blue-400 text-blue-100 placeholder-blue-300"
+                      className="w-full px-4 py-3 bg-gray-100 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder-deep-space-black/70"
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -125,20 +141,19 @@ const Login = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label text-blue-100">Password</label>
+                  <label className="brand-body-sm text-white mb-2 block">Password</label>
                   <div className="relative">
-                    <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-300" />
                     <input
                       type={showPassword ? "text" : "password"}
                       required
-                      className="input-field pl-12 pr-12 bg-purple-400/20 border-purple-300 focus:border-blue-400 focus:ring-blue-400 text-blue-100 placeholder-blue-300"
+                      className="w-full px-4 py-3 bg-brand-yellow/90 border border-brand-yellow/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder-deep-space-black/70 pr-12"
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
                     <button
                       type="button"
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-300 hover:text-blue-400 transition-colors"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-deep-space-black/70 hover:text-deep-space-black transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -150,43 +165,30 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full text-lg shadow-2xl"
-                style={{
-                  background: loading ? "rgba(141, 233, 113, 0.7)" : "",
-                }}
+                className="w-full py-3 px-6 bg-lumen-green text-deep-space-black brand-subheading-sm rounded-lg hover:bg-neon-violet hover:text-white transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-3 border-blue-950 mr-3"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-deep-space-black mr-3"></div>
                     Signing in...
                   </div>
                 ) : (
-                  "Sign In"
+                  "SIGN IN"
                 )}
               </button>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  className="text-blue-400 hover:text-blue-500 font-medium text-sm transition-colors bg-transparent border-none cursor-pointer"
-                  onClick={() => console.log("Forgot password clicked")}
-                >
-                  Forgot password?
-                </button>
-              </div>
             </form>
           ) : (
             // Password Change Form
             <>
               <div className="text-center mb-8">
-                <div className="w-16 h-16 mx-auto mb-4 bg-green-400 rounded-2xl flex items-center justify-center shadow-lg">
-                  <FaCheck className="text-2xl text-blue-950" />
+                <div className="w-16 h-16 mx-auto mb-4 bg-lumen-green rounded-2xl flex items-center justify-center shadow-lg">
+                  <FaCheck className="text-2xl text-deep-space-black" />
                 </div>
-                <h2 className="heading-3 text-blue-100">Set New Password</h2>
-                <p className="body-small text-blue-300 mb-2">
+                <h2 className="text-2xl font-semibold text-white mb-2">Set New Password</h2>
+                <p className="text-white/70 mb-2">
                   Welcome! Please set your new password to continue
                 </p>
-                <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 font-medium text-sm">
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-lumen-green/20 text-lumen-green font-medium text-sm">
                   {resetData?.email}
                 </div>
               </div>
@@ -194,15 +196,14 @@ const Login = () => {
               <form className="space-y-6" onSubmit={handlePasswordChange}>
                 <div className="space-y-4">
                   <div className="form-group">
-                    <label className="form-label text-blue-100">
+                    <label className="block text-sm font-medium text-white mb-2">
                       New Password
                     </label>
                     <div className="relative">
-                      <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pearl-300" />
                       <input
                         type={showNewPassword ? "text" : "password"}
                         required
-                        className="input-field pl-10 pr-10 bg-violet-400/20 border-violet-300 text-pearl-100 placeholder-pearl-300"
+                        className="w-full px-4 py-3 bg-brand-yellow/90 border border-brand-yellow/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder-deep-space-black/70 pr-12"
                         placeholder="Enter new password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
@@ -210,7 +211,7 @@ const Login = () => {
                       />
                       <button
                         type="button"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-pearl-300 hover:text-lumen-400 transition-colors"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-deep-space-black/70 hover:text-deep-space-black transition-colors"
                         onClick={() => setShowNewPassword(!showNewPassword)}
                       >
                         {showNewPassword ? <FaEyeSlash /> : <FaEye />}
@@ -219,15 +220,14 @@ const Login = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label text-pearl-100">
+                    <label className="block text-sm font-medium text-white mb-2">
                       Confirm Password
                     </label>
                     <div className="relative">
-                      <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pearl-300" />
                       <input
                         type={showConfirmPassword ? "text" : "password"}
                         required
-                        className="input-field pl-10 pr-10 bg-violet-400/20 border-violet-300 text-pearl-100 placeholder-pearl-300"
+                        className="w-full px-4 py-3 bg-brand-yellow/90 border border-brand-yellow/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder-deep-space-black/70 pr-12"
                         placeholder="Confirm new password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -235,7 +235,7 @@ const Login = () => {
                       />
                       <button
                         type="button"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-pearl-300 hover:text-lumen-400 transition-colors"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-deep-space-black/70 hover:text-deep-space-black transition-colors"
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
@@ -250,18 +250,18 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={goBackToLogin}
-                    className="btn-secondary flex-1"
+                    className="flex-1 py-3 px-6 bg-white border border-deep-space-black/20 text-deep-space-black font-semibold rounded-lg hover:bg-iridescent-pearl transition-all duration-200"
                   >
                     Back to Login
                   </button>
                   <button
                     type="submit"
                     disabled={passwordChangeLoading}
-                    className="btn-primary flex-1"
+                    className="flex-1 py-3 px-6 bg-lumen-green text-deep-space-black font-semibold rounded-lg hover:bg-neon-violet hover:text-white transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {passwordChangeLoading ? (
                       <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-space-950 mr-2"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-deep-space-black mr-2"></div>
                         Setting...
                       </div>
                     ) : (
