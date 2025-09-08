@@ -1971,20 +1971,26 @@ router.put(
         });
       }
 
-      // Get manager details from managers table and get the user ID
-      // Only allow managers that are actually defined in employee_master table
-      const managerResult = await pool.query(
-        `SELECT m.manager_id, m.manager_name, u.id as user_id 
+      // Get manager details - check both managers table and employee_master table
+      // First check if manager exists in managers table
+      let managerResult = await pool.query(
+        `SELECT m.manager_id, m.manager_name, u.id as user_id, m.email
          FROM managers m 
          LEFT JOIN users u ON m.email = u.email 
-         WHERE m.manager_name ILIKE $1 AND m.status = 'active'
-         AND EXISTS (
-           SELECT 1 FROM employee_master em 
-           WHERE em.manager_id = m.manager_id 
-           AND em.manager_name = m.manager_name
-         )`,
+         WHERE m.manager_name ILIKE $1 AND m.status = 'active'`,
         [manager]
       );
+
+      // If not found in managers table, check employee_master table
+      if (managerResult.rows.length === 0) {
+        managerResult = await pool.query(
+          `SELECT em.employee_id as manager_id, em.employee_name as manager_name, u.id as user_id, u.email
+           FROM employee_master em
+           LEFT JOIN users u ON em.company_email = u.email 
+           WHERE em.employee_name ILIKE $1 AND em.status = 'active'`,
+          [manager]
+        );
+      }
 
       if (managerResult.rows.length === 0) {
         return res.status(400).json({

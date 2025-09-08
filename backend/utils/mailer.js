@@ -22,7 +22,7 @@ async function sendOnboardingEmail(
     from: process.env.EMAIL_USER,
     to,
     subject: "Welcome to nxzen - Employee Onboarding Login Details",
-    text: `Welcome to nxzen! \n\nLogin here: http://localhost:3000/login \nEmail: ${to} \nTemporary Password: ${tempPassword}\nEmployment Type: ${employmentType}\n\nPlease reset your password after logging in.`,
+    text: `Welcome to nxzen! \n\nLogin here: https://149.102.158.71:2025/login \nEmail: ${to} \nTemporary Password: ${tempPassword}\nEmployment Type: ${employmentType}\n\nPlease reset your password after logging in.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <!-- Logo Section -->
@@ -45,7 +45,7 @@ async function sendOnboardingEmail(
         <div style="background-color: #f8f9fa; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #00ff88;">
           <h3 style="color: #333; margin-top: 0; margin-bottom: 20px;">🔐 Login Details</h3>
           <div style="background-color: white; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef;">
-            <p style="margin: 10px 0;"><strong>🌐 Login URL:</strong> <a href="http://localhost:3000/login" style="color: #007bff; text-decoration: none;">http://localhost:3000/login</a></p>
+            <p style="margin: 10px 0;"><strong>🌐 Login URL:</strong> <a href="https://149.102.158.71:2025/login" style="color: #007bff; text-decoration: none;">https://149.102.158.71:2025/login</a></p>
             <p style="margin: 10px 0;"><strong>📧 Email:</strong> <span style="color: #495057;">${to}</span></p>
             <p style="margin: 10px 0;"><strong>🔑 Temporary Password:</strong> <span style="background-color: #f8f9fa; padding: 8px 12px; border-radius: 6px; font-family: 'Courier New', monospace; border: 1px solid #dee2e6; color: #495057;">${tempPassword}</span></p>
             <p style="margin: 10px 0;"><strong>💼 Employment Type:</strong> <span style="background-color: #e7f3ff; padding: 8px 12px; border-radius: 6px; border: 1px solid #b3d9ff; color: #0066cc; font-weight: 500;">${employmentType}</span></p>
@@ -85,14 +85,14 @@ async function sendPasswordResetEmail(to, resetToken) {
     from: process.env.EMAIL_USER,
     to,
     subject: "Password Reset Request",
-    text: `You requested a password reset. Click the link below to reset your password:\n\nhttp://localhost:3000/reset-password?token=${resetToken}\n\nIf you didn't request this, please ignore this email.`,
+    text: `You requested a password reset. Click the link below to reset your password:\n\nhttps://149.102.158.71:2025/reset-password?token=${resetToken}\n\nIf you didn't request this, please ignore this email.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Password Reset Request</h2>
         <p>You requested a password reset for your account.</p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="http://localhost:3000/reset-password?token=${resetToken}" 
+          <a href="https://149.102.158.71:2025/reset-password?token=${resetToken}" 
              style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Reset Password
           </a>
@@ -100,7 +100,7 @@ async function sendPasswordResetEmail(to, resetToken) {
         
         <p>If the button doesn't work, copy and paste this link into your browser:</p>
         <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
-          http://localhost:3000/reset-password?token=${resetToken}
+          https://149.102.158.71:2025/reset-password?token=${resetToken}
         </p>
         
         <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 20px 0;">

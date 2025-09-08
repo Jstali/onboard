@@ -268,38 +268,41 @@ const EmployeeDashboard = () => {
         {activeTab === "dashboard" && (
           <>
             {/* Onboarding Form or Success Message */}
-            <div className="bg-white rounded-2xl p-6 mb-8 border border-gray-200">
-              {onboardingStatus?.hasForm ? (
-                onboardingStatus.status ===
-                "approved" ? null : onboardingStatus.status === "submitted" ? (
-                  <div className="bg-white rounded-lg p-6 mb-8 border-l-4 border-brand-yellow">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-brand-yellow/20 rounded-xl flex items-center justify-center mr-4">
-                        <div className="w-6 h-6 bg-brand-yellow rounded-full animate-pulse"></div>
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-deep-space-black">
-                          Form Submitted Successfully!
-                        </h3>
-                        <p className="text-deep-space-black/70 mt-1">
-                          Your onboarding form has been submitted and is
-                          awaiting HR approval. You will be notified once it's
-                          approved.
-                        </p>
+            {onboardingStatus?.hasForm ? (
+              onboardingStatus.status === "approved" ? null : (
+                <div className="bg-white rounded-2xl p-6 mb-8 border border-gray-200">
+                  {onboardingStatus.status === "submitted" ? (
+                    <div className="bg-white rounded-lg p-6 mb-8 border-l-4 border-brand-yellow">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-brand-yellow/20 rounded-xl flex items-center justify-center mr-4">
+                          <div className="w-6 h-6 bg-brand-yellow rounded-full animate-pulse"></div>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-deep-space-black">
+                            Form Submitted Successfully!
+                          </h3>
+                          <p className="text-deep-space-black/70 mt-1">
+                            Your onboarding form has been submitted and is
+                            awaiting HR approval. You will be notified once it's
+                            approved.
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="animate-fade-in">
-                    <OnboardingForm onSuccess={checkOnboardingStatus} />
-                  </div>
-                )
-              ) : (
+                  ) : (
+                    <div className="animate-fade-in">
+                      <OnboardingForm onSuccess={checkOnboardingStatus} />
+                    </div>
+                  )}
+                </div>
+              )
+            ) : (
+              <div className="bg-white rounded-2xl p-6 mb-8 border border-gray-200">
                 <div className="animate-fade-in">
                   <OnboardingForm onSuccess={checkOnboardingStatus} />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Quick Actions - Only show when onboarding is approved */}
             {onboardingStatus?.status === "approved" ? (
