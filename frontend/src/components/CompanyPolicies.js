@@ -24,7 +24,7 @@ const CompanyPolicies = () => {
     {
       id: 1,
       title: "Company Overview",
-      icon: <FaBuilding className="w-6 h-6 text-indigo-600" />,
+      icon: <FaBuilding className="w-6 h-6 text-deep-space-black" />,
       content: `NXZEN is a leading technology company dedicated to innovation and excellence in software development and digital solutions. Founded on the principles of creativity, collaboration, and cutting-edge technology, we strive to deliver exceptional results that exceed our clients' expectations.
 
 Our mission is to transform businesses through innovative technology solutions while maintaining the highest standards of professional integrity and customer satisfaction. We believe in fostering a collaborative work environment where every team member can thrive and contribute to our collective success.`,
@@ -32,7 +32,7 @@ Our mission is to transform businesses through innovative technology solutions w
     {
       id: 2,
       title: "Code of Conduct",
-      icon: <FaHandshake className="w-6 h-6 text-green-600" />,
+      icon: <FaHandshake className="w-6 h-6 text-lumen-green" />,
       content: `At NXZEN, we maintain the highest ethical standards in all our business dealings. All employees are expected to:
 
 • Treat colleagues, clients, and partners with respect and professionalism
@@ -45,7 +45,7 @@ Our mission is to transform businesses through innovative technology solutions w
     {
       id: 3,
       title: "Work Environment & Culture",
-      icon: <FaUsers className="w-6 h-6 text-blue-600" />,
+      icon: <FaUsers className="w-6 h-6 text-neon-violet" />,
       content: `NXZEN is committed to providing a positive, inclusive, and productive work environment where all employees can succeed. Our culture is built on:
 
 • Collaboration and teamwork across all departments
@@ -59,7 +59,7 @@ Our mission is to transform businesses through innovative technology solutions w
     {
       id: 4,
       title: "Attendance & Time Management",
-      icon: <FaClock className="w-6 h-6 text-orange-600" />,
+      icon: <FaClock className="w-6 h-6 text-brand-coral" />,
       content: `Punctuality and regular attendance are essential for maintaining our high standards of client service and team collaboration:
 
 • Standard working hours: 9:00 AM to 6:00 PM, Monday through Friday
@@ -73,7 +73,7 @@ Our mission is to transform businesses through innovative technology solutions w
     {
       id: 5,
       title: "Information Security",
-      icon: <FaShieldAlt className="w-6 h-6 text-red-600" />,
+      icon: <FaShieldAlt className="w-6 h-6 text-deep-space-black" />,
       content: `Protecting company and client data is paramount to our success and reputation:
 
 • All company devices must be password protected and encrypted
@@ -88,7 +88,7 @@ Our mission is to transform businesses through innovative technology solutions w
     {
       id: 6,
       title: "Professional Development",
-      icon: <FaGraduationCap className="w-6 h-6 text-purple-600" />,
+      icon: <FaGraduationCap className="w-6 h-6 text-lumen-green" />,
       content: `NXZEN invests in our employees' growth and career advancement:
 
 • Annual performance reviews and goal setting
@@ -103,24 +103,24 @@ Our mission is to transform businesses through innovative technology solutions w
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-iridescent-pearl">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b border-deep-space-black/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <button
                 onClick={() => navigate(-1)}
-                className="flex items-center text-gray-600 hover:text-gray-800 transition-colors duration-200 mr-4"
+                className="flex items-center text-deep-space-black/70 hover:text-deep-space-black hover:bg-neon-violet/20 transition-all duration-200 mr-4 px-3 py-2 rounded-lg"
               >
                 <FaArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="brand-heading-md text-deep-space-black">
                   Company Policies
                 </h1>
-                <p className="text-sm text-gray-600">
+                <p className="brand-body-sm text-deep-space-black/70">
                   NXZEN Employee Handbook & Guidelines
                 </p>
               </div>
@@ -128,7 +128,7 @@ Our mission is to transform businesses through innovative technology solutions w
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleLogout}
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                className="flex items-center px-4 py-2 text-sm font-medium text-deep-space-black bg-lumen-green hover:bg-neon-violet rounded-lg transition-all duration-200 transform hover:scale-105"
               >
                 <FaSignOutAlt className="mr-2" />
                 Logout
@@ -141,23 +141,23 @@ Our mission is to transform businesses through innovative technology solutions w
       {/* Main Content */}
       <main className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Introduction */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+        <div className="bg-white rounded-lg shadow-sm border border-deep-space-black/10 p-6 mb-8">
           <div className="flex items-center mb-4">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                <FaBuilding className="w-6 h-6 text-indigo-600" />
+              <div className="w-12 h-12 bg-lumen-green/20 rounded-full flex items-center justify-center">
+                <FaBuilding className="w-6 h-6 text-deep-space-black" />
               </div>
             </div>
             <div className="ml-4">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="brand-subheading-lg text-deep-space-black">
                 Welcome to NXZEN
               </h2>
-              <p className="text-gray-600">
+              <p className="brand-body-md text-deep-space-black/70">
                 Your guide to our company policies, procedures, and culture
               </p>
             </div>
           </div>
-          <p className="text-gray-700 leading-relaxed">
+          <p className="text-deep-space-black/80 leading-relaxed">
             This handbook serves as your comprehensive guide to working at NXZEN. 
             Please familiarize yourself with all policies and procedures outlined 
             below. If you have any questions, don't hesitate to reach out to your 
@@ -170,19 +170,19 @@ Our mission is to transform businesses through innovative technology solutions w
           {policies.map((policy) => (
             <div
               key={policy.id}
-              className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200"
+              className="bg-white rounded-lg shadow-sm border border-deep-space-black/10 hover:shadow-md hover:border-neon-violet/30 transition-all duration-200"
             >
               <div className="p-6">
                 <div className="flex items-center mb-4">
                   <div className="flex-shrink-0 mr-4">
                     {policy.icon}
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-deep-space-black">
                     {policy.title}
                   </h3>
                 </div>
                 <div className="prose prose-gray max-w-none">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  <p className="text-deep-space-black/80 leading-relaxed whitespace-pre-line">
                     {policy.content}
                   </p>
                 </div>
@@ -192,16 +192,16 @@ Our mission is to transform businesses through innovative technology solutions w
         </div>
 
         {/* Footer */}
-        <div className="mt-12 bg-gray-100 rounded-lg p-6">
+        <div className="mt-12 bg-lumen-green/10 rounded-lg p-6 border border-lumen-green/20">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-deep-space-black mb-2">
               Questions or Concerns?
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-deep-space-black/70 mb-4">
               If you have any questions about these policies or need clarification 
               on any company procedures, please contact:
             </p>
-            <div className="space-y-2 text-sm text-gray-700">
+            <div className="space-y-2 text-sm text-deep-space-black/80">
               <p><strong>HR Department:</strong> hr@nxzen.com</p>
               <p><strong>General Inquiries:</strong> info@nxzen.com</p>
               <p><strong>Phone:</strong> +1 (555) 123-4567</p>

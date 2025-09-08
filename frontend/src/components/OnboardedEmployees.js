@@ -2,8 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { FaEdit, FaEye, FaTrash } from "react-icons/fa";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const OnboardedEmployees = ({ onRefresh }) => {
+  const { user, refreshUserData } = useAuth();
+  const navigate = useNavigate();
   const [onboardedEmployees, setOnboardedEmployees] = useState([]);
   const [availableManagers, setAvailableManagers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,12 +91,34 @@ const OnboardedEmployees = ({ onRefresh }) => {
       console.log("🔍 Submitting assignment data:", assignmentData);
       console.log("🔍 Selected employee ID:", selectedEmployee.id);
 
-      await axios.put(
+      const response = await axios.put(
         `/hr/onboarded/${selectedEmployee.id}/assign`,
         assignmentData
       );
 
-      toast.success("Employee details assigned successfully!");
+      console.log("🔍 Assignment response:", response.data);
+
+      // Check if the current user's role was updated
+      if (response.data.roleUpdated && response.data.newRole === 'manager') {
+        console.log("🔍 Current user's role was updated to manager");
+        
+        // Refresh user data to get the updated role
+        const updatedUser = await refreshUserData();
+        
+        if (updatedUser && updatedUser.role === 'manager') {
+          toast.success("Employee details assigned successfully! Your role has been updated to Manager. Redirecting to Manager Dashboard...");
+          
+          // Small delay to show the success message
+          setTimeout(() => {
+            navigate('/manager/dashboard');
+          }, 2000);
+        } else {
+          toast.success("Employee details assigned successfully!");
+        }
+      } else {
+        toast.success("Employee details assigned successfully!");
+      }
+
       setShowAssignmentModal(false);
       setSelectedEmployee(null);
       fetchOnboardedEmployees();

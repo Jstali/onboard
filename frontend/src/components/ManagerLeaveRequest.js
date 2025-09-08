@@ -250,18 +250,18 @@ const ManagerLeaveRequest = () => {
     switch (status) {
       case "Approved":
       case "approved":
-        return "text-brand-green bg-brand-green/10 border border-brand-green/20";
+        return "text-deep-space-black bg-lumen-green/20 border border-lumen-green/30";
       case "Rejected":
       case "rejected":
-        return "text-brand-red bg-brand-red/10 border border-brand-red/20";
+        return "text-white bg-brand-coral border border-brand-coral/30";
       case "Manager Approved":
-        return "text-brand-blue bg-brand-blue/10 border border-brand-blue/20";
+        return "text-white bg-neon-violet border border-neon-violet/30";
       case "Pending Manager Approval":
-        return "text-brand-yellow bg-brand-yellow/10 border border-brand-yellow/20";
+        return "text-deep-space-black bg-brand-yellow/20 border border-brand-yellow/30";
       case "Pending HR Approval":
-        return "text-brand-violet bg-brand-violet/10 border border-brand-violet/20";
+        return "text-white bg-neon-violet border border-neon-violet/30";
       default:
-        return "text-brand-black/60 bg-brand-black/10 border border-brand-black/20";
+        return "text-deep-space-black/70 bg-deep-space-black/10 border border-deep-space-black/20";
     }
   };
 
@@ -276,18 +276,19 @@ const ManagerLeaveRequest = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="bg-brand-pearl rounded-xl shadow-lg p-6 mb-6 border border-brand-black/10">
+    <div className="min-h-screen bg-iridescent-pearl">
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-deep-space-black/10">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-brand-black/70 hover:text-brand-black transition-colors duration-200 mr-4"
+              className="flex items-center text-deep-space-black/70 hover:text-deep-space-black hover:bg-neon-violet/20 transition-all duration-200 mr-4 px-3 py-2 rounded-lg"
             >
               <FaArrowLeft className="w-4 h-4 mr-2" />
               Back
             </button>
-            <h2 className="text-2xl font-bold text-brand-black">
+            <h2 className="text-2xl font-bold text-deep-space-black">
               Manager Leave Request Form
             </h2>
           </div>
@@ -295,34 +296,34 @@ const ManagerLeaveRequest = () => {
 
         {/* Leave Balance Display */}
         {leaveBalance ? (
-          <div className="bg-brand-pearl border border-brand-black/10 rounded-lg p-4 mb-6">
-            <h3 className="text-lg font-semibold text-brand-black mb-2">
+          <div className="bg-iridescent-pearl border border-deep-space-black/10 rounded-lg p-4 mb-6">
+            <h3 className="text-lg font-semibold text-deep-space-black mb-2">
               Your Leave Balance
             </h3>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold text-brand-blue">
+                <p className="text-2xl font-bold text-neon-violet">
                   {leaveBalance.total_allocated}
                 </p>
-                <p className="text-sm text-brand-black/70">Total Allocated</p>
+                <p className="text-sm text-deep-space-black/70">Total Allocated</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-brand-yellow">
+                <p className="text-2xl font-bold text-brand-coral">
                   {leaveBalance.leaves_taken}
                 </p>
-                <p className="text-sm text-brand-black/70">Leaves Taken</p>
+                <p className="text-sm text-deep-space-black/70">Leaves Taken</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-brand-green">
+                <p className="text-2xl font-bold text-lumen-green">
                   {leaveBalance.leaves_remaining}
                 </p>
-                <p className="text-sm text-brand-black/70">Leaves Remaining</p>
+                <p className="text-sm text-deep-space-black/70">Leaves Remaining</p>
               </div>
             </div>
           </div>
         ) : (
           <div className="bg-brand-yellow/10 border border-brand-yellow/20 rounded-lg p-4 mb-6">
-            <p className="text-brand-black/70">Loading leave balance...</p>
+            <p className="text-deep-space-black/70">Loading leave balance...</p>
           </div>
         )}
 
@@ -330,14 +331,14 @@ const ManagerLeaveRequest = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-brand-black mb-2">
+              <label className="block text-sm font-medium text-deep-space-black mb-2">
                 Leave Type *
               </label>
               <select
                 name="leaveType"
                 value={formData.leaveType}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
+                className="w-full px-3 py-2 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green bg-white text-deep-space-black"
                 required
               >
                 <option value="">Select Leave Type</option>
@@ -350,7 +351,7 @@ const ManagerLeaveRequest = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-brand-black mb-2">
+              <label className="block text-sm font-medium text-deep-space-black mb-2">
                 From Date *
               </label>
               <input
@@ -358,13 +359,13 @@ const ManagerLeaveRequest = () => {
                 name="fromDate"
                 value={formData.fromDate}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
+                className="w-full px-3 py-2 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green bg-white text-deep-space-black"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-brand-black mb-2">
+              <label className="block text-sm font-medium text-deep-space-black mb-2">
                 To Date (Optional)
               </label>
               <input
@@ -372,19 +373,19 @@ const ManagerLeaveRequest = () => {
                 name="toDate"
                 value={formData.toDate}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black"
+                className="w-full px-3 py-2 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green bg-white text-deep-space-black"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-brand-black mb-2">
+              <label className="block text-sm font-medium text-deep-space-black mb-2">
                 Total Days
               </label>
               <input
                 type="text"
                 value={calculateTotalDays()}
                 readOnly
-                className="w-full px-3 py-2 border border-brand-black/20 rounded-lg bg-brand-pearl/50 text-brand-black/70"
+                className="w-full px-3 py-2 border border-deep-space-black/20 rounded-lg bg-iridescent-pearl text-deep-space-black/70"
               />
             </div>
           </div>
@@ -395,15 +396,15 @@ const ManagerLeaveRequest = () => {
               name="halfDay"
               checked={formData.halfDay}
               onChange={handleInputChange}
-              className="h-4 w-4 text-brand-green focus:ring-brand-green border-brand-black/20 rounded"
+              className="h-4 w-4 text-lumen-green focus:ring-lumen-green border-deep-space-black/20 rounded"
             />
-            <label className="ml-2 block text-sm text-brand-black">
+            <label className="ml-2 block text-sm text-deep-space-black">
               Half Day Leave
             </label>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-black mb-2">
+            <label className="block text-sm font-medium text-deep-space-black mb-2">
               Reason *
             </label>
             <textarea
@@ -411,7 +412,7 @@ const ManagerLeaveRequest = () => {
               value={formData.reason}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-3 py-2 border border-brand-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green bg-brand-pearl text-brand-black placeholder-brand-black/50"
+              className="w-full px-3 py-2 border border-deep-space-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green bg-white text-deep-space-black placeholder-deep-space-black/50"
               placeholder="Please provide a detailed reason for your leave request..."
               required
             />
@@ -421,8 +422,8 @@ const ManagerLeaveRequest = () => {
             <div
               className={`p-4 rounded-lg ${
                 message.includes("successfully")
-                  ? "bg-brand-green/10 text-brand-green border border-brand-green/20"
-                  : "bg-brand-red/10 text-brand-red border border-brand-red/20"
+                  ? "bg-lumen-green/10 text-deep-space-black border border-lumen-green/20"
+                  : "bg-brand-coral/10 text-white border border-brand-coral/20"
               }`}
             >
               {message}
@@ -433,7 +434,7 @@ const ManagerLeaveRequest = () => {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-brand-green text-brand-black rounded-lg hover:bg-brand-green/80 focus:outline-none focus:ring-2 focus:ring-brand-green disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors duration-150"
+              className="px-6 py-2 bg-lumen-green text-deep-space-black rounded-lg hover:bg-neon-violet focus:outline-none focus:ring-2 focus:ring-lumen-green disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all duration-200 transform hover:scale-105"
             >
               {loading ? "Submitting..." : "Submit Leave Request"}
             </button>
@@ -442,58 +443,58 @@ const ManagerLeaveRequest = () => {
       </div>
 
       {/* My Leave Requests History */}
-      <div className="bg-brand-pearl rounded-xl shadow-lg p-6 border border-brand-black/10">
-        <h3 className="text-xl font-semibold text-brand-black mb-4">
+      <div className="bg-white rounded-xl shadow-lg p-6 border border-deep-space-black/10">
+        <h3 className="text-xl font-semibold text-deep-space-black mb-4">
           My Leave Requests
         </h3>
         {myRequests.length === 0 ? (
-          <p className="text-brand-black/60 text-center py-4">
+          <p className="text-deep-space-black/70 text-center py-4">
             No leave requests found.
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-brand-black/10 bg-brand-pearl rounded-xl overflow-hidden">
-              <thead className="bg-brand-pearl border-b border-brand-black/10">
+            <table className="min-w-full divide-y divide-deep-space-black/10 bg-white rounded-xl overflow-hidden">
+              <thead className="bg-iridescent-pearl border-b border-deep-space-black/10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-deep-space-black/70 uppercase tracking-wider">
                     Series
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-deep-space-black/70 uppercase tracking-wider">
                     Leave Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-deep-space-black/70 uppercase tracking-wider">
                     From Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-deep-space-black/70 uppercase tracking-wider">
                     To Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-deep-space-black/70 uppercase tracking-wider">
                     Total Days
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-deep-space-black/70 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-brand-black uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-deep-space-black/70 uppercase tracking-wider">
                     Created At
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-brand-pearl divide-y divide-brand-black/10">
+              <tbody className="bg-white divide-y divide-deep-space-black/10">
                 {myRequests.map((request) => (
-                  <tr key={request.id} className="hover:bg-brand-pearl/80 transition-colors duration-200">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-black">
+                  <tr key={request.id} className="hover:bg-iridescent-pearl/50 transition-colors duration-200">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-deep-space-black">
                       {request.series}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-deep-space-black">
                       {request.leave_type}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-deep-space-black">
                       {formatDate(request.from_date)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-deep-space-black">
                       {formatDate(request.to_date)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-deep-space-black">
                       {request.total_leave_days}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -505,7 +506,7 @@ const ManagerLeaveRequest = () => {
                         {formatStatus(request.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-black/70">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-deep-space-black/70">
                       {formatDate(request.created_at)}
                     </td>
                   </tr>
@@ -515,6 +516,7 @@ const ManagerLeaveRequest = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };

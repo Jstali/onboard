@@ -243,13 +243,13 @@ const EmployeeLeaveRequest = () => {
       case "Approved":
         return "text-deep-space-black bg-lumen-green rounded-full";
       case "Rejected":
-        return "text-deep-space-black bg-coral-red rounded-full";
+        return "text-white bg-brand-coral rounded-full";
       case "Manager Approved":
-        return "text-deep-space-black bg-neon-violet rounded-full";
+        return "text-white bg-neon-violet rounded-full";
       case "Pending Manager Approval":
-        return "text-deep-space-black bg-yellow rounded-full";
+        return "text-deep-space-black bg-brand-yellow rounded-full";
       default:
-        return "text-deep-space-black bg-iridescent-pearl border-2 border-deep-space-black rounded-full";
+        return "text-deep-space-black bg-white border-2 border-deep-space-black rounded-full";
     }
   };
 
@@ -266,7 +266,7 @@ const EmployeeLeaveRequest = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 bg-iridescent-pearl min-h-screen">
       {/* Header */}
-      <div className="bg-iridescent-pearl rounded-xl shadow-lg p-6 mb-6 border border-deep-space-black/10">
+      <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-deep-space-black/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <button
@@ -286,9 +286,9 @@ const EmployeeLeaveRequest = () => {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Side - Leave Balance */}
-        <div className="bg-iridescent-pearl rounded-xl shadow-lg p-6 border border-deep-space-black/10">
+        <div className="bg-white rounded-xl shadow-lg p-6 border border-deep-space-black/10">
           {leaveBalance ? (
-            <div className="bg-iridescent-pearl border border-deep-space-black/10 rounded-xl p-4">
+            <div className="bg-white border border-deep-space-black/10 rounded-xl p-4">
               <h3 className="text-lg font-semibold text-deep-space-black mb-4">
                 Your Leave Balance
               </h3>
@@ -326,7 +326,7 @@ const EmployeeLeaveRequest = () => {
                   {leaveTypeBalances.map((balance, index) => (
                     <div
                       key={index}
-                      className="bg-iridescent-pearl rounded-lg p-3 border border-deep-space-black/10"
+                      className="bg-white rounded-lg p-3 border border-deep-space-black/10"
                     >
                       <h5 className="text-sm font-semibold text-deep-space-black mb-2">
                         {balance.leave_type}
@@ -366,7 +366,7 @@ const EmployeeLeaveRequest = () => {
         </div>
 
         {/* Right Side - Leave Request Form */}
-        <div className="bg-iridescent-pearl rounded-xl shadow-lg p-6 border border-deep-space-black/10">
+        <div className="bg-white rounded-xl shadow-lg p-6 border border-deep-space-black/10">
           <h3 className="text-xl font-semibold text-deep-space-black mb-6">
             Submit Leave Request
           </h3>
@@ -382,7 +382,7 @@ const EmployeeLeaveRequest = () => {
                   onChange={handleInputChange}
                   required
                   disabled={leaveTypes.length === 0}
-                  className="w-full px-3 py-2 border border-deep-space-black/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-lumen-green bg-iridescent-pearl disabled:bg-iridescent-pearl/50 disabled:cursor-not-allowed text-deep-space-black"
+                  className="w-full px-3 py-2 border border-deep-space-black/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-lumen-green bg-white disabled:bg-gray-50 disabled:cursor-not-allowed text-deep-space-black"
                 >
                   <option value="">
                     {leaveTypes.length === 0
@@ -467,7 +467,7 @@ const EmployeeLeaveRequest = () => {
                   onChange={handleInputChange}
                   required
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-3 py-2 border border-deep-space-black/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-lumen-green bg-iridescent-pearl text-deep-space-black"
+                  className="w-full px-3 py-2 border border-deep-space-black/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-lumen-green bg-white text-deep-space-black"
                 />
               </div>
 
@@ -483,7 +483,7 @@ const EmployeeLeaveRequest = () => {
                   min={
                     formData.fromDate || new Date().toISOString().split("T")[0]
                   }
-                  className="w-full px-3 py-2 border border-deep-space-black/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-lumen-green bg-iridescent-pearl text-deep-space-black"
+                  className="w-full px-3 py-2 border border-deep-space-black/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-lumen-green bg-white text-deep-space-black"
                 />
                 <p className="text-xs text-deep-space-black/60 mt-1">
                   Leave empty for single day leave
@@ -492,7 +492,7 @@ const EmployeeLeaveRequest = () => {
             </div>
 
             {formData.fromDate && (
-              <div className="bg-iridescent-pearl border border-deep-space-black/10 rounded-xl p-4">
+              <div className="bg-white border border-deep-space-black/10 rounded-xl p-4">
                 <p className="text-sm text-deep-space-black">
                   <strong>Total Leave Days:</strong> {calculateTotalDays()}{" "}
                   {calculateTotalDays() === 1 ? "day" : "days"}
@@ -513,7 +513,7 @@ const EmployeeLeaveRequest = () => {
                 required
                 rows={4}
                 placeholder="Please provide a detailed reason for your leave request..."
-                className="w-full px-3 py-2 border border-deep-space-black/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-lumen-green bg-iridescent-pearl text-deep-space-black placeholder-deep-space-black/50"
+                className="w-full px-3 py-2 border border-deep-space-black/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-lumen-green bg-white text-deep-space-black placeholder-deep-space-black/50"
               />
             </div>
 
@@ -522,7 +522,7 @@ const EmployeeLeaveRequest = () => {
                 className={`p-4 rounded-xl ${
                   message.includes("successfully")
                     ? "bg-lumen-green text-deep-space-black border border-lumen-green"
-                    : "bg-coral-red text-deep-space-black border border-coral-red"
+                    : "bg-brand-coral text-white border border-brand-coral"
                 }`}
               >
                 {message}
@@ -533,7 +533,7 @@ const EmployeeLeaveRequest = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-lumen-green text-deep-space-black px-6 py-2 rounded-xl hover:bg-lumen-green/80 focus:outline-none focus:ring-2 focus:ring-lumen-green disabled:opacity-50 font-medium transition-colors duration-150"
+                className="bg-lumen-green text-deep-space-black px-6 py-2 rounded-xl hover:bg-neon-violet focus:outline-none focus:ring-2 focus:ring-lumen-green disabled:opacity-50 font-medium transition-colors duration-150"
               >
                 {loading ? "Submitting..." : "Submit Leave Request"}
               </button>
@@ -543,7 +543,7 @@ const EmployeeLeaveRequest = () => {
       </div>
 
       {/* My Leave Requests History */}
-      <div className="bg-iridescent-pearl rounded-xl shadow-lg p-6 border border-deep-space-black/10">
+      <div className="bg-white rounded-xl shadow-lg p-6 border border-deep-space-black/10">
         <h3 className="text-xl font-bold text-deep-space-black mb-4">
           My Leave Requests
         </h3>
@@ -554,40 +554,40 @@ const EmployeeLeaveRequest = () => {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-deep-space-black/10 bg-iridescent-pearl rounded-xl overflow-hidden shadow-md">
-              <thead className="bg-iridescent-pearl border-b border-deep-space-black/10">
+            <table className="min-w-full divide-y divide-deep-space-black/10 bg-white rounded-xl overflow-hidden shadow-md">
+              <thead className="bg-white border-b border-deep-space-black/10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl rounded-tl-xl">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-white rounded-tl-xl">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-white">
                     From
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-white">
                     To
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-white">
                     Days
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-white">
                     Manager
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-white">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl rounded-tr-xl">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-deep-space-black uppercase tracking-wider bg-white rounded-tr-xl">
                     Submitted
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-iridescent-pearl divide-y divide-deep-space-black/10">
+              <tbody className="bg-white divide-y divide-deep-space-black/10">
                 {myRequests.map((request, index) => (
                   <tr
                     key={request.id}
                     className={`hover:bg-neon-violet/10 transition-colors duration-200 ${
                       index % 2 === 0
-                        ? "bg-iridescent-pearl"
-                        : "bg-iridescent-pearl-dark"
+                        ? "bg-white"
+                        : "bg-gray-50"
                     }`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap bg-inherit">
@@ -632,7 +632,7 @@ const EmployeeLeaveRequest = () => {
                           </span>
                         )}
                         {request.manager3_name && (
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow/20 text-deep-space-black border border-yellow/30">
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-brand-yellow/20 text-deep-space-black border border-brand-yellow/30">
                             {request.manager3_name}
                           </span>
                         )}

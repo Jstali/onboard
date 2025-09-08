@@ -54,6 +54,68 @@ router.get("/dashboard", async (req, res) => {
   }
 });
 
+// Get manager's profile data
+router.get("/profile", async (req, res) => {
+  try {
+    const managerId = req.user.userId;
+
+    // Get manager details from managers table
+    const managerResult = await pool.query(
+      `
+      SELECT 
+        m.manager_id,
+        m.manager_name,
+        m.email,
+        m.department,
+        m.designation,
+        m.status,
+        m.created_at,
+        m.updated_at,
+        u.first_name,
+        u.last_name,
+        u.role
+      FROM managers m
+      LEFT JOIN users u ON m.user_id = u.id
+      WHERE m.user_id = $1
+    `,
+      [managerId]
+    );
+
+    if (managerResult.rows.length === 0) {
+      return res.status(404).json({ error: "Manager profile not found" });
+    }
+
+    const manager = managerResult.rows[0];
+
+    // Get team statistics
+    const teamStatsResult = await pool.query(
+      `
+      SELECT 
+        COUNT(*) as total_employees,
+        COUNT(CASE WHEN em.status = 'active' THEN 1 END) as active_employees
+      FROM manager_employee_mapping mem
+      INNER JOIN employee_master em ON mem.employee_id = (
+        SELECT u.id FROM users u WHERE u.email = em.company_email
+      )
+      WHERE mem.manager_id = $1 AND mem.is_active = true
+    `,
+      [managerId]
+    );
+
+    const teamStats = teamStatsResult.rows[0];
+
+    res.json({
+      manager: {
+        ...manager,
+        team_stats: teamStats
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching manager profile:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Get employees under manager with detailed leave information
 router.get("/employees", async (req, res) => {
   try {
@@ -107,6 +169,74 @@ router.get("/employees", async (req, res) => {
     res.json({ employees: result.rows });
   } catch (error) {
     console.error("Error fetching employees:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Get detailed leave information for an employee
+router.get("/employee/:employeeId/leave-details", async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const managerId = req.user.userId;
+
+    // Verify that the employee is under this manager
+    const managerCheck = await pool.query(
+      "SELECT 1 FROM manager_employee_mapping WHERE manager_id = $1 AND employee_id = $2 AND is_active = true",
+      [managerId, employeeId]
+    );
+
+    if (managerCheck.rows.length === 0) {
+      return res.status(403).json({ error: "Access denied: Employee not under your management" });
+    }
+
+    // Get leave balances by type with calculated leaves taken from approved requests
+    const leaveBalances = await pool.query(
+      `
+      SELECT 
+        ltb.leave_type,
+        ltb.total_allocated,
+        COALESCE(SUM(lr.total_leave_days), 0) as leaves_taken,
+        (ltb.total_allocated - COALESCE(SUM(lr.total_leave_days), 0)) as leaves_remaining,
+        ltb.year
+      FROM leave_type_balances ltb
+      LEFT JOIN leave_requests lr ON lr.employee_id = ltb.employee_id 
+        AND lr.leave_type = ltb.leave_type 
+        AND lr.status = 'approved'
+        AND EXTRACT(YEAR FROM lr.from_date) = ltb.year
+      WHERE ltb.employee_id = $1 AND ltb.year = EXTRACT(YEAR FROM CURRENT_DATE)
+      GROUP BY ltb.leave_type, ltb.total_allocated, ltb.year
+      ORDER BY ltb.leave_type
+    `,
+      [employeeId]
+    );
+
+    // Get recent leave requests for context
+    const leaveRequests = await pool.query(
+      `
+      SELECT 
+        lr.leave_type,
+        lr.from_date,
+        lr.to_date,
+        lr.total_leave_days,
+        lr.status,
+        lr.reason,
+        lr.created_at
+      FROM leave_requests lr
+      WHERE lr.employee_id = $1 
+        AND lr.status IN ('approved', 'pending_manager_approval', 'pending_hr_approval')
+        AND lr.from_date >= CURRENT_DATE - INTERVAL '1 year'
+      ORDER BY lr.from_date DESC
+      LIMIT 10
+    `,
+      [employeeId]
+    );
+
+    res.json({
+      leaveBalances: leaveBalances.rows,
+      recentLeaves: leaveRequests.rows
+    });
+  } catch (error) {
+    console.error("Error fetching leave details:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

@@ -763,10 +763,26 @@ router.put("/employee-forms/:id/approve", async (req, res) => {
         form.employee_type
       );
 
+      // Check if the employee type is 'Manager' and update role accordingly
+      let roleUpdated = false;
+      let newRole = null;
+
+      if (form.employee_type === 'Manager') {
+        await pool.query(
+          "UPDATE users SET role = 'manager', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+          [form.employee_id]
+        );
+        roleUpdated = true;
+        newRole = 'manager';
+        console.log(`✅ User role updated to manager for employee type: ${form.employee_type}`);
+      }
+
       res.json({
         message:
           "Employee form approved successfully. Employee moved to onboarded list and document collection created.",
         status: "approved",
+        roleUpdated: roleUpdated,
+        newRole: newRole,
       });
     } else if (action === "reject") {
       // Update form status to rejected
@@ -1956,17 +1972,23 @@ router.put(
       }
 
       // Get manager details from managers table and get the user ID
+      // Only allow managers that are actually defined in employee_master table
       const managerResult = await pool.query(
         `SELECT m.manager_id, m.manager_name, u.id as user_id 
          FROM managers m 
          LEFT JOIN users u ON m.email = u.email 
-         WHERE m.manager_name ILIKE $1 AND m.status = 'active'`,
+         WHERE m.manager_name ILIKE $1 AND m.status = 'active'
+         AND EXISTS (
+           SELECT 1 FROM employee_master em 
+           WHERE em.manager_id = m.manager_id 
+           AND em.manager_name = m.manager_name
+         )`,
         [manager]
       );
 
       if (managerResult.rows.length === 0) {
         return res.status(400).json({
-          error: "Manager not found or inactive",
+          error: "Manager not found, inactive, or not defined in employee master table",
         });
       }
 
@@ -1976,6 +1998,34 @@ router.put(
         return res.status(400).json({
           error: "Manager does not have a user account",
         });
+      }
+
+      // Ensure manager has a record in managers table
+      // Check if manager record exists for this user_id
+      const existingManagerRecord = await pool.query(
+        "SELECT * FROM managers WHERE user_id = $1",
+        [managerInfo.user_id]
+      );
+
+      if (existingManagerRecord.rows.length === 0) {
+        // Create manager record if it doesn't exist
+        const createManagerResult = await pool.query(
+          `INSERT INTO managers (manager_id, manager_name, email, department, designation, status, user_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING *`,
+          [
+            managerInfo.manager_id,
+            managerInfo.manager_name,
+            managerInfo.email,
+            null, // department
+            null, // designation
+            'active',
+            managerInfo.user_id
+          ]
+        );
+        console.log("✅ Created manager record:", createManagerResult.rows[0]);
+      } else {
+        console.log("✅ Manager record already exists for user_id:", managerInfo.user_id);
       }
 
       // Generate unique 6-digit employee ID
@@ -2113,6 +2163,41 @@ router.put(
       await Promise.all(mappingPromises);
       console.log("✅ Manager-employee mappings created successfully");
 
+      // Check if the assigned employee should have manager role
+      // If the employee type is 'Manager' or if they are assigned as a manager to other employees
+      let shouldUpdateRole = false;
+      let newRole = 'employee';
+
+      // Check if employee type is 'Manager'
+      if (employmentType === 'Manager') {
+        shouldUpdateRole = true;
+        newRole = 'manager';
+        console.log("🔍 Employee type is 'Manager', updating role to manager");
+      }
+
+      // Check if this employee is assigned as a manager to other employees
+      if (!shouldUpdateRole) {
+        const managerCheck = await pool.query(
+          "SELECT COUNT(*) as count FROM manager_employee_mapping WHERE manager_id = $1 AND is_active = true",
+          [onboarded.user_id]
+        );
+        
+        if (managerCheck.rows[0].count > 0) {
+          shouldUpdateRole = true;
+          newRole = 'manager';
+          console.log("🔍 Employee is assigned as manager to other employees, updating role to manager");
+        }
+      }
+
+      // Update user role if needed
+      if (shouldUpdateRole) {
+        await pool.query(
+          "UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+          [newRole, onboarded.user_id]
+        );
+        console.log(`✅ User role updated to: ${newRole}`);
+      }
+
       res.json({
         message:
           "Employee details assigned and moved to master table successfully",
@@ -2122,6 +2207,8 @@ router.put(
           name: name,
           manager: manager,
         },
+        roleUpdated: shouldUpdateRole,
+        newRole: shouldUpdateRole ? newRole : null,
       });
     } catch (error) {
       console.error("❌ Assign employee details error:", error);

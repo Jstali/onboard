@@ -28,8 +28,10 @@ const EmployeeAttendance = () => {
   const getWeekDates = (date) => {
     const start = new Date(date);
     const day = start.getDay();
-    const diff = start.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-    start.setDate(diff);
+    // Calculate days to subtract to get to Monday (1)
+    // Monday = 1, Tuesday = 2, ..., Sunday = 0
+    const daysToSubtract = day === 0 ? 6 : day - 1;
+    start.setDate(start.getDate() - daysToSubtract);
 
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
@@ -77,6 +79,7 @@ const EmployeeAttendance = () => {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
           const data = await response.json();
+          console.log("📊 Fetched attendance data:", data.attendance);
           setAttendance(data.attendance || []);
 
           // Initialize hours state from fetched data
@@ -178,6 +181,8 @@ const EmployeeAttendance = () => {
     try {
       const token = localStorage.getItem("token");
 
+      console.log("🔍 markAttendance called with date:", date, "status:", status);
+
       // Build request body, omitting null values
       const requestBody = {
         date,
@@ -192,6 +197,9 @@ const EmployeeAttendance = () => {
         requestBody.hours = hours;
       }
 
+      console.log("📤 Sending request to:", "http://localhost:5001/api/attendance/mark");
+      console.log("📤 Request body:", requestBody);
+      
       const response = await fetch(
         "/api/attendance/mark",
         {
@@ -203,20 +211,27 @@ const EmployeeAttendance = () => {
           body: JSON.stringify(requestBody),
         }
       );
+      
+      console.log("📥 Response status:", response.status);
+      console.log("📥 Response ok:", response.ok);
 
       if (response.ok) {
+        console.log("✅ Attendance marked successfully, refreshing data...");
         toast.success("Attendance updated successfully");
+        
         // Refresh attendance data to show updated status
         if (view === "weekly") {
           const today = new Date();
           const { start, end } = getWeekDates(today);
-          fetchAttendance(
+          console.log("🔄 Refreshing weekly data for:", start.toISOString().split("T")[0], "to", end.toISOString().split("T")[0]);
+          await fetchAttendance(
             start.toISOString().split("T")[0],
             end.toISOString().split("T")[0]
           );
         } else if (view === "calendar") {
           const { start, end } = getMonthDates(currentMonth);
-          fetchAttendance(
+          console.log("🔄 Refreshing calendar data for:", start.toISOString().split("T")[0], "to", end.toISOString().split("T")[0]);
+          await fetchAttendance(
             start.toISOString().split("T")[0],
             end.toISOString().split("T")[0]
           );
@@ -233,24 +248,17 @@ const EmployeeAttendance = () => {
 
   // Get attendance status for a specific date
   const getAttendanceForDate = (date) => {
-    // Format the input date as YYYY-MM-DD without timezone issues
-    const inputDate = new Date(date);
-    const inputYear = inputDate.getFullYear();
-    const inputMonth = String(inputDate.getMonth() + 1).padStart(2, "0");
-    const inputDay = String(inputDate.getDate()).padStart(2, "0");
-    const formattedInputDate = `${inputYear}-${inputMonth}-${inputDay}`;
+    // The input date should already be in YYYY-MM-DD format from toISOString().split("T")[0]
+    const formattedInputDate = date;
+
+    console.log("🔍 getAttendanceForDate - Input date:", date, "Formatted:", formattedInputDate);
+    console.log("🔍 Available attendance records:", attendance.map(a => ({ date: a.date, status: a.status })));
 
     return (
       attendance.find((a) => {
-        // Format the attendance date as YYYY-MM-DD for comparison
-        const attendanceDate = new Date(a.date);
-        const attendanceYear = attendanceDate.getFullYear();
-        const attendanceMonth = String(attendanceDate.getMonth() + 1).padStart(
-          2,
-          "0"
-        );
-        const attendanceDay = String(attendanceDate.getDate()).padStart(2, "0");
-        const formattedAttendanceDate = `${attendanceYear}-${attendanceMonth}-${attendanceDay}`;
+        // The attendance date from API is already in YYYY-MM-DD format, so use it directly
+        const formattedAttendanceDate = a.date;
+        console.log("🔍 Comparing:", formattedInputDate, "with", formattedAttendanceDate);
         return formattedAttendanceDate === formattedInputDate;
       }) || null
     );
@@ -266,23 +274,23 @@ const EmployeeAttendance = () => {
         };
       case "Work From Home":
         return {
-          icon: <FaHome className="text-deep-space-black" />,
-          color: "bg-neon-violet text-deep-space-black rounded-full",
+          icon: <FaHome className="text-white" />,
+          color: "bg-neon-violet text-white rounded-full",
         };
       case "leave":
         return {
-          icon: <FaTimes className="text-deep-space-black" />,
-          color: "bg-coral-red text-deep-space-black rounded-full",
+          icon: <FaTimes className="text-white" />,
+          color: "bg-neon-violet text-white rounded-full",
         };
       case "absent":
         return {
-          icon: <FaTimes className="text-deep-space-black" />,
-          color: "bg-neon-violet text-deep-space-black rounded-full",
+          icon: <FaTimes className="text-white" />,
+          color: "bg-brand-coral text-white rounded-full",
         };
       case "Half Day":
         return {
-          icon: <FaClock className="text-deep-space-black" />,
-          color: "bg-yellow text-deep-space-black rounded-full",
+          icon: <FaClock className="text-white" />,
+          color: "bg-neon-violet text-white rounded-full",
         };
       default:
         return {
@@ -298,16 +306,20 @@ const EmployeeAttendance = () => {
     const { start } = getWeekDates(new Date());
     const days = [];
 
+    console.log("📅 generateWeekDays - Week start:", start.toISOString().split("T")[0]);
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(start);
       date.setDate(start.getDate() + i);
       const dayOfWeek = date.getDay();
       // Skip Saturday (6) and Sunday (0)
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        console.log("📅 Adding weekday:", date.toISOString().split("T")[0], "Day:", dayOfWeek);
         days.push(date);
       }
     }
 
+    console.log("📅 Generated weekdays:", days.map(d => d.toISOString().split("T")[0]));
     return days;
   };
 
@@ -421,7 +433,7 @@ const EmployeeAttendance = () => {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate("/employee/dashboard")}
-                className="flex items-center px-3 py-2 text-sm font-medium text-deep-space-black bg-iridescent-pearl border border-deep-space-black/20 hover:bg-neon-violet/20 rounded-xl transition-colors duration-200"
+                className="flex items-center px-3 py-2 text-sm font-medium text-deep-space-black bg-white border border-deep-space-black/20 hover:bg-neon-violet/20 rounded-xl transition-colors duration-200"
               >
                 <FaHome className="w-4 h-4 mr-2" />
                 Home
@@ -436,7 +448,7 @@ const EmployeeAttendance = () => {
                 className={`px-4 py-2 rounded-xl flex items-center space-x-2 shadow-md ${
                   view === "weekly"
                     ? "bg-lumen-green text-deep-space-black"
-                    : "bg-iridescent-pearl text-deep-space-black border border-deep-space-black/20 hover:bg-neon-violet/20"
+                    : "bg-white text-deep-space-black border border-deep-space-black/20 hover:bg-neon-violet/20"
                 }`}
               >
                 <FaTable />
@@ -447,7 +459,7 @@ const EmployeeAttendance = () => {
                 className={`px-4 py-2 rounded-xl flex items-center space-x-2 shadow-md ${
                   view === "calendar"
                     ? "bg-lumen-green text-deep-space-black"
-                    : "bg-iridescent-pearl text-deep-space-black border border-deep-space-black/20 hover:bg-neon-violet/20"
+                    : "bg-white text-deep-space-black border border-deep-space-black/20 hover:bg-neon-violet/20"
                 }`}
               >
                 <FaCalendarAlt />
@@ -458,7 +470,7 @@ const EmployeeAttendance = () => {
 
           {/* Weekly View */}
           {view === "weekly" && (
-            <div className="bg-iridescent-pearl rounded-xl shadow-md border border-deep-space-black/10 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-md border border-deep-space-black/10 overflow-hidden">
               {/* Current Week Header */}
               <div className="px-6 py-4 border-b border-deep-space-black/10">
                 <h3 className="text-xl font-semibold text-deep-space-black text-center">
@@ -469,33 +481,33 @@ const EmployeeAttendance = () => {
               {/* Weekly Table */}
               <div className="p-6">
                 <div className="overflow-x-auto rounded-xl border border-deep-space-black/10 shadow-md">
-                  <table className="min-w-full bg-iridescent-pearl rounded-xl overflow-hidden">
-                    <thead className="bg-iridescent-pearl border-b border-deep-space-black/10">
+                  <table className="min-w-full bg-white rounded-xl overflow-hidden">
+                    <thead className="bg-white border-b border-deep-space-black/10">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl rounded-tl-xl">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-white rounded-tl-xl">
                           Day
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-white">
                           Date
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-white">
                           Status
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-white">
                           Project
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-white">
                           Tasks
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-white">
                           Actions
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-iridescent-pearl rounded-tr-xl">
+                        <th className="px-6 py-4 text-left text-sm font-bold text-deep-space-black uppercase tracking-wider bg-white rounded-tr-xl">
                           Hours
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-iridescent-pearl divide-y divide-deep-space-black/10">
+                    <tbody className="bg-white divide-y divide-deep-space-black/10">
                       {generateWeekDays().map((date, index) => {
                         const attendanceRecord = getAttendanceForDate(
                           date.toISOString().split("T")[0]
@@ -511,8 +523,8 @@ const EmployeeAttendance = () => {
                               isToday
                                 ? "bg-lumen-green/10 border-l-4 border-lumen-green"
                                 : index % 2 === 0
-                                ? "bg-iridescent-pearl"
-                                : "bg-iridescent-pearl-dark"
+                                ? "bg-white"
+                                : "bg-gray-50"
                             }`}
                           >
                             <td className="px-6 py-5 whitespace-nowrap text-sm font-semibold text-deep-space-black bg-inherit">
@@ -542,7 +554,7 @@ const EmployeeAttendance = () => {
                                       attendanceRecord.status.slice(1)}
                                 </span>
                               ) : (
-                                <span className="text-deep-space-black bg-iridescent-pearl border-2 border-deep-space-black rounded-full px-3 py-1 text-sm font-medium">
+                                <span className="text-deep-space-black bg-white border-2 border-deep-space-black rounded-full px-3 py-1 text-sm font-medium">
                                   Not marked
                                 </span>
                               )}
@@ -551,7 +563,7 @@ const EmployeeAttendance = () => {
                               <input
                                 type="text"
                                 placeholder="Enter project name"
-                                className="w-full bg-iridescent-pearl border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder:text-deep-space-black/50 transition-colors duration-200"
+                                className="w-full bg-white border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder:text-deep-space-black/50 transition-colors duration-200"
                                 value={
                                   projectInputs[
                                     date.toISOString().split("T")[0]
@@ -572,7 +584,7 @@ const EmployeeAttendance = () => {
                               <input
                                 type="text"
                                 placeholder="Describe your tasks"
-                                className="w-full bg-iridescent-pearl border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder:text-deep-space-black/50 transition-colors duration-200"
+                                className="w-full bg-white border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder:text-deep-space-black/50 transition-colors duration-200"
                                 value={
                                   taskInputs[
                                     date.toISOString().split("T")[0]
@@ -591,20 +603,13 @@ const EmployeeAttendance = () => {
                             </td>
                             <td className="px-6 py-5 whitespace-nowrap bg-inherit">
                               <select
-                                className="w-full bg-iridescent-pearl border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green transition-colors duration-200 text-deep-space-black"
+                                className="w-full bg-white border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green transition-colors duration-200 text-deep-space-black"
                                 value={attendanceRecord?.status || ""}
                                 onChange={(e) => {
                                   if (e.target.value) {
-                                    // Format date as YYYY-MM-DD without timezone issues
-                                    const year = date.getFullYear();
-                                    const month = String(
-                                      date.getMonth() + 1
-                                    ).padStart(2, "0");
-                                    const day = String(date.getDate()).padStart(
-                                      2,
-                                      "0"
-                                    );
-                                    const formattedDate = `${year}-${month}-${day}`;
+                                    // Use the same date format as getAttendanceForDate
+                                    const formattedDate = date.toISOString().split("T")[0];
+                                    console.log("🔄 Status dropdown onChange - Date:", date, "Formatted:", formattedDate, "Status:", e.target.value);
 
                                     // Mark attendance without automatically setting hours
                                     markAttendance(
@@ -629,7 +634,7 @@ const EmployeeAttendance = () => {
                             </td>
                             <td className="px-6 py-5 whitespace-nowrap bg-inherit">
                               <select
-                                className="w-full bg-iridescent-pearl border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green transition-colors duration-200 text-deep-space-black"
+                                className="w-full bg-white border border-deep-space-black/20 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-lumen-green focus:border-lumen-green transition-colors duration-200 text-deep-space-black"
                                 value={
                                   hoursInputs[
                                     date.toISOString().split("T")[0]
@@ -726,7 +731,7 @@ const EmployeeAttendance = () => {
 
                   {/* Week Statistics */}
                   <div className="grid grid-cols-5 gap-6">
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-lumen-green mb-1">
                         {
                           attendance.filter(
@@ -738,7 +743,7 @@ const EmployeeAttendance = () => {
                         Present
                       </div>
                     </div>
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-neon-violet mb-1">
                         {
                           attendance.filter(
@@ -750,7 +755,7 @@ const EmployeeAttendance = () => {
                         WFH
                       </div>
                     </div>
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-coral-red mb-1">
                         {
                           attendance.filter(
@@ -762,7 +767,7 @@ const EmployeeAttendance = () => {
                         Leave
                       </div>
                     </div>
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-deep-space-black/70 mb-1">
                         {
                           attendance.filter(
@@ -774,7 +779,7 @@ const EmployeeAttendance = () => {
                         Absent
                       </div>
                     </div>
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-yellow mb-1">
                         {
                           attendance.filter(
@@ -794,20 +799,20 @@ const EmployeeAttendance = () => {
 
           {/* Calendar View */}
           {view === "calendar" && (
-            <div className="bg-iridescent-pearl rounded-xl shadow-md border border-deep-space-black/10 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-md border border-deep-space-black/10 overflow-hidden">
               {/* Month Navigation */}
               <div className="flex justify-between items-center p-4 border-b border-deep-space-black/10">
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setView("weekly")}
-                    className="flex items-center px-3 py-2 text-sm font-medium text-deep-space-black bg-iridescent-pearl border border-deep-space-black/20 hover:bg-neon-violet/20 rounded-xl transition-colors duration-200"
+                    className="flex items-center px-3 py-2 text-sm font-medium text-deep-space-black bg-white border border-deep-space-black/20 hover:bg-neon-violet/20 rounded-xl transition-colors duration-200"
                   >
                     <FaArrowLeft className="w-4 h-4 mr-2" />
                     Back
                   </button>
                   <button
                     onClick={goToPreviousMonth}
-                    className="px-3 py-1 bg-iridescent-pearl border border-deep-space-black/20 rounded-xl hover:bg-neon-violet/20 text-deep-space-black"
+                    className="px-3 py-1 bg-white border border-deep-space-black/20 rounded-xl hover:bg-neon-violet/20 text-deep-space-black"
                   >
                     Previous Month
                   </button>
@@ -820,7 +825,7 @@ const EmployeeAttendance = () => {
                 </h3>
                 <button
                   onClick={goToNextMonth}
-                  className="px-3 py-1 bg-iridescent-pearl border border-deep-space-black/20 rounded-xl hover:bg-neon-violet/20 text-deep-space-black"
+                  className="px-3 py-1 bg-white border border-deep-space-black/20 rounded-xl hover:bg-neon-violet/20 text-deep-space-black"
                 >
                   Next Month
                 </button>
@@ -864,7 +869,7 @@ const EmployeeAttendance = () => {
                           className={`p-2 min-h-[80px] border border-deep-space-black/10 ${
                             !isCurrentMonth
                               ? "bg-neon-violet/10 text-deep-space-black/50"
-                              : "bg-iridescent-pearl"
+                              : "bg-white"
                           } ${isToday ? "ring-2 ring-lumen-green" : ""}`}
                         >
                           <div className="text-sm font-medium text-deep-space-black mb-1">
@@ -909,7 +914,7 @@ const EmployeeAttendance = () => {
 
                   {/* Monthly Statistics */}
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-lumen-green mb-1">
                         {
                           attendance.filter((a) => {
@@ -929,7 +934,7 @@ const EmployeeAttendance = () => {
                         Present
                       </div>
                     </div>
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-neon-violet mb-1">
                         {
                           attendance.filter((a) => {
@@ -949,7 +954,7 @@ const EmployeeAttendance = () => {
                         WFH
                       </div>
                     </div>
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-coral-red mb-1">
                         {
                           attendance.filter((a) => {
@@ -969,7 +974,7 @@ const EmployeeAttendance = () => {
                         Leave
                       </div>
                     </div>
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-deep-space-black/70 mb-1">
                         {
                           attendance.filter((a) => {
@@ -989,7 +994,7 @@ const EmployeeAttendance = () => {
                         Absent
                       </div>
                     </div>
-                    <div className="text-center bg-iridescent-pearl rounded-xl p-4 shadow-md border border-deep-space-black/10">
+                    <div className="text-center bg-white rounded-xl p-4 shadow-md border border-deep-space-black/10">
                       <div className="text-3xl font-bold text-yellow mb-1">
                         {
                           attendance.filter((a) => {

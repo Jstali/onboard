@@ -103,7 +103,7 @@ const ManualEmployeeAdd = ({ onSuccess, onClose }) => {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-deep-space-black/20 rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-lumen-green text-deep-space-black"
               placeholder="employee@company.com"
               required
             />
@@ -118,7 +118,7 @@ const ManualEmployeeAdd = ({ onSuccess, onClose }) => {
               name="first_name"
               value={formData.first_name}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-deep-space-black/20 rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-lumen-green text-deep-space-black"
               placeholder="Enter first name"
               required
             />
@@ -133,7 +133,7 @@ const ManualEmployeeAdd = ({ onSuccess, onClose }) => {
               name="last_name"
               value={formData.last_name}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-deep-space-black/20 rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-lumen-green text-deep-space-black"
               placeholder="Enter last name"
               required
             />
@@ -147,7 +147,7 @@ const ManualEmployeeAdd = ({ onSuccess, onClose }) => {
               name="employment_type"
               value={formData.employment_type}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-deep-space-black/20 rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-lumen-green text-deep-space-black"
             >
               <option value="Full-Time">Full-Time</option>
               <option value="Contract">Contract</option>
@@ -165,7 +165,7 @@ const ManualEmployeeAdd = ({ onSuccess, onClose }) => {
               name="temp_password"
               value={formData.temp_password}
               onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-deep-space-black/20 rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-lumen-green text-deep-space-black"
               placeholder="Leave empty for auto-generation"
               minLength={6}
             />
