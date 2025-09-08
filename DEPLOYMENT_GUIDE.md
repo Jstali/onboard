@@ -147,7 +147,7 @@ onboard/
 
    # Application Configuration
    NODE_ENV=production
-   PORT=5001
+   PORT=2026
 
    # JWT Secret (change this to a secure random string)
    JWT_SECRET=your_secure_jwt_secret_key_here
@@ -280,7 +280,7 @@ npm start
 ### Application URLs
 
 - **Frontend**: [http://localhost:3001](http://localhost:3001)
-- **Backend API**: [http://localhost:5001](http://localhost:5001)
+- **Backend API**: [http://localhost:2026](http://localhost:2026)
 
 ---
 
@@ -345,14 +345,14 @@ npm start
 
 #### Issue 2: Port Already in Use
 
-**Error**: "Port 5001 already in use" or "Port 3001 already in use"
+**Error**: "Port 2026 already in use" or "Port 3001 already in use"
 **Solutions**:
 
 1. Kill existing processes:
 
    ```bash
-   # Kill process on port 5001
-   npx kill-port 5001
+   # Kill process on port 2026
+   npx kill-port 2026
 
    # Kill process on port 3001
    npx kill-port 3001

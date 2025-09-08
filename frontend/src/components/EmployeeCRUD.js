@@ -88,7 +88,7 @@ const EmployeeCRUD = () => {
 
       console.log("Sending employee data:", employeeData);
 
-      await axios.post("http://localhost:5001/api/hr/employees", employeeData);
+      await axios.post("/api/hr/employees", employeeData);
 
       toast.success("Employee created successfully");
       setShowAddModal(false);
@@ -129,7 +129,7 @@ const EmployeeCRUD = () => {
       if (!selectedEmployee) return;
 
       await axios.put(
-        `http://localhost:5001/api/hr/employees/${selectedEmployee.id}`,
+        `/api/hr/employees/${selectedEmployee.id}`,
         formData
       );
 
@@ -147,7 +147,7 @@ const EmployeeCRUD = () => {
   const handleView = async (employee) => {
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/hr/employees/${employee.id}`
+        `/api/hr/employees/${employee.id}`
       );
       setSelectedEmployee(response.data.employee);
       setShowViewModal(true);

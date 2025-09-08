@@ -1,4 +1,4 @@
-🚀 Server running on port 5001
+🚀 Server running on port 2026
 📧 Email configured for: alphanxzen@gmail.com
 🔍 POST /api/auth/login - 2025-09-06T12:56:50.278Z
 🔍 POST /api/attendance/mark - 2025-09-06T12:56:58.631Z
@@ -11,7 +11,7 @@
   "hours": null
 }
 🔍 Attendance mark request headers: {
-  host: 'localhost:5001',
+  host: 'localhost:2026',
   'user-agent': 'curl/8.7.1',
   accept: '*/*',
   'content-type': 'application/json',
@@ -33,7 +33,7 @@
   "status": "Work From Home"
 }
 🔍 Attendance mark request headers: {
-  host: 'localhost:5001',
+  host: 'localhost:2026',
   'user-agent': 'curl/8.7.1',
   accept: '*/*',
   'content-type': 'application/json',
@@ -51,7 +51,7 @@
   "hours": 8
 }
 🔍 Attendance mark request headers: {
-  host: 'localhost:5001',
+  host: 'localhost:2026',
   'user-agent': 'curl/8.7.1',
   accept: '*/*',
   'content-type': 'application/json',
@@ -75,7 +75,7 @@
   "status": "Work From Home"
 }
 🔍 Attendance mark request headers: {
-  host: 'localhost:5001',
+  host: 'localhost:2026',
   connection: 'keep-alive',
   'content-length': '47',
   'sec-ch-ua-platform': '"macOS"',
@@ -103,7 +103,7 @@
   "status": "absent"
 }
 🔍 Attendance mark request headers: {
-  host: 'localhost:5001',
+  host: 'localhost:2026',
   connection: 'keep-alive',
   'content-length': '39',
   'sec-ch-ua-platform': '"macOS"',
@@ -391,7 +391,7 @@
   "status": "present"
 }
 🔍 Attendance mark request headers: {
-  host: 'localhost:5001',
+  host: 'localhost:2026',
   connection: 'keep-alive',
   'content-length': '40',
   'sec-ch-ua-platform': '"macOS"',

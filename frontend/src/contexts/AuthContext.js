@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 
 // Configure axios defaults
 axios.defaults.timeout = 15000; // 15 second timeout
-axios.defaults.baseURL = "http://localhost:5001/api";
+axios.defaults.baseURL = "/api";
 
 const AuthContext = createContext();
 

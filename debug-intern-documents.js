@@ -8,7 +8,7 @@ async function debugInternDocuments() {
     // Test 1: Get approved employee forms
     console.log("1️⃣ Testing GET /hr/approved-employee-forms...");
     const approvedFormsResponse = await axios.get(
-      "http://localhost:5001/api/hr/approved-employee-forms"
+      "/api/hr/approved-employee-forms"
     );
     console.log("✅ Approved employee forms loaded");
     console.log(
@@ -18,7 +18,7 @@ async function debugInternDocuments() {
     // Test 2: Get document collection
     console.log("2️⃣ Testing GET /hr/document-collection...");
     const collectionResponse = await axios.get(
-      "http://localhost:5001/api/hr/document-collection"
+      "/api/hr/document-collection"
     );
     console.log("✅ Document collection loaded");
     console.log(
@@ -28,7 +28,7 @@ async function debugInternDocuments() {
     // Test 3: Get document templates
     console.log("3️⃣ Testing GET /hr/document-templates...");
     const templatesResponse = await axios.get(
-      "http://localhost:5001/api/hr/document-templates"
+      "/api/hr/document-templates"
     );
     console.log("✅ Document templates loaded");
     console.log(

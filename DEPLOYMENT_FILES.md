@@ -36,7 +36,7 @@ This document lists all the deployment and migration files created for the ONBOA
 - **Purpose**: Starts the application on Windows
 - **Features**:
   - Validates prerequisites
-  - Starts backend server on port 5001
+  - Starts backend server on port 2026
   - Starts frontend server on port 3001
   - Checks application status
   - Provides access information
@@ -127,7 +127,7 @@ ONDOARD/
 
 ### After Deployment:
 
-- Backend accessible at: http://localhost:5001
+- Backend accessible at: http://localhost:2026
 - Frontend accessible at: http://localhost:3001
 - Test login: test.employee@company.com / test123
 

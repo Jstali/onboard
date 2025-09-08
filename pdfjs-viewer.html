@@ -25,7 +25,7 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
         // Load PDF
-        pdfjsLib.getDocument('http://localhost:5001/uploads/documents/documents-1756718792889-234149447.pdf').promise
+        pdfjsLib.getDocument('http://localhost:2026/uploads/documents/documents-1756718792889-234149447.pdf').promise
             .then(function(pdf) {
                 console.log('PDF loaded successfully');
                 document.getElementById('loading').style.display = 'none';
@@ -54,7 +54,7 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('error').innerHTML = 
-                    'Error loading PDF. <a href="http://localhost:5001/uploads/documents/documents-1756718792889-234149447.pdf" target="_blank">Open in New Tab</a>';
+                    'Error loading PDF. <a href="http://localhost:2026/uploads/documents/documents-1756718792889-234149447.pdf" target="_blank">Open in New Tab</a>';
             });
     </script>
 </body>

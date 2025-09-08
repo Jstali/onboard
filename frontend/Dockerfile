@@ -1,3 +1,4 @@
+
 # =============================================================================
 # NXZEN EMPLOYEE MANAGEMENT SYSTEM - FRONTEND DOCKERFILE
 # =============================================================================
@@ -11,10 +12,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Install system dependencies
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++
+RUN apk add --no-cache     python3     make     g++
 
 # Copy package files
 COPY package*.json ./
@@ -40,27 +38,14 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy built application from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Create nginx user and set permissions
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S nxzen -u 1001 -G nginx
-
-# Set proper permissions
-RUN chown -R nxzen:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
-
-# Create nginx directories
-RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run && \
-    chown -R nxzen:nginx /var/cache/nginx /var/log/nginx /var/run
-
-# Switch to non-root user
-USER nxzen
+# Create necessary directories and set permissions
+RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run &&     chown -R nginx:nginx /var/cache/nginx /var/log/nginx /var/run /usr/share/nginx/html &&     chmod -R 755 /usr/share/nginx/html
 
 # Expose port
 EXPOSE 80
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3     CMD curl -f http://localhost/health || exit 1
 
-# Start nginx
+# Start nginx (runs as nginx user by default)
 CMD ["nginx", "-g", "daemon off;"]

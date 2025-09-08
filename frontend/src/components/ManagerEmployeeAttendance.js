@@ -47,7 +47,7 @@ const ManagerEmployeeAttendance = () => {
       }
 
       const response = await fetch(
-        "http://localhost:5001/api/manager/employees",
+        "/api/manager/employees",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -97,7 +97,7 @@ const ManagerEmployeeAttendance = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5001/api/manager/employee/${empId}/attendance`,
+        `/api/manager/employee/${empId}/attendance`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

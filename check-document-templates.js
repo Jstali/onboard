@@ -8,7 +8,7 @@ async function checkDocumentTemplates() {
     // Get document templates
     console.log("1️⃣ Testing GET /hr/document-templates...");
     const templatesResponse = await axios.get(
-      "http://localhost:5001/api/hr/document-templates"
+      "/api/hr/document-templates"
     );
     console.log("✅ Document templates loaded");
     console.log(

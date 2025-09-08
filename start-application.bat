@@ -50,7 +50,7 @@ echo Starting Backend Server...
 echo ========================================
 
 :: Start backend server in a new window
-echo Starting backend server on port 5001...
+echo Starting backend server on port 2026...
 start "ONBOARD Backend Server" cmd /k "cd backend && npm start"
 
 :: Wait a moment for backend to start
@@ -73,7 +73,7 @@ echo ========================================
 echo Application Started Successfully!
 echo ========================================
 echo.
-echo Backend Server: http://localhost:5001
+echo Backend Server: http://localhost:2026
 echo Frontend Application: http://localhost:3001
 echo.
 echo Test Credentials:
@@ -88,7 +88,7 @@ echo Checking application status...
 
 :: Check if backend is running
 echo Checking backend server...
-curl -s http://localhost:5001/api/auth/me >nul 2>&1
+curl -s /api/auth/me >nul 2>&1
 if %errorlevel% equ 0 (
     echo ✓ Backend server is running
 ) else (

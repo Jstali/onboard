@@ -363,7 +363,7 @@ const HRExpenseManagement = () => {
                         Attachment
                       </h4>
                       <a
-                        href={`http://localhost:5001${expense.attachment_url}`}
+                        href={`http://localhost:2026${expense.attachment_url}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-sm text-brand-green hover:text-brand-green/80 transition-colors duration-200"
@@ -706,7 +706,7 @@ const HRExpenseManagement = () => {
                     Attachment
                   </h4>
                   <a
-                    href={`http://localhost:5001${selectedExpense.attachment_url}`}
+                    href={`http://localhost:2026${selectedExpense.attachment_url}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-sm text-brand-green hover:text-brand-green/80 transition-colors duration-200"

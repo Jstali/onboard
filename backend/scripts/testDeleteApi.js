@@ -4,7 +4,7 @@ require("dotenv").config({ path: "../config.env" });
 
 // Configure axios for testing
 const api = axios.create({
-  baseURL: "http://localhost:5001/api",
+  baseURL: "/api",
   timeout: 10000,
 });
 

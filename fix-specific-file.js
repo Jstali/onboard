@@ -141,7 +141,7 @@ async function fixSpecificFile() {
     // Step 6: Test the file accessibility
     console.log("\n6️⃣ Testing file accessibility...");
     const axios = require("axios");
-    const testUrl = `http://localhost:5001${newFileUrl}`;
+    const testUrl = `http://localhost:2026${newFileUrl}`;
 
     try {
       const response = await axios.head(testUrl, { timeout: 5000 });

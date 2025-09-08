@@ -26,7 +26,7 @@
 - [ ] Run start script:
   - Linux/macOS: `./start-application.sh`
   - Windows: `start-application.bat`
-- [ ] Verify backend starts on port 5001
+- [ ] Verify backend starts on port 2026
 - [ ] Verify frontend starts on port 3001
 
 ## Testing

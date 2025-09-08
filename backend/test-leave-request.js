@@ -4,7 +4,7 @@ async function testLeaveRequest() {
   try {
     // Get HR token
     const loginResponse = await axios.post(
-      "http://localhost:5001/api/auth/login",
+      "/api/auth/login",
       {
         email: "hr@nxzen.com",
         password: "hr123",
@@ -28,7 +28,7 @@ async function testLeaveRequest() {
     console.log("📤 Data:", leaveRequestData);
 
     const response = await axios.post(
-      "http://localhost:5001/api/leave/submit",
+      "/api/leave/submit",
       leaveRequestData,
       {
         headers: {

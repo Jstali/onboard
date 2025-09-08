@@ -36,7 +36,7 @@ const DocumentUploadSection = ({
   const fetchRequirements = useCallback(async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5001/api/documents/requirements`
+        `/api/documents/requirements`
       );
       setRequirements(response.data);
 
@@ -64,7 +64,7 @@ const DocumentUploadSection = ({
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5001/api/documents/employee/${employeeId}`,
+        `/api/documents/employee/${employeeId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -86,7 +86,7 @@ const DocumentUploadSection = ({
 
       // Also fetch validation status
       const validationResponse = await axios.get(
-        `http://localhost:5001/api/documents/validation/${employeeId}`,
+        `/api/documents/validation/${employeeId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setValidation(validationResponse.data.validation);
@@ -99,7 +99,7 @@ const DocumentUploadSection = ({
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5001/api/employee/form-status`,
+        `/api/employee/form-status`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -145,7 +145,7 @@ const DocumentUploadSection = ({
 
       const token = localStorage.getItem("token");
       await axios.post(
-        `http://localhost:5001/api/documents/upload/${employeeId}`,
+        `/api/documents/upload/${employeeId}`,
         formData,
         {
           headers: {
@@ -174,7 +174,7 @@ const DocumentUploadSection = ({
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `http://localhost:5001/api/employee/save-draft`,
+        `/api/employee/save-draft`,
         {
           employeeId,
           documents: uploadedDocuments,

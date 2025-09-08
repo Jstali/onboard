@@ -12,9 +12,9 @@
 # Database connection parameters
 DB_HOST="localhost"
 DB_PORT="5432"
-DB_NAME="nxzen_hrms"
+DB_NAME="onboardxdb"
 DB_USER="postgres"
-DB_PASSWORD="password"
+DB_PASSWORD="MySecurePass#2025"
 
 # Colors for output
 RED='\033[0;31m'

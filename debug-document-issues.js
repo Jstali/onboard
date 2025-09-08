@@ -11,7 +11,7 @@ async function debugDocumentIssues() {
     console.log("1️⃣ Testing backend server connectivity...");
     try {
       const healthResponse = await axios.get(
-        "http://localhost:5001/api/health"
+        "/api/health"
       );
       console.log("✅ Backend server is running");
       console.log(`   Status: ${healthResponse.data.status}`);
@@ -71,7 +71,7 @@ async function debugDocumentIssues() {
 
         console.log(`   Testing access to: ${fileUrl}`);
         const fileResponse = await axios.head(
-          `http://localhost:5001${fileUrl}`,
+          `http://localhost:2026${fileUrl}`,
           {
             timeout: 5000,
             validateStatus: function (status) {
@@ -101,7 +101,7 @@ async function debugDocumentIssues() {
     try {
       // This would require authentication, but let's check if the endpoint exists
       const response = await axios.get(
-        "http://localhost:5001/api/documents/employee/1",
+        "/api/documents/employee/1",
         {
           timeout: 5000,
           validateStatus: function (status) {
@@ -135,7 +135,7 @@ async function debugDocumentIssues() {
     console.log("\n5️⃣ Testing CORS configuration...");
     try {
       const corsResponse = await axios.options(
-        "http://localhost:5001/api/health",
+        "/api/health",
         {
           timeout: 5000,
         }

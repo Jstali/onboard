@@ -145,11 +145,11 @@ async function sendLeaveRequestToManager(managerEmail, leaveRequest) {
       leaveRequest.toDate || "Single Day"
     }\nTotal Days: ${leaveRequest.totalDays}\nReason: ${
       leaveRequest.reason
-    }\n\nPlease approve or reject this request by clicking the links below:\n\nApprove: http://localhost:5001/api/leave/approve/${
+    }\n\nPlease approve or reject this request by clicking the links below:\n\nApprove: /api/leave/approve/${
       leaveRequest.id
     }?action=approve&token=${
       leaveRequest.approvalToken
-    }\nReject: http://localhost:5001/api/leave/approve/${
+    }\nReject: /api/leave/approve/${
       leaveRequest.id
     }?action=reject&token=${leaveRequest.approvalToken}`,
     html: `
@@ -185,13 +185,13 @@ async function sendLeaveRequestToManager(managerEmail, leaveRequest) {
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="http://localhost:5001/api/leave/approve/${
+          <a href="/api/leave/approve/${
             leaveRequest.id
           }?action=approve&token=${leaveRequest.approvalToken}" 
              style="background-color: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin-right: 15px;">
             ✅ Approve Request
           </a>
-          <a href="http://localhost:5001/api/leave/approve/${
+          <a href="/api/leave/approve/${
             leaveRequest.id
           }?action=reject&token=${leaveRequest.approvalToken}" 
              style="background-color: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
@@ -425,7 +425,7 @@ async function sendExpenseRequestToManager(managerEmail, expenseRequest) {
     to: managerEmail,
     replyTo: expenseRequest.employeeEmail, // Set reply-to to employee's email
     subject: `Expense Request from ${expenseRequest.employeeName} - Primary Manager Action Required`,
-    text: `Expense Request Details:\n\nEmployee: ${expenseRequest.employeeName}\nEmployee Email: ${expenseRequest.employeeEmail}\nCategory: ${expenseRequest.expenseCategory}\nType: ${expenseRequest.expenseType}\nAmount: ${expenseRequest.amount} ${expenseRequest.currency}\nDate: ${expenseRequest.expenseDate}\nDescription: ${expenseRequest.description}\nAttachment: ${expenseRequest.attachmentName}\n\nPlease approve or reject this request by clicking the links below:\n\nApprove: http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=approve&token=${expenseRequest.approvalToken}\nReject: http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=reject&token=${expenseRequest.approvalToken}`,
+    text: `Expense Request Details:\n\nEmployee: ${expenseRequest.employeeName}\nEmployee Email: ${expenseRequest.employeeEmail}\nCategory: ${expenseRequest.expenseCategory}\nType: ${expenseRequest.expenseType}\nAmount: ${expenseRequest.amount} ${expenseRequest.currency}\nDate: ${expenseRequest.expenseDate}\nDescription: ${expenseRequest.description}\nAttachment: ${expenseRequest.attachmentName}\n\nPlease approve or reject this request by clicking the links below:\n\nApprove: /api/expenses/approve/${expenseRequest.id}?action=approve&token=${expenseRequest.approvalToken}\nReject: /api/expenses/approve/${expenseRequest.id}?action=reject&token=${expenseRequest.approvalToken}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Expense Request - Primary Manager Action Required</h2>
@@ -446,11 +446,11 @@ async function sendExpenseRequestToManager(managerEmail, expenseRequest) {
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=approve&token=${expenseRequest.approvalToken}" 
+          <a href="/api/expenses/approve/${expenseRequest.id}?action=approve&token=${expenseRequest.approvalToken}" 
              style="background-color: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin-right: 15px;">
             ✅ Approve Request
           </a>
-          <a href="http://localhost:5001/api/expenses/approve/${expenseRequest.id}?action=reject&token=${expenseRequest.approvalToken}" 
+          <a href="/api/expenses/approve/${expenseRequest.id}?action=reject&token=${expenseRequest.approvalToken}" 
              style="background-color: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
             ❌ Reject Request
           </a>

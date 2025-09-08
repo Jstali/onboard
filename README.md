@@ -151,7 +151,7 @@ EMAIL_USER=alphanxzen@gmail.com
 EMAIL_PASS=rewn cxqu eiuz fgmd
 
 # Server Configuration
-PORT=5001
+PORT=2026
 NODE_ENV=development
 ```
 
@@ -185,8 +185,8 @@ npm start
 ## 🌐 Access Points
 
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5001
-- **Health Check**: http://localhost:5001/api/health
+- **Backend API**: http://localhost:2026
+- **Health Check**: /api/health
 
 ## 🔐 Default Credentials
 
@@ -353,7 +353,7 @@ The application automatically sends emails for:
 
 1. **Database Connection**: Verify PostgreSQL is running and credentials are correct
 2. **Email Sending**: Check Gmail app password and SMTP settings
-3. **Port Conflicts**: Ensure ports 3000 and 5001 are available
+3. **Port Conflicts**: Ensure ports 3000 and 2026 are available
 4. **CORS Issues**: Verify frontend URL in backend CORS configuration
 5. **Document Collection**: Check if approved employees have document records
 6. **Email Conflicts**: Use the email generation system to avoid duplicates

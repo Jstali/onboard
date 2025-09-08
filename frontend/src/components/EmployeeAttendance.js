@@ -65,7 +65,7 @@ const EmployeeAttendance = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5001/api/attendance/my-attendance?start_date=${startDate}&end_date=${endDate}`,
+        `/api/attendance/my-attendance?start_date=${startDate}&end_date=${endDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -138,7 +138,7 @@ const EmployeeAttendance = () => {
       }
 
       const response = await fetch(
-        "http://localhost:5001/api/attendance/settings",
+        "/api/attendance/settings",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -193,7 +193,7 @@ const EmployeeAttendance = () => {
       }
 
       const response = await fetch(
-        "http://localhost:5001/api/attendance/mark",
+        "/api/attendance/mark",
         {
           method: "POST",
           headers: {

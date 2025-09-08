@@ -8,7 +8,7 @@ const testDocumentCollection = async () => {
     // Test 1: Get all document collection records
     console.log("1️⃣ Testing GET /hr/document-collection...");
     const documentsResponse = await axios.get(
-      "http://localhost:5001/api/hr/document-collection"
+      "/api/hr/document-collection"
     );
     console.log(
       `✅ Success! Found ${documentsResponse.data.documents.length} document records`
@@ -27,7 +27,7 @@ const testDocumentCollection = async () => {
     // Test 2: Get document templates
     console.log("\n2️⃣ Testing GET /hr/document-templates...");
     const templatesResponse = await axios.get(
-      "http://localhost:5001/api/hr/document-templates"
+      "/api/hr/document-templates"
     );
     console.log(
       `✅ Success! Found ${templatesResponse.data.templates.length} document templates`
@@ -45,7 +45,7 @@ const testDocumentCollection = async () => {
     // Test 3: Get employee master data
     console.log("\n3️⃣ Testing GET /hr/master...");
     const employeesResponse = await axios.get(
-      "http://localhost:5001/api/hr/master"
+      "/api/hr/master"
     );
     console.log(
       `✅ Success! Found ${employeesResponse.data.employees.length} employees`

@@ -8,7 +8,7 @@ async function cleanupAndResyncDocuments() {
     // Step 1: Clear existing document collection records
     console.log("1️⃣ Clearing existing document collection records...");
     const clearResponse = await axios.delete(
-      "http://localhost:5001/api/hr/document-collection/cleanup"
+      "/api/hr/document-collection/cleanup"
     );
     console.log("✅ Existing records cleared");
     console.log(`📊 Cleared ${clearResponse.data.deletedCount} records\n`);
@@ -16,7 +16,7 @@ async function cleanupAndResyncDocuments() {
     // Step 2: Run sync to recreate documents with proper filtering
     console.log("2️⃣ Running document sync with employment type filtering...");
     const syncResponse = await axios.post(
-      "http://localhost:5001/api/hr/sync-document-collection"
+      "/api/hr/sync-document-collection"
     );
     console.log("✅ Document sync completed");
     console.log(`📊 ${syncResponse.data.message}\n`);
@@ -24,7 +24,7 @@ async function cleanupAndResyncDocuments() {
     // Step 3: Verify the results
     console.log("3️⃣ Verifying results...");
     const verifyResponse = await axios.get(
-      "http://localhost:5001/api/hr/document-collection"
+      "/api/hr/document-collection"
     );
     console.log(
       `📊 Total documents after sync: ${verifyResponse.data.documents.length}`
@@ -60,7 +60,7 @@ async function cleanupAndResyncDocuments() {
       console.log("🔄 Cleanup endpoint not found, running sync only...");
       try {
         const syncResponse = await axios.post(
-          "http://localhost:5001/api/hr/sync-document-collection"
+          "/api/hr/sync-document-collection"
         );
         console.log("✅ Document sync completed");
         console.log(`📊 ${syncResponse.data.message}`);

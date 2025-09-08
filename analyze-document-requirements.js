@@ -14,7 +14,7 @@ async function analyzeDocumentRequirements() {
     for (const type of employmentTypes) {
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/documents/requirements/${type}`
+          `/api/documents/requirements/${type}`
         );
         documentRequirements[type] = response.data;
         console.log(`✅ ${type} requirements loaded`);
@@ -26,7 +26,7 @@ async function analyzeDocumentRequirements() {
     // Test 2: Get document templates from database
     console.log("\n2️⃣ Testing GET /hr/document-templates...");
     const templatesResponse = await axios.get(
-      "http://localhost:5001/api/hr/document-templates"
+      "/api/hr/document-templates"
     );
     console.log("✅ Document templates loaded");
     console.log(
@@ -36,7 +36,7 @@ async function analyzeDocumentRequirements() {
     // Test 3: Get employee forms
     console.log("3️⃣ Testing GET /hr/employee-forms...");
     const formsResponse = await axios.get(
-      "http://localhost:5001/api/hr/employee-forms"
+      "/api/hr/employee-forms"
     );
     console.log("✅ Employee forms loaded");
     console.log(`📊 Found ${formsResponse.data.forms.length} employee forms\n`);
@@ -44,7 +44,7 @@ async function analyzeDocumentRequirements() {
     // Test 4: Get document collection
     console.log("4️⃣ Testing GET /hr/document-collection...");
     const collectionResponse = await axios.get(
-      "http://localhost:5001/api/hr/document-collection"
+      "/api/hr/document-collection"
     );
     console.log("✅ Document collection loaded");
     console.log(

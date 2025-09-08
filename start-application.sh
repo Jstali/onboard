@@ -47,7 +47,7 @@ echo "Starting Backend Server..."
 echo "========================================"
 
 # Start backend server in background
-echo "Starting backend server on port 5001..."
+echo "Starting backend server on port 2026..."
 cd onboard/backend
 npm start &
 BACKEND_PID=$!
@@ -76,7 +76,7 @@ echo "========================================"
 echo "Application Started Successfully!"
 echo "========================================"
 echo
-echo "Backend Server: http://localhost:5001"
+echo "Backend Server: http://localhost:2026"
 echo "Frontend Application: http://localhost:3001"
 echo
 echo "Test Credentials:"
@@ -91,7 +91,7 @@ echo "Checking application status..."
 
 # Check if backend is running
 echo "Checking backend server..."
-if curl -s http://localhost:5001/api/auth/me > /dev/null 2>&1; then
+if curl -s /api/auth/me > /dev/null 2>&1; then
     echo "✓ Backend server is running"
 else
     echo "⚠ Backend server may still be starting up"

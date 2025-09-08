@@ -282,7 +282,7 @@ echo 2. Run start-application.bat to start the application
 echo 3. Access the application at http://localhost:3001
 echo.
 echo For development:
-echo - Backend will run on http://localhost:5001
+echo - Backend will run on http://localhost:2026
 echo - Frontend will run on http://localhost:3001
 echo.
 pause

@@ -46,14 +46,14 @@ start-application.bat
 ### ✅ Success Indicators
 
 - [ ] See "Deployment Completed Successfully!" message
-- [ ] Both frontend (port 3001) and backend (port 5001) running
+- [ ] Both frontend (port 3001) and backend (port 2026) running
 - [ ] Can login with HR credentials
 - [ ] Can see employee dashboard
 
 ### 🚨 Common Issues
 
 1. **Database connection failed**: Check PostgreSQL is running
-2. **Port in use**: Kill existing processes with `npx kill-port 5001`
+2. **Port in use**: Kill existing processes with `npx kill-port 2026`
 3. **npm errors**: Run `npm cache clean --force`
 
 For detailed instructions, see **DEPLOYMENT_GUIDE.md**

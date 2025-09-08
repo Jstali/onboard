@@ -40,7 +40,7 @@ const ManagerDashboard = () => {
       }
 
       const response = await fetch(
-        "http://localhost:5001/api/manager/dashboard",
+        "/api/manager/dashboard",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -72,7 +72,7 @@ const ManagerDashboard = () => {
       if (!token) return;
 
       const response = await fetch(
-        `http://localhost:5001/api/leave/balances/${employeeId}`,
+        `/api/leave/balances/${employeeId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

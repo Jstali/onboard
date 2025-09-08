@@ -18,7 +18,7 @@ const ManagerLeaveApproval = () => {
 
   const fetchLeaveTypes = async () => {
     try {
-      const response = await axios.get("http://localhost:5001/api/leave/types");
+      const response = await axios.get("/api/leave/types");
       setLeaveTypes(response.data);
     } catch (error) {
       console.error("Error fetching leave types:", error);
@@ -33,7 +33,7 @@ const ManagerLeaveApproval = () => {
       }
 
       const response = await axios.get(
-        "http://localhost:5001/api/leave/manager/pending",
+        "/api/leave/manager/pending",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -73,7 +73,7 @@ const ManagerLeaveApproval = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5001/api/leave/manager/${selectedRequest.id}/approve`,
+        `/api/leave/manager/${selectedRequest.id}/approve`,
         approvalData,
         {
           headers: {
