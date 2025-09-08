@@ -122,7 +122,7 @@ const HRDashboard = () => {
               {/* Logo */}
               <div className="flex items-center space-x-3 cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105">
                 <img
-                  src={require("../assets/nxzen.png")}
+                  src="/favicon.png"
                   alt="nxzen Logo"
                   className="w-10 h-10 object-contain transition-transform duration-300 hover:rotate-12"
                 />

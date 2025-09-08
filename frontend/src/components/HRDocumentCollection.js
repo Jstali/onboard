@@ -706,7 +706,7 @@ const HRDocumentCollection = () => {
                   Submitted
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border border-gray-400"
+                  className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider border border-gray-400"
                   style={{ width: "150px", minWidth: "150px" }}
                 >
                   Document Summary

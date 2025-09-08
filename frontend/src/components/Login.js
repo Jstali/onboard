@@ -102,21 +102,21 @@ const Login = () => {
       <div className="absolute inset-0 bg-deep-space-black/40"></div>
       
       {/* Logo in top left */}
-      <div className="absolute top-8 left-8">
+      {/* <div className="absolute top-8 left-10">
         <img 
+          src="/favicon.png" 
+          alt="favicon" 
+          className="h-24 w-auto"
+        />
+      </div> */}
+
+      <div className="absolute z-10 w-full max-w-md mx-4">
+        <div className="bg-deep-space-black/95 rounded-2xl p-8 shadow-2xl border border-deep-space-black/20 backdrop-blur-sm">
+          <div className="text-center mb-8 ">
+          <img 
           src="/nxzen-logo.png" 
           alt="nxzen logo" 
-          className="h-12 w-auto"
-        />
-      </div>
-
-      <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="bg-deep-space-black/95 rounded-2xl p-8 shadow-2xl border border-deep-space-black/20 backdrop-blur-sm">
-          <div className="text-center mb-8">
-            <img
-              src="/nxzen-logo-white.png"
-              alt="nxzen logo"
-              className="h-12 w-auto"
+          className="h-20 w-auto"
             />
           </div>
 
@@ -146,7 +146,7 @@ const Login = () => {
                     <input
                       type={showPassword ? "text" : "password"}
                       required
-                      className="w-full px-4 py-3 bg-brand-yellow/90 border border-brand-yellow/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder-deep-space-black/70 pr-12"
+                      className="w-full px-4 py-3 bg-brand-white/90 border border-brand-yellow/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-lumen-green focus:border-lumen-green text-deep-space-black placeholder-deep-space-black/70 pr-12"
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}

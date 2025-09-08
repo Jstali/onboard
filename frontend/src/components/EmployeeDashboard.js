@@ -223,11 +223,11 @@ const EmployeeDashboard = () => {
               <div className="flex items-center space-x-3 cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg bg-lumen-green">
                   <span className="text-xl font-bold text-deep-space-black">
-                    N
+                    <img src="/favicon.png" alt="favicon" className="w-12 h-12" />
                   </span>
                 </div>
                 <div className="text-deep-space-black font-bold text-xl transition-colors duration-300 hover:text-lumen-green">
-                  NXZEN
+                  nxzen
                 </div>
               </div>
               <div className="border-l border-gray-300 h-8"></div>
