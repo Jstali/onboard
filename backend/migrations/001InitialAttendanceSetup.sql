@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS leave_requests (
     to_date DATE NOT NULL,
     total_leave_days INTEGER NOT NULL,
     reason TEXT,
-    status VARCHAR(50) DEFAULT 'pending_manager_approval' CHECK (status IN ('pending_manager_approval', 'pending_hr_approval', 'approved', 'rejected')),
+    status VARCHAR(50) DEFAULT 'Pending Manager Approval' CHECK (status IN ('Pending Manager Approval', 'Pending HR Approval', 'Manager Approved', 'HR Approved', 'rejected')),
     manager_id INTEGER REFERENCES users(id),
     managerApprovedAt TIMESTAMP,
     managerApprovalNotes TEXT,

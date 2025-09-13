@@ -447,7 +447,7 @@ router.post(
         [employeeId]
       );
 
-      if (employeeResult.rows.length === 0) {
+      if (!employeeResult.rows || employeeResult.rows.length === 0) {
         return res.status(404).json({ error: "Employee not found" });
       }
 
@@ -464,7 +464,10 @@ router.post(
         [employeeId, currentYear]
       );
 
-      const leaveBalanceBefore = balanceResult.rows[0]?.leaves_remaining || 27;
+      const leaveBalanceBefore =
+        balanceResult.rows && balanceResult.rows.length > 0
+          ? balanceResult.rows[0].leaves_remaining || 15
+          : 15;
 
       // Calculate total leave days
       const totalLeaveDays = toDate

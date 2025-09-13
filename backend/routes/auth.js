@@ -20,9 +20,9 @@ router.post(
 
       const { email, password } = req.body;
 
-      // Check if user exists
+      // Check if user exists (case-insensitive)
       const userResult = await pool.query(
-        "SELECT * FROM users WHERE email = $1",
+        "SELECT * FROM users WHERE LOWER(email) = LOWER($1)",
         [email]
       );
 

@@ -150,7 +150,7 @@ router.get("/employees", async (req, res) => {
           )
           FROM leave_requests lr 
           WHERE lr.employee_id = u.id 
-            AND lr.status IN ('approved', 'pending_manager_approval', 'pending_hr_approval')
+            AND lr.status IN ('approved', 'Pending Manager Approval', 'Pending HR Approval')
             AND lr.from_date >= CURRENT_DATE - INTERVAL '1 year'
         ) as recent_leaves
       FROM users u
@@ -225,7 +225,7 @@ router.get("/employee/:employeeId/leave-details", async (req, res) => {
         lr.created_at
       FROM leave_requests lr
       WHERE lr.employee_id = $1 
-        AND lr.status IN ('approved', 'pending_manager_approval', 'pending_hr_approval')
+        AND lr.status IN ('approved', 'Pending Manager Approval', 'Pending HR Approval')
         AND lr.from_date >= CURRENT_DATE - INTERVAL '1 year'
       ORDER BY lr.from_date DESC
       LIMIT 10
@@ -506,7 +506,7 @@ router.get("/leave-requests", async (req, res) => {
       LEFT JOIN employee_master em ON u.email = em.company_email
       WHERE mem.manager_id = $1 
         AND mem.is_active = true
-        AND lr.status IN ('pending_manager_approval', 'pending_hr_approval', 'approved', 'rejected')
+        AND lr.status IN ('Pending Manager Approval', 'Pending HR Approval', 'approved', 'rejected')
       ORDER BY lr.created_at DESC
     `,
       [managerId]

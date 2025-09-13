@@ -287,7 +287,7 @@ CREATE TABLE IF NOT EXISTS leave_requests (
     total_leave_days DECIMAL(4,1) NOT NULL,
     half_day BOOLEAN DEFAULT false,
     reason TEXT,
-    status VARCHAR(50) DEFAULT 'pending_manager_approval' CHECK (status IN ('pending_manager_approval', 'pending_hr_approval', 'approved', 'rejected')),
+    status VARCHAR(50) DEFAULT 'Pending Manager Approval' CHECK (status IN ('Pending Manager Approval', 'Pending HR Approval', 'Manager Approved', 'HR Approved', 'rejected')),
     manager_id INTEGER REFERENCES users(id),
     manager1_name VARCHAR(255),
     manager2_name VARCHAR(255),

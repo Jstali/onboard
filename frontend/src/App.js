@@ -11,7 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Login";
 import PasswordReset from "./components/PasswordReset";
-import HRDashboard from "./components/HRDashboardSidebar";
+import HRDashboard from "./components/HRDashboard";
 import EmployeeDashboard from "./components/EmployeeDashboard";
 import AttendancePortal from "./components/AttendancePortal";
 import EmployeeAttendance from "./components/EmployeeAttendance";

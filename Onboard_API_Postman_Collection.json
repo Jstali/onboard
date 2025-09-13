@@ -1,0 +1,717 @@
+{
+  "info": {
+    "name": "Onboard API Collection",
+    "description": "Comprehensive API collection for the Employee Onboarding + Attendance Application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login - HR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hr@nxzen.com\",\n  \"password\": \"hr123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"stalin.j@nxzen.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "HR Endpoints",
+      "item": [
+        {
+          "name": "Get All Employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/hr/employees",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hr", "employees"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Master Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/hr/master",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hr", "master"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Employee Forms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/hr/employee-forms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hr", "employee-forms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Document Collection",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/hr/document-collection",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hr", "document-collection"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Approved Employee Forms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/hr/approved-employee-forms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hr", "approved-employee-forms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Onboarded Employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/hr/onboarded",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hr", "onboarded"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Master Managers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/hr/master-managers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hr", "master-managers"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Employee Endpoints",
+      "item": [
+        {
+          "name": "Get Onboarding Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/employee/onboarding-status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "employee", "onboarding-status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Onboarding Form",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/employee/onboarding-form",
+              "host": ["{{base_url}}"],
+              "path": ["api", "employee", "onboarding-form"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check if Onboarded",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/employee/is-onboarded",
+              "host": ["{{base_url}}"],
+              "path": ["api", "employee", "is-onboarded"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Get My Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/my-attendance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance", "my-attendance"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Attendance Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance", "settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Attendance Stats (HR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Attendance Details (HR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/hr/details",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance", "hr", "details"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Leave Management",
+      "item": [
+        {
+          "name": "Get Leave Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/leave/types",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leave", "types"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pending Leave Requests (HR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/leave/hr/pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leave", "hr", "pending"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Leave Requests (HR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/leave/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leave", "all"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Leave Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Approved by HR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/leave/hr/:id/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leave", "hr", ":id", "approve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Leave request ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Expense Management",
+      "item": [
+        {
+          "name": "Get Expense Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/expenses/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", "categories"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Expense Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/expenses/my-requests",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", "my-requests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Expense Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "expenseCategory",
+                  "value": "Travel",
+                  "type": "text"
+                },
+                {
+                  "key": "expenseType",
+                  "value": "Taxi",
+                  "type": "text"
+                },
+                {
+                  "key": "amount",
+                  "value": "500",
+                  "type": "text"
+                },
+                {
+                  "key": "currency",
+                  "value": "INR",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Test expense",
+                  "type": "text"
+                },
+                {
+                  "key": "expenseDate",
+                  "value": "2025-09-01",
+                  "type": "text"
+                },
+                {
+                  "key": "taxIncluded",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "attachments",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", "submit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pending Expense Requests (HR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/expenses/hr/pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", "hr", "pending"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Expense Requests (HR)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/expenses/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", "all"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Expense Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Approved by HR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/expenses/hr/:id/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "expenses", "hr", ":id", "approve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Expense request ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Manager Endpoints",
+      "item": [
+        {
+          "name": "Get Manager Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/manager/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "manager", "dashboard"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "Get Document Requirements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/documents/requirements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "requirements"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "HR Configuration",
+      "item": [
+        {
+          "name": "Get Managers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/hr-config/managers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hr-config", "managers"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
