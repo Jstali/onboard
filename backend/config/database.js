@@ -679,55 +679,10 @@ const initializeTables = async () => {
       console.log("✅ Default HR user created: hr@nxzen.com / hr123");
     }
 
-    // Insert default managers if not exists
-    const managers = [
-      {
-        id: "MGR001",
-        name: "Pradeep",
-        email: "strawhatluff124@gmail.com",
-        department: "Engineering",
-      },
-      {
-        id: "MGR002",
-        name: "Vamshi",
-        email: "vamshi@company.com",
-        department: "Product",
-      },
-      {
-        id: "MGR003",
-        name: "Vinod",
-        email: "vinod@company.com",
-        department: "Design",
-      },
-      {
-        id: "MGR004",
-        name: "Rakesh",
-        email: "rakesh@company.com",
-        department: "Marketing",
-      },
-    ];
-
-    for (const manager of managers) {
-      const managerExists = await pool.query(
-        "SELECT * FROM managers WHERE manager_id = $1",
-        [manager.id]
-      );
-      if (managerExists.rows.length === 0) {
-        await pool.query(
-          "INSERT INTO managers (manager_id, manager_name, email, department, designation) VALUES ($1, $2, $3, $4, $5)",
-          [
-            manager.id,
-            manager.name,
-            manager.email,
-            manager.department,
-            "Manager",
-          ]
-        );
-        console.log(
-          `✅ Default manager created: ${manager.name} (${manager.id})`
-        );
-      }
-    }
+    // Managers will be created from employee_master table when employees are assigned as managers
+    console.log(
+      "✅ Manager creation skipped - managers will be created from employee_master table"
+    );
 
     // Company Emails table - To store company email addresses for all users and managers
     await pool.query(`
@@ -818,7 +773,7 @@ const initializeTables = async () => {
         const companyEmail = `${username}@nxzen.com`;
 
         await pool.query(
-          "INSERT INTO company_emails (manager_id, company_email, is_primary, is_active) VALUES ($1, $2, $3, $4) ON CONFLICT (manager_id) DO NOTHING",
+          "INSERT INTO company_emails (manager_id, company_email, is_primary, is_active) VALUES ($1, $2, $3, $4) ON CONFLICT (company_email) DO NOTHING",
           [manager.manager_id, companyEmail, true, true]
         );
         console.log(

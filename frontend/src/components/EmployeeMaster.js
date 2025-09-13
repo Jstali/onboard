@@ -255,11 +255,11 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
   // Pagination calculations
   const indexOfLastEmployee = currentPage * employeesPerPage;
   const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
-  const currentEmployees = employees.slice(
+  const currentEmployees = (employees || []).slice(
     indexOfFirstEmployee,
     indexOfLastEmployee
   );
-  const totalPages = Math.ceil(employees.length / employeesPerPage);
+  const totalPages = Math.ceil((employees || []).length / employeesPerPage);
 
   return (
     <div className="min-h-screen bg-brand-pearl p-8">
@@ -532,7 +532,7 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
         )}
 
         {/* Pagination */}
-        {employees.length > 0 && (
+        {(employees || []).length > 0 && (
           <div className="bg-brand-pearl px-4 py-3 flex items-center justify-between border-t border-brand-black/10 sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
@@ -559,9 +559,12 @@ const EmployeeMaster = ({ employees, onRefresh }) => {
                   </span>{" "}
                   to{" "}
                   <span className="font-medium">
-                    {Math.min(indexOfLastEmployee, employees.length)}
+                    {Math.min(indexOfLastEmployee, (employees || []).length)}
                   </span>{" "}
-                  of <span className="font-medium">{employees.length}</span>{" "}
+                  of{" "}
+                  <span className="font-medium">
+                    {(employees || []).length}
+                  </span>{" "}
                   results
                 </p>
               </div>

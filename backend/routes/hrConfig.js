@@ -637,21 +637,23 @@ router.delete(
 
 // Get available managers for department assignment - only from employee_master table
 router.get("/managers", [authenticateToken, checkHRRole], async (req, res) => {
+  console.log("🔍 HRConfig managers route hit");
   try {
+    console.log("🔍 HRConfig managers endpoint called");
     const result = await pool.query(`
       SELECT DISTINCT 
-        manager_id, 
-        manager_name, 
+        employee_id as manager_id, 
+        employee_name as manager_name, 
         company_email as email, 
         department, 
         designation
       FROM employee_master 
-      WHERE manager_name IS NOT NULL
-        AND manager_id IS NOT NULL
-        AND status = 'active'
-      ORDER BY manager_name
+      WHERE status = 'active' 
+        AND type = 'Manager'
+      ORDER BY employee_name
     `);
 
+    console.log("🔍 HRConfig managers response:", result.rows);
     res.json({ managers: result.rows });
   } catch (error) {
     console.error("Error fetching available managers:", error);
@@ -683,24 +685,25 @@ router.get(
               '' as last_name,
               company_email as email,
               'manager' as role,
-              CASE 
-                WHEN department_id ~ '^[0-9]+$' THEN department_id::integer
-                ELSE NULL
-              END as department_id,
+            NULL as department_id,
               status,
               created_at,
               updated_at
             FROM employee_master
-            WHERE manager_id ~ '^[0-9]+$'
-              AND manager_name IS NOT NULL
+            WHERE status = 'active'
+              AND type = 'Manager'
           ) as subq
           ORDER BY subq.first_name
     `);
 
       // Get departments for mapping
-      const deptResult = await pool.query('SELECT id, name, manager_id FROM departments');
-      const deptMap = new Map(deptResult.rows.map(d => [d.manager_id.toString(), d.name]));
-      
+      const deptResult = await pool.query(
+        "SELECT id, name, manager_id FROM departments"
+      );
+      const deptMap = new Map(
+        deptResult.rows.map((d) => [d.manager_id.toString(), d.name])
+      );
+
       // Format the response
       const managers = result.rows.map((manager) => {
         const deptName = deptMap.get(manager.id);
@@ -708,7 +711,7 @@ router.get(
           ...manager,
           full_name: manager.first_name,
           department_name: deptName || null,
-          is_assigned: !!deptName
+          is_assigned: !!deptName,
         };
       });
 

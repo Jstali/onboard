@@ -9,10 +9,11 @@ const hrRoutes = require("./routes/hr");
 const hrConfigRoutes = require("./routes/hrConfig");
 const employeeRoutes = require("./routes/employee");
 const attendanceRoutes = require("./routes/attendance");
-const leaveRoutes = require("./routes/leave.js");
+const leaveRoutes = require("./routes/leave");
 const documentsRoutes = require("./routes/documents");
 const expensesRoutes = require("./routes/expenses");
 const managerRoutes = require("./routes/manager");
+const adpPayrollRoutes = require("./routes/adpPayroll");
 const { connectDB } = require("./config/database");
 
 const app = express();
@@ -149,6 +150,7 @@ app.use("/api/manager", managerRoutes);
 app.use("/api/leave", leaveRoutes);
 app.use("/api/documents", documentsRoutes);
 app.use("/api/expenses", expensesRoutes);
+app.use("/api/adp-payroll", adpPayrollRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -179,8 +181,8 @@ app.use("*", (req, res) => {
 // Start server
 const startServer = async () => {
   try {
-    // Temporarily skip database initialization to get server running
-    // await connectDB();
+    // Connect to database
+    await connectDB();
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📧 Email configured for: ${process.env.EMAIL_USER}`);

@@ -732,7 +732,7 @@ router.get("/manager/pending", authenticateToken, async (req, res) => {
     if (departmentResult.rows.length === 0) {
       // Fallback to old manager system if no department assigned
       const managerResult = await pool.query(
-        "SELECT manager_id FROM managers WHERE email = $1 AND status = 'active'",
+        "SELECT employee_id as manager_id FROM employee_master WHERE company_email = $1 AND status = 'active' AND type = 'Manager'",
         [req.user.email]
       );
 
@@ -1027,8 +1027,6 @@ router.get("/approve/:id", async (req, res) => {
       `);
     }
   } catch (error) {
-
-
     console.error("❌ Email approval error:", error);
     console.error("❌ Error details:", {
       message: error.message,

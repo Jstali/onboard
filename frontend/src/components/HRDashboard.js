@@ -28,6 +28,8 @@ import HRConfig from "./HRConfig";
 import HRExpenseManagement from "./HRExpenseManagement";
 import HRExpenseAnalytics from "./HRExpenseAnalytics";
 import HRDocumentCollection from "./HRDocumentCollection";
+import HRPayoutManagement from "./HRPayoutManagement";
+import HRPNCMonitoring from "./HRPNCMonitoring";
 
 const HRDashboard = () => {
   const { logout } = useAuth();
@@ -95,7 +97,8 @@ const HRDashboard = () => {
     logout();
   };
 
-  const tabs = [
+  // Organized tabs into logical groups
+  const employeeTabs = [
     { id: "employees", label: "Employees", icon: FaUsers },
     { id: "forms", label: "Employee Forms", icon: FaClipboardList },
     {
@@ -104,13 +107,24 @@ const HRDashboard = () => {
       icon: FaFileAlt,
     },
     { id: "onboarded", label: "Onboarded Employees", icon: FaUsers },
+  ];
+
+  const managementTabs = [
     { id: "master", label: "Employee Master", icon: FaUsers },
     { id: "attendance", label: "Attendance", icon: FaCalendarAlt },
     { id: "leave", label: "Leave Management", icon: FaCalendarCheck },
     { id: "expenses", label: "Expense Management", icon: FaReceipt },
+  ];
+
+  const analyticsTabs = [
     { id: "expense-analytics", label: "Expense Analytics", icon: FaChartBar },
+    { id: "pnc-monitoring", label: "P&C Monthly Monitoring", icon: FaChartBar },
+    { id: "payout", label: "Payout Management", icon: FaReceipt },
     { id: "config", label: "HR Config", icon: FaCog },
   ];
+
+  // Flatten all tabs for easy lookup
+  const allTabs = [...employeeTabs, ...managementTabs, ...analyticsTabs];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -155,17 +169,53 @@ const HRDashboard = () => {
         </div>
       </header>
 
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs - Two Row Layout */}
       <nav className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-6 overflow-x-auto scrollbar-hide">
-            {tabs.map((tab) => {
+          {/* Row 1: Employee Operations */}
+          <div className="flex space-x-6 overflow-x-auto scrollbar-hide py-2 border-b border-gray-100">
+            <div className="flex items-center mr-4">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Employee Operations
+              </span>
+            </div>
+            {employeeTabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-4 px-3 border-b-2 font-medium text-sm transition-all duration-300 ease-in-out transform hover:scale-105 whitespace-nowrap flex-shrink-0 ${
+                  className={`flex items-center py-3 px-3 border-b-2 font-medium text-sm transition-all duration-300 ease-in-out transform hover:scale-105 whitespace-nowrap flex-shrink-0 ${
+                    activeTab === tab.id
+                      ? "border-blue-500 text-blue-600 bg-blue-50"
+                      : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50"
+                  }`}
+                >
+                  <Icon
+                    className={`mr-2 transition-transform duration-300 ${
+                      activeTab === tab.id ? "scale-110" : "hover:scale-110"
+                    }`}
+                  />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Row 2: Management & Analytics */}
+          <div className="flex space-x-6 overflow-x-auto scrollbar-hide py-2">
+            <div className="flex items-center mr-4">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Management & Analytics
+              </span>
+            </div>
+            {[...managementTabs, ...analyticsTabs].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center py-3 px-3 border-b-2 font-medium text-sm transition-all duration-300 ease-in-out transform hover:scale-105 whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
                       ? "border-blue-500 text-blue-600 bg-blue-50"
                       : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50"
@@ -288,10 +338,24 @@ const HRDashboard = () => {
           </div>
         )}
 
+        {/* P&C Monthly Monitoring Tab */}
+        {activeTab === "pnc-monitoring" && (
+          <div>
+            <HRPNCMonitoring />
+          </div>
+        )}
+
         {/* HR Config Tab */}
         {activeTab === "config" && (
           <div>
             <HRConfig />
+          </div>
+        )}
+
+        {/* Payout Management Tab */}
+        {activeTab === "payout" && (
+          <div>
+            <HRPayoutManagement />
           </div>
         )}
 

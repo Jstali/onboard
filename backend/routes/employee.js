@@ -877,9 +877,22 @@ router.get("/profile", async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT u.id, u.email, u.first_name, u.last_name, ef.type, ef.form_data
+      SELECT 
+        u.id, 
+        u.email, 
+        u.first_name, 
+        u.last_name, 
+        ef.type, 
+        ef.form_data,
+        em.employee_id,
+        em.employee_name,
+        em.department,
+        em.designation,
+        em.type as employment_type,
+        em.status
       FROM users u
       LEFT JOIN employee_forms ef ON u.id = ef.employee_id
+      LEFT JOIN employee_master em ON u.email = em.company_email
       WHERE u.id = $1
     `,
       [req.user.userId]
@@ -889,7 +902,10 @@ router.get("/profile", async (req, res) => {
       return res.status(404).json({ error: "Profile not found" });
     }
 
-    res.json({ profile: result.rows[0] });
+    res.json({
+      success: true,
+      employee: result.rows[0],
+    });
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({ error: "Failed to get profile" });

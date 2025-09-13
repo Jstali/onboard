@@ -45,12 +45,119 @@ router.use((req, res, next) => {
   console.log("🔍 HR route middleware hit:", req.method, req.path);
   next();
 });
+
+// Test route for P&C Monitoring without authentication (for debugging)
+router.get("/pnc-monitoring-test", async (req, res) => {
+  try {
+    const { month } = req.query;
+
+    if (!month) {
+      return res
+        .status(400)
+        .json({ error: "Month parameter is required (YYYY-MM format)" });
+    }
+
+    // Validate month format (YYYY-MM)
+    const monthRegex = /^\d{4}-\d{2}$/;
+    if (!monthRegex.test(month)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid month format. Use YYYY-MM format" });
+    }
+
+    const [year, monthNum] = month.split("-");
+    const startOfMonth = new Date(year, monthNum - 1, 1);
+    const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
+
+    console.log(`📊 Testing P&C Monthly Monitoring Report for ${month}`);
+
+    // Use the database function to get the complete report
+    const reportResult = await pool.query(
+      "SELECT get_pnc_monitoring_report($1) as report_data",
+      [month]
+    );
+
+    const reportData = reportResult.rows[0]?.report_data;
+
+    if (!reportData) {
+      return res.status(500).json({
+        error: "Failed to generate test P&C Monitoring Report",
+      });
+    }
+
+    res.json({
+      message: "P&C Monitoring test successful",
+      month,
+      reportData: reportData,
+    });
+  } catch (error) {
+    console.error("❌ Error testing P&C Monitoring:", error);
+    res.status(500).json({
+      error: "Failed to test P&C Monitoring",
+      details: error.message,
+    });
+  }
+});
+
 router.use(authenticateToken, requireHR);
 
 // Test route to verify routing is working
 router.get("/test", (req, res) => {
   console.log("🔍 Test route hit");
   res.json({ message: "HR routes are working" });
+});
+
+// Test route for P&C Monitoring without authentication (for debugging)
+router.get("/pnc-monitoring-test", async (req, res) => {
+  try {
+    const { month } = req.query;
+
+    if (!month) {
+      return res
+        .status(400)
+        .json({ error: "Month parameter is required (YYYY-MM format)" });
+    }
+
+    // Validate month format (YYYY-MM)
+    const monthRegex = /^\d{4}-\d{2}$/;
+    if (!monthRegex.test(month)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid month format. Use YYYY-MM format" });
+    }
+
+    const [year, monthNum] = month.split("-");
+    const startOfMonth = new Date(year, monthNum - 1, 1);
+    const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
+
+    console.log(`📊 Testing P&C Monthly Monitoring Report for ${month}`);
+
+    // Use the database function to get the complete report
+    const reportResult = await pool.query(
+      "SELECT get_pnc_monitoring_report($1) as report_data",
+      [month]
+    );
+
+    const reportData = reportResult.rows[0]?.report_data;
+
+    if (!reportData) {
+      return res.status(500).json({
+        error: "Failed to generate test P&C Monitoring Report",
+      });
+    }
+
+    res.json({
+      message: "P&C Monitoring test successful",
+      month,
+      reportData: reportData,
+    });
+  } catch (error) {
+    console.error("❌ Error testing P&C Monitoring:", error);
+    res.status(500).json({
+      error: "Failed to test P&C Monitoring",
+      details: error.message,
+    });
+  }
 });
 
 // Test route for document collection
@@ -60,14 +167,14 @@ router.put("/document-collection/test", (req, res) => {
   res.json({ message: "Document collection test route working" });
 });
 
-// Get available managers for assignment (from managers table - legacy)
+// Get available managers for assignment (from employee_master table)
 router.get("/managers", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT manager_name as employee_name, email as company_email 
-      FROM managers 
-      WHERE status = 'active' 
-      ORDER BY manager_name
+      SELECT employee_name, company_email 
+      FROM employee_master 
+      WHERE status = 'active' AND type = 'Manager'
+      ORDER BY employee_name
     `);
 
     res.json({
@@ -767,14 +874,16 @@ router.put("/employee-forms/:id/approve", async (req, res) => {
       let roleUpdated = false;
       let newRole = null;
 
-      if (form.employee_type === 'Manager') {
+      if (form.employee_type === "Manager") {
         await pool.query(
           "UPDATE users SET role = 'manager', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
           [form.employee_id]
         );
         roleUpdated = true;
-        newRole = 'manager';
-        console.log(`✅ User role updated to manager for employee type: ${form.employee_type}`);
+        newRole = "manager";
+        console.log(
+          `✅ User role updated to manager for employee type: ${form.employee_type}`
+        );
       }
 
       res.json({
@@ -1058,12 +1167,10 @@ router.get("/master", async (req, res) => {
       SELECT 
         em.*,
         CASE 
-          WHEN m.manager_name IS NOT NULL THEN m.manager_name
           WHEN em.manager_name IS NOT NULL AND em.manager_name != '' THEN em.manager_name
           ELSE 'Not Assigned'
         END as display_manager_name
       FROM employee_master em
-      LEFT JOIN managers m ON em.manager_id = m.manager_id
       ORDER BY em.created_at DESC
     `);
 
@@ -1494,7 +1601,7 @@ router.post("/master/import", upload.single("excelFile"), async (req, res) => {
         let managerName = null;
         if (mappedData.manager_name) {
           const managerResult = await client.query(
-            "SELECT manager_id, manager_name FROM managers WHERE manager_name ILIKE $1 AND status = 'active'",
+            "SELECT employee_id as manager_id, employee_name as manager_name FROM employee_master WHERE employee_name ILIKE $1 AND status = 'active' AND type = 'Manager'",
             [mappedData.manager_name]
           );
           if (managerResult.rows.length > 0) {
@@ -1909,9 +2016,9 @@ router.put(
       const managersToCheck = [manager, manager2, manager3].filter(Boolean);
 
       for (const managerName of managersToCheck) {
-        // Get manager email from managers table
+        // Get manager email from employee_master table
         const managerResult = await pool.query(
-          "SELECT email FROM managers WHERE manager_name = $1",
+          "SELECT company_email as email FROM employee_master WHERE employee_name = $1 AND type = 'Manager'",
           [managerName]
         );
 
@@ -1971,30 +2078,19 @@ router.put(
         });
       }
 
-      // Get manager details - check both managers table and employee_master table
-      // First check if manager exists in managers table
+      // Get manager details from employee_master table
       let managerResult = await pool.query(
-        `SELECT m.manager_id, m.manager_name, u.id as user_id, m.email
-         FROM managers m 
-         LEFT JOIN users u ON m.email = u.email 
-         WHERE m.manager_name ILIKE $1 AND m.status = 'active'`,
+        `SELECT em.employee_id as manager_id, em.employee_name as manager_name, u.id as user_id, u.email
+         FROM employee_master em
+         LEFT JOIN users u ON em.company_email = u.email 
+         WHERE em.employee_name ILIKE $1 AND em.status = 'active' AND em.type = 'Manager'`,
         [manager]
       );
 
-      // If not found in managers table, check employee_master table
-      if (managerResult.rows.length === 0) {
-        managerResult = await pool.query(
-          `SELECT em.employee_id as manager_id, em.employee_name as manager_name, u.id as user_id, u.email
-           FROM employee_master em
-           LEFT JOIN users u ON em.company_email = u.email 
-           WHERE em.employee_name ILIKE $1 AND em.status = 'active'`,
-          [manager]
-        );
-      }
-
       if (managerResult.rows.length === 0) {
         return res.status(400).json({
-          error: "Manager not found, inactive, or not defined in employee master table",
+          error:
+            "Manager not found, inactive, or not defined in employee master table",
         });
       }
 
@@ -2006,33 +2102,11 @@ router.put(
         });
       }
 
-      // Ensure manager has a record in managers table
-      // Check if manager record exists for this user_id
-      const existingManagerRecord = await pool.query(
-        "SELECT * FROM managers WHERE user_id = $1",
-        [managerInfo.user_id]
+      // Manager record is already in employee_master table, no need to create separate manager record
+      console.log(
+        "✅ Using manager from employee_master table:",
+        managerInfo.manager_name
       );
-
-      if (existingManagerRecord.rows.length === 0) {
-        // Create manager record if it doesn't exist
-        const createManagerResult = await pool.query(
-          `INSERT INTO managers (manager_id, manager_name, email, department, designation, status, user_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)
-           RETURNING *`,
-          [
-            managerInfo.manager_id,
-            managerInfo.manager_name,
-            managerInfo.email,
-            null, // department
-            null, // designation
-            'active',
-            managerInfo.user_id
-          ]
-        );
-        console.log("✅ Created manager record:", createManagerResult.rows[0]);
-      } else {
-        console.log("✅ Manager record already exists for user_id:", managerInfo.user_id);
-      }
 
       // Generate unique 6-digit employee ID
       const employeeId = await generateEmployeeId();
@@ -2072,10 +2146,10 @@ router.put(
 
       if (manager2) {
         const manager2Result = await pool.query(
-          `SELECT m.manager_id, m.manager_name, u.id as user_id 
-           FROM managers m 
-           LEFT JOIN users u ON m.email = u.email 
-           WHERE m.manager_id = $1`,
+          `SELECT em.employee_id as manager_id, em.employee_name as manager_name, u.id as user_id 
+           FROM employee_master em
+           LEFT JOIN users u ON em.company_email = u.email 
+           WHERE em.employee_id = $1 AND em.type = 'Manager'`,
           [manager2]
         );
         if (manager2Result.rows.length > 0) {
@@ -2085,10 +2159,10 @@ router.put(
 
       if (manager3) {
         const manager3Result = await pool.query(
-          `SELECT m.manager_id, m.manager_name, u.id as user_id 
-           FROM managers m 
-           LEFT JOIN users u ON m.email = u.email 
-           WHERE m.manager_id = $1`,
+          `SELECT em.employee_id as manager_id, em.employee_name as manager_name, u.id as user_id 
+           FROM employee_master em
+           LEFT JOIN users u ON em.company_email = u.email 
+           WHERE em.employee_id = $1 AND em.type = 'Manager'`,
           [manager3]
         );
         if (manager3Result.rows.length > 0) {
@@ -2172,12 +2246,12 @@ router.put(
       // Check if the assigned employee should have manager role
       // If the employee type is 'Manager' or if they are assigned as a manager to other employees
       let shouldUpdateRole = false;
-      let newRole = 'employee';
+      let newRole = "employee";
 
       // Check if employee type is 'Manager'
-      if (employmentType === 'Manager') {
+      if (employmentType === "Manager") {
         shouldUpdateRole = true;
-        newRole = 'manager';
+        newRole = "manager";
         console.log("🔍 Employee type is 'Manager', updating role to manager");
       }
 
@@ -2187,11 +2261,13 @@ router.put(
           "SELECT COUNT(*) as count FROM manager_employee_mapping WHERE manager_id = $1 AND is_active = true",
           [onboarded.user_id]
         );
-        
+
         if (managerCheck.rows[0].count > 0) {
           shouldUpdateRole = true;
-          newRole = 'manager';
-          console.log("🔍 Employee is assigned as manager to other employees, updating role to manager");
+          newRole = "manager";
+          console.log(
+            "🔍 Employee is assigned as manager to other employees, updating role to manager"
+          );
         }
       }
 
@@ -2222,11 +2298,28 @@ router.put(
       // Provide specific error messages for common issues
       let errorMessage = "Failed to assign employee details";
       if (error.code === "23505") {
+        console.log("🔍 Duplicate key error detail:", error.detail);
+        console.log("🔍 Duplicate key error message:", error.message);
         if (error.detail && error.detail.includes("company_email")) {
           errorMessage = "Company email already exists in master table";
         } else if (error.detail && error.detail.includes("employee_id")) {
           errorMessage = "Employee ID already exists in master table";
         } else if (error.detail && error.detail.includes("name")) {
+          errorMessage = "Employee name and email combination already exists";
+        } else if (
+          error.detail &&
+          error.detail.includes("employee_master_company_email_key")
+        ) {
+          errorMessage = "Company email already exists in master table";
+        } else if (
+          error.detail &&
+          error.detail.includes("employee_master_employee_id_key")
+        ) {
+          errorMessage = "Employee ID already exists in master table";
+        } else if (
+          error.detail &&
+          error.detail.includes("employee_master_name_email_unique")
+        ) {
           errorMessage = "Employee name and email combination already exists";
         } else {
           errorMessage = "Duplicate entry detected - please check all fields";
@@ -2265,9 +2358,8 @@ router.get("/debug/employees", async (req, res) => {
     const masterResult = await pool.query(`
       SELECT 
         em.*,
-        COALESCE(m.manager_name, em.manager_name, em.manager_id) as display_manager_name
+        COALESCE(em.manager_name, em.manager_id) as display_manager_name
       FROM employee_master em
-      LEFT JOIN managers m ON em.manager_id = m.manager_id
       ORDER BY em.id
     `);
     console.log("🔍 Employee Master:", masterResult.rows);
@@ -2332,7 +2424,7 @@ router.post(
 
       if (manager2Id) {
         const manager2Result = await pool.query(
-          "SELECT manager_name FROM managers WHERE manager_id = $1",
+          "SELECT employee_name as manager_name FROM employee_master WHERE employee_id = $1 AND type = 'Manager'",
           [manager2Id]
         );
         if (manager2Result.rows.length > 0) {
@@ -2342,7 +2434,7 @@ router.post(
 
       if (manager3Id) {
         const manager3Result = await pool.query(
-          "SELECT manager_name FROM managers WHERE manager_id = $1",
+          "SELECT employee_name as manager_name FROM employee_master WHERE employee_id = $1 AND type = 'Manager'",
           [manager3Id]
         );
         if (manager3Result.rows.length > 0) {
@@ -2437,14 +2529,14 @@ router.post(
           ])
         ).rows[0].id;
 
-      // Get manager user IDs from managers table
+      // Get manager user IDs from employee_master table
       let primaryManagerUserId = null;
       let secondaryManagerUserId = null;
       let tertiaryManagerUserId = null;
 
       if (managerId) {
         const primaryManagerResult = await pool.query(
-          "SELECT u.id FROM managers m JOIN users u ON m.email = u.email WHERE m.manager_id = $1",
+          "SELECT u.id FROM employee_master em JOIN users u ON em.company_email = u.email WHERE em.employee_id = $1 AND em.type = 'Manager'",
           [managerId]
         );
         if (primaryManagerResult.rows.length > 0) {
@@ -2454,7 +2546,7 @@ router.post(
 
       if (manager2Id) {
         const secondaryManagerResult = await pool.query(
-          "SELECT u.id FROM managers m JOIN users u ON m.email = u.email WHERE m.manager_id = $1",
+          "SELECT u.id FROM employee_master em JOIN users u ON em.company_email = u.email WHERE em.employee_id = $1 AND em.type = 'Manager'",
           [manager2Id]
         );
         if (secondaryManagerResult.rows.length > 0) {
@@ -2464,7 +2556,7 @@ router.post(
 
       if (manager3Id) {
         const tertiaryManagerResult = await pool.query(
-          "SELECT u.id FROM managers m JOIN users u ON m.email = u.email WHERE m.manager_id = $1",
+          "SELECT u.id FROM employee_master em JOIN users u ON em.company_email = u.email WHERE em.employee_id = $1 AND em.type = 'Manager'",
           [manager3Id]
         );
         if (tertiaryManagerResult.rows.length > 0) {
@@ -3140,9 +3232,9 @@ router.put(
         const managersToCheck = [manager1, manager2, manager3].filter(Boolean);
 
         for (const managerName of managersToCheck) {
-          // Get manager email from managers table
+          // Get manager email from employee_master table
           const managerResult = await pool.query(
-            "SELECT email FROM managers WHERE manager_name = $1",
+            "SELECT company_email as email FROM employee_master WHERE employee_name = $1 AND type = 'Manager'",
             [managerName]
           );
 
@@ -3247,9 +3339,9 @@ router.put("/master/:id", async (req, res) => {
     );
 
     for (const managerId of managerIdsToCheck) {
-      // Get manager email from managers table
+      // Get manager email from employee_master table
       const managerResult = await pool.query(
-        "SELECT email, manager_name FROM managers WHERE manager_id = $1",
+        "SELECT company_email as email, employee_name as manager_name FROM employee_master WHERE employee_id = $1 AND type = 'Manager'",
         [managerId]
       );
 
@@ -3273,7 +3365,7 @@ router.put("/master/:id", async (req, res) => {
 
     if (manager_id) {
       const managerResult = await pool.query(
-        "SELECT manager_name FROM managers WHERE manager_id = $1",
+        "SELECT employee_name as manager_name FROM employee_master WHERE employee_id = $1 AND type = 'Manager'",
         [manager_id]
       );
       manager_name = managerResult.rows[0]?.manager_name;
@@ -3281,7 +3373,7 @@ router.put("/master/:id", async (req, res) => {
 
     if (manager2_id) {
       const manager2Result = await pool.query(
-        "SELECT manager_name FROM managers WHERE manager_id = $1",
+        "SELECT employee_name as manager_name FROM employee_master WHERE employee_id = $1 AND type = 'Manager'",
         [manager2_id]
       );
       manager2_name = manager2Result.rows[0]?.manager_name;
@@ -3289,7 +3381,7 @@ router.put("/master/:id", async (req, res) => {
 
     if (manager3_id) {
       const manager3Result = await pool.query(
-        "SELECT manager_name FROM managers WHERE manager_id = $1",
+        "SELECT employee_name as manager_name FROM employee_master WHERE employee_id = $1 AND type = 'Manager'",
         [manager3_id]
       );
       manager3_name = manager3Result.rows[0]?.manager_name;
@@ -3435,7 +3527,57 @@ router.put("/master/:id", async (req, res) => {
       );
     }
 
-    // 5. Update leave_requests table if employee name changed
+    // 5. Sync manager assignments with manager_employee_mapping table
+    console.log("🔄 Syncing manager assignments...");
+
+    // Get the employee's user ID
+    const employeeUserResult = await pool.query(
+      "SELECT id FROM users WHERE email = $1",
+      [company_email]
+    );
+
+    if (employeeUserResult.rows.length > 0) {
+      const employeeUserId = employeeUserResult.rows[0].id;
+
+      // Remove existing manager mappings for this employee
+      await pool.query(
+        "DELETE FROM manager_employee_mapping WHERE employee_id = $1",
+        [employeeUserId]
+      );
+      console.log(
+        `✅ Removed existing manager mappings for employee: ${employee_name}`
+      );
+
+      // Add new manager mappings
+      const managerIds = [manager_id, manager2_id, manager3_id].filter(Boolean);
+
+      for (let i = 0; i < managerIds.length; i++) {
+        const managerId = managerIds[i];
+
+        // Get the manager's user ID from employee_master
+        const managerUserResult = await pool.query(
+          "SELECT u.id FROM employee_master em JOIN users u ON em.company_email = u.email WHERE em.employee_id = $1 AND em.type = 'Manager'",
+          [managerId]
+        );
+
+        if (managerUserResult.rows.length > 0) {
+          const managerUserId = managerUserResult.rows[0].id;
+          const mappingType =
+            i === 0 ? "primary" : i === 1 ? "secondary" : "tertiary";
+
+          await pool.query(
+            "INSERT INTO manager_employee_mapping (manager_id, employee_id, mapping_type, is_active) VALUES ($1, $2, $3, true)",
+            [managerUserId, employeeUserId, mappingType]
+          );
+
+          console.log(
+            `✅ Added ${mappingType} manager mapping: Manager ${managerId} -> Employee ${employee_name}`
+          );
+        }
+      }
+    }
+
+    // 6. Update leave_requests table if employee name changed
     if (oldEmployee.employee_name !== employee_name) {
       await pool.query(
         `UPDATE leave_requests 
@@ -4006,7 +4148,7 @@ router.delete("/managers/:managerId", async (req, res) => {
 
     // Check if manager exists
     const managerCheck = await client.query(
-      "SELECT manager_id, email FROM managers WHERE manager_id = $1",
+      "SELECT employee_id as manager_id, company_email as email FROM employee_master WHERE employee_id = $1 AND type = 'Manager'",
       [managerId]
     );
 
@@ -4144,7 +4286,7 @@ router.delete("/managers/:managerId", async (req, res) => {
 
       // Delete from managers table
       const managerResult = await client.query(
-        "DELETE FROM managers WHERE manager_id = $1",
+        "UPDATE employee_master SET status = 'inactive' WHERE employee_id = $1 AND type = 'Manager'",
         [managerId]
       );
       console.log("✅ Manager deleted:", managerResult.rowCount);
@@ -4183,14 +4325,15 @@ router.get("/managers-list", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT 
-        manager_id,
-        manager_name,
-        email,
+        employee_id as manager_id,
+        employee_name as manager_name,
+        company_email as email,
         department,
         designation,
         status,
         created_at
-      FROM managers 
+      FROM employee_master 
+      WHERE status = 'active' AND type = 'Manager'
       ORDER BY created_at DESC
     `);
 
@@ -4278,7 +4421,7 @@ router.get("/employees-by-type", async (req, res) => {
     const [managersResult, internsResult, fullTimeResult, contractResult] =
       await Promise.all([
         pool.query(
-          "SELECT COUNT(*) as count FROM managers WHERE status = 'active'"
+          "SELECT COUNT(*) as count FROM employee_master WHERE status = 'active' AND type = 'Manager'"
         ),
         pool.query(
           "SELECT COUNT(*) as count FROM interns WHERE status = 'active'"
@@ -4307,6 +4450,109 @@ router.get("/employees-by-type", async (req, res) => {
   } catch (error) {
     console.error("Get employees by type error:", error);
     res.status(500).json({ error: "Failed to get employees by type" });
+  }
+});
+
+// ============================================================================
+// P&C MONTHLY MONITORING REPORT ENDPOINTS
+// ============================================================================
+
+// Get P&C Monthly Monitoring Report (temporarily without auth for testing)
+router.get("/pnc-monitoring", async (req, res) => {
+  try {
+    const { month } = req.query;
+
+    if (!month) {
+      return res
+        .status(400)
+        .json({ error: "Month parameter is required (YYYY-MM format)" });
+    }
+
+    // Validate month format (YYYY-MM)
+    const monthRegex = /^\d{4}-\d{2}$/;
+    if (!monthRegex.test(month)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid month format. Use YYYY-MM format" });
+    }
+
+    console.log(`📊 Generating P&C Monthly Monitoring Report for ${month}`);
+
+    // Use the database function to get cached or generate new report
+    const reportResult = await pool.query(
+      "SELECT get_pnc_monitoring_report($1) as report_data",
+      [month]
+    );
+
+    const reportData = reportResult.rows[0]?.report_data;
+
+    if (!reportData) {
+      return res.status(500).json({
+        error: "Failed to generate P&C Monthly Monitoring Report",
+      });
+    }
+
+    console.log(
+      `✅ P&C Monthly Monitoring Report generated successfully for ${month}`
+    );
+    res.json(reportData);
+  } catch (error) {
+    console.error("❌ Error generating P&C Monthly Monitoring Report:", error);
+    res.status(500).json({
+      error: "Failed to generate P&C Monthly Monitoring Report",
+      details: error.message,
+    });
+  }
+});
+
+// Recalculate P&C Monthly Monitoring Report
+router.post("/pnc-monitoring/recalculate", async (req, res) => {
+  try {
+    const { month } = req.body;
+
+    if (!month) {
+      return res
+        .status(400)
+        .json({ error: "Month parameter is required (YYYY-MM format)" });
+    }
+
+    // Validate month format (YYYY-MM)
+    const monthRegex = /^\d{4}-\d{2}$/;
+    if (!monthRegex.test(month)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid month format. Use YYYY-MM format" });
+    }
+
+    console.log(`🔄 Recalculating P&C Monthly Monitoring Report for ${month}`);
+
+    // Use the database function to regenerate the report
+    const reportResult = await pool.query(
+      "SELECT get_pnc_monitoring_report($1) as report_data",
+      [month]
+    );
+
+    const reportData = reportResult.rows[0]?.report_data;
+
+    if (!reportData) {
+      return res.status(500).json({
+        error: "Failed to recalculate P&C Monthly Monitoring Report",
+      });
+    }
+
+    console.log(
+      `✅ P&C Monthly Monitoring Report recalculated successfully for ${month}`
+    );
+    res.json(reportData);
+  } catch (error) {
+    console.error(
+      "❌ Error recalculating P&C Monthly Monitoring Report:",
+      error
+    );
+    res.status(500).json({
+      error: "Failed to recalculate P&C Monthly Monitoring Report",
+      details: error.message,
+    });
   }
 });
 

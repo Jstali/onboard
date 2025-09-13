@@ -63,20 +63,20 @@ router.get("/profile", async (req, res) => {
     const managerResult = await pool.query(
       `
       SELECT 
-        m.manager_id,
-        m.manager_name,
-        m.email,
-        m.department,
-        m.designation,
-        m.status,
-        m.created_at,
-        m.updated_at,
+        em.employee_id as manager_id,
+        em.employee_name as manager_name,
+        em.company_email as email,
+        em.department,
+        em.designation,
+        em.status,
+        em.created_at,
+        em.updated_at,
         u.first_name,
         u.last_name,
         u.role
-      FROM managers m
-      LEFT JOIN users u ON m.user_id = u.id
-      WHERE m.user_id = $1
+      FROM employee_master em
+      LEFT JOIN users u ON em.company_email = u.email
+      WHERE u.id = $1 AND em.type = 'Manager'
     `,
       [managerId]
     );
@@ -107,8 +107,8 @@ router.get("/profile", async (req, res) => {
     res.json({
       manager: {
         ...manager,
-        team_stats: teamStats
-      }
+        team_stats: teamStats,
+      },
     });
   } catch (error) {
     console.error("Error fetching manager profile:", error);
@@ -186,7 +186,9 @@ router.get("/employee/:employeeId/leave-details", async (req, res) => {
     );
 
     if (managerCheck.rows.length === 0) {
-      return res.status(403).json({ error: "Access denied: Employee not under your management" });
+      return res
+        .status(403)
+        .json({ error: "Access denied: Employee not under your management" });
     }
 
     // Get leave balances by type with calculated leaves taken from approved requests
@@ -233,7 +235,7 @@ router.get("/employee/:employeeId/leave-details", async (req, res) => {
 
     res.json({
       leaveBalances: leaveBalances.rows,
-      recentLeaves: leaveRequests.rows
+      recentLeaves: leaveRequests.rows,
     });
   } catch (error) {
     console.error("Error fetching leave details:", error);

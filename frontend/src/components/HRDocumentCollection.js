@@ -75,14 +75,16 @@ const HRDocumentCollection = () => {
 
       // Convert requirements to templates format for compatibility
       const onboardingTemplates = [];
-      Object.entries(requirementsRes.data).forEach(([category, documents]) => {
-        documents.forEach((doc, index) => {
+      const requirementsData = requirementsRes.data || {};
+      Object.entries(requirementsData).forEach(([category, docs]) => {
+        const documentsArray = Array.isArray(docs) ? docs : [];
+        documentsArray.forEach((doc) => {
           onboardingTemplates.push({
             id: `${category}_${doc.type}`,
             document_name: doc.name,
             document_type: doc.type,
             category: category,
-            is_required: doc.required,
+            is_required: !!doc.required,
             is_active: true,
           });
         });
